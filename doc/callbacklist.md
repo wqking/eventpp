@@ -251,5 +251,5 @@ The callbacks are called in the thread same as the callee of `operator()`.
 
 ## Internal data structure
 
-CallbackList uses double linked list to manage the callbacks.  
+CallbackList uses doubly linked list to manage the callbacks.  
 Each node is linked by shared pointer. Using shared pointer allows the node be removed while iterating.  

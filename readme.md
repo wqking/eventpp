@@ -51,7 +51,7 @@ Declaration
 ```c++
 template <
 	typename Prototype,
-	typename CallbackType = void,
+	typename Callback = void,
 	typename Threading = MultipleThreading
 >
 class CallbackList;
