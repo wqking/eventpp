@@ -1,0 +1,3 @@
+.svn
+tests/build/temp*
+tests/build/project*
