@@ -12,7 +12,7 @@ PROJECT=eventpptest
 
 PROJECT_PREFIX = project
 
-SUPPORT_MAKES = auto nmake mingw mingw_debug linux vc15
+SUPPORT_MAKES = linux mingw mingw_debug msys nmake vc17 vc15
 
 none: needcmake
 	$(ECHO) "Usage:"
@@ -24,15 +24,14 @@ none: needcmake
 	$(ECHO) "Available MakeType"
 	$(ECHO) "  $(SUPPORT_MAKES)"
 	$(ECHO) 
-	$(ECHO) "  nmake        Generate Microsoft VC makefile and then use nmake to build."
+	$(ECHO) "  linux        Generate Linux/Unix makefile and then use GCC make to build."
 	$(ECHO) "  mingw        Generate MinGW makefile and then use mingw32-make to build (release version)."
 	$(ECHO) "  mingw_debug  Generate MinGW makefile and then use mingw32-make to build (debug version)."
-	$(ECHO) "  linux        Generate Linux/Unix makefile and then use GCC make to build."
+	$(ECHO) "  msys         Generate MSys makefile and then use make to build (release version)."
+	$(ECHO) "  nmake        Generate Microsoft VC makefile and then use nmake to build."
+	$(ECHO) "  vc17         Generate project files for Microsoft VC 2017. No auto build. You need to open the project in VC IDE then build."
 	$(ECHO) "  vc15         Generate project files for Microsoft VC 2015. No auto build. You need to open the project in VC IDE then build."
 	$(ECHO) "  auto         Auto detect the compiler and make environment and then use make to build. NOT recommend."
-	$(ECHO) 
-	$(ECHO) "  clean        No build. Remove and clean all generated files, include build and projects files."
-	$(ECHO) "  cleanbuild   No build. Remove and clean all build files, but leave projects files."
 
 needcmake:
 	$(ECHO)
@@ -80,24 +79,15 @@ linux_debug: needcmake
 	$(CH_DIR) $(CACHE_DIR)_linux_debug $(CMAKE) -DCMAKE_BUILD_TYPE=Debug -G"Unix Makefiles"
 	$(EXEC_BUILD)_linux_debug make $(TARGET)
 
+vc17: needcmake
+	$(MK_DIR) $(PROJECT_PREFIX)_vc17
+	$(CH_DIR) $(PROJECT_PREFIX)_vc17 $(CMAKE) -G"Visual Studio 15 2017 Win64"
+	$(ECHO) Please open the solution $(PROJECT).sln in $(PROJECT_PREFIX)_vc17 in VC IDE.
+
 vc15: needcmake
 	$(MK_DIR) $(PROJECT_PREFIX)_vc15
 	$(CH_DIR) $(PROJECT_PREFIX)_vc15 $(CMAKE) -G"Visual Studio 14 Win64"
 	$(ECHO) Please open the solution $(PROJECT).sln in $(PROJECT_PREFIX)_vc15 in VC IDE.
-
-cleanbuild: needcmake
-	@cmake -E remove_directory bin
-	@cmake -E remove_directory $(CACHE_DIR)
-
-clean: needcmake cleanbuild
-	@cmake -E remove_directory $(PROJECT_PREFIX)_vc05
-	@cmake -E remove_directory $(PROJECT_PREFIX)_vc08
-	@cmake -E remove_directory $(PROJECT_PREFIX)_vc10
-	@cmake -E remove_directory $(PROJECT_PREFIX)_vc12
-	@cmake -E remove_directory $(PROJECT_PREFIX)_vc13
-	@cmake -E remove_directory $(PROJECT_PREFIX)_cb_mingw
-	@cmake -E remove_directory $(PROJECT_PREFIX)_cb_nmake
-	@cmake -E remove_directory $(PROJECT_PREFIX)_cb_linux
 
 .PHONY: clean
 

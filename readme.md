@@ -6,7 +6,7 @@ eventpp provides tools that allow your application components to communicate wit
 
 1. Supports nested event. A listener can dispatch event, add other listeners, when capturing an event.
 2. Thread safe.
-3. Requires C++ 11 (tested with MSVC 2015, MinGW gcc 7.2, and Ubuntu gcc 5.4).
+3. Requires C++ 11 (tested with MSVC 2017, MSVC 2015, MinGW (Msys) gcc 7.2, and Ubuntu gcc 5.4).
 4. Header only, no source file, no need to build.
 5. Template based, less runtime overhead.
 6. Backed by unit tests.
@@ -122,6 +122,7 @@ callbackList();
 The library itself is header only and doesn't need building. If you want to run the unit tests, follow below steps:  
 1. `cd tests/build`
 2. Run `make` with different target.
+    * make vc17 #generate solution files for Microsoft Visual Studio 2017, then open eventpptest.sln in folder project_vc17
     * make vc15 #generate solution files for Microsoft Visual Studio 2015, then open eventpptest.sln in folder project_vc15
     * make mingw #build using MinGW
     * make linux #build on Linux
