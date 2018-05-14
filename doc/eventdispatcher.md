@@ -1,7 +1,26 @@
 # Class EventDispatcher reference
 
+## Table Of Contents
+
+- [Tutorials](#tutorials)
+    - [Tutorial 1 -- Basic usage](#tutorial1)
+    - [Tutorial 2 -- Listener with parameters](#tutorial2)
+    - [Tutorial 3 -- Customized event struct](#tutorial3)
+    - [Tutorial 4 -- Event queue](#tutorial4)
+	
+- [API reference](#apis)
+- [Event getter](#event-getter)
+- [Argument passing mode](#argument-passing-mode)
+- [Nested listener safety](#nested-listener-safety)
+- [Thread safety](#thread-safety)
+- [Exception safety](#exception-safety)
+- [Time complexities](#time-complexities)
+- [Internal data structure](#internal-data-structure)
+
+<a name="tutorials" />
 ## Tutorials
 
+<a name="tutorial1" />
 ### Tutorial 1 -- Basic usage
 
 **Code**  
@@ -63,6 +82,7 @@ dispatcher.dispatch(5);
 Here we dispatched two events, one is event 3, the other is event 5.  
 During the dispatching, all listeners of that event will be invoked one by one in the order of they were added.
 
+<a name="tutorial2" />
 ### Tutorial 2 -- Listener with parameters
 
 **Code**  
@@ -160,6 +180,7 @@ dispatcher.dispatch(MyEvent { 3, "Hello world", 38 }, true);
 **Remarks**
 Previous tutorials pass the event type as the first argument in `dispatch`, and all other event parameters as other arguments of `dispatch`. Another common situation is an Event class is defined as the base, all other events derive from Event, and the actual event type is a data member of Event (think QEvent in Qt).  
 
+<a name="tutorial4" />
 ### Tutorial 4 -- Event queue
 
 **Code**  
@@ -199,6 +220,7 @@ dispatcher.process();
 A typical use case is in a GUI application, each components call `EventDispatcher<>::enqueue()` to post the events, then the main event loop calls `EventDispatcher<>::process()` to dispatch the events.
 
 
+<a name="apis" />
 ## API reference
 
 **Template parameters**
@@ -213,10 +235,10 @@ template <
 >
 class EventDispatcher;
 ```
-`EventGetter`: the *event getter*. The simplest form is an event type. For details, see [Event getter](#eventgetter) for details.  
+`EventGetter`: the *event getter*. The simplest form is an event type. For details, see [Event getter](#event-getter) for details.  
 `Prototype`:  the listener prototype. It's C++ function type such as `void(int, std::string, const MyClass *)`.  
 `Callback`: the underlying type to hold the callback. Default is `void`, which will be expanded to `std::function`.  
-`ArgumentPassingMode`: the argument passing mode. Default is `ArgumentPassingAutoDetect`. See [Argument passing mode](#argumentpassingmode) for details.  
+`ArgumentPassingMode`: the argument passing mode. Default is `ArgumentPassingAutoDetect`. See [Argument passing mode](#argument-passing-mode) for details.  
 `Threading`: threading model. Default is 'MultipleThreading'. Possible values:  
   * `MultipleThreading`: the core data is protected with mutex. It's the default value.  
   * `SingleThreading`: the core data is not protected and can't be accessed from multiple threads.  
@@ -310,7 +332,7 @@ AnyReturnType func(const EventDispatcher::Callback &);
 ```
 **Note**: the `func` can remove any listeners, or add other listeners, safely.
 
-<a name="eventgetter" />
+<a name="event-getter" />
 ## Event getter
 
 The first template parameter of EventDispatcher is the *event getter*.  
@@ -364,7 +386,7 @@ Note the first argument is `MyEvent`, not `Event`.
 `dispatch` and `enqueue` don't assume the meaning of any arguments. How to get the event type completely depends on `getEvent`.   `getEvent` can simple return a member for the first argument, or concatenate all arguments, or even hash the arguments and return the hash value as the event type.
 
 
-<a name="argumentpassingmode" />
+<a name="argument-passing-mode" />
 ## Argument passing mode
 
 We have the dispatcher  
@@ -445,18 +467,21 @@ dispatcher.dispatch(3, 8, "hello"); // Compile OK
 dispatcher.enqueue(3, 8, "hello"); // Compile OK
 ```
 
+<a name="nested-listener-safety" />
 ## Nested listener safety
 1. If a listener adds another listener of the same event to the dispatcher during a dispatching, the new listener is guaranteed not to be triggered within the same dispatching. This is guaranteed by an unsigned 64 bits integer counter. This rule will be broken is the counter is overflowed to zero in a dispatching, but this rule will continue working on the subsequence dispatching.  
 2. Any listeners that are removed during a dispatching are guaranteed not triggered.  
 3. All above points are not true in multiple threading. That's to say, if one thread is invoking a callback list, the other thread add or remove a callback, the added or removed callback may be triggered during the invoking.
 
 
+<a name="thread-safety" />
 ## Thread safety
 `EventDispatcher` is thread safe. All public functions can be invoked from multiple threads simultaneously. If it failed, please report a bug.  
 `EventDispatcher` guarantees the integration of each append/prepend/insert/remove/dispatching operations, but it doesn't guarantee the order of the operations in multiple threads. For example, if a thread is dispatching an event, the other thread removes a listener in the mean time, the removed listener may be still triggered after it's removed.  
 But the operations on the listeners, such as copying, moving, comparing, or invoking, may be not thread safe. It depends on listeners.  
 
 
+<a name="exception-safety" />
 ## Exception safety
 
 EventDispatcher doesn't throw any exceptions.  
@@ -464,14 +489,16 @@ Exceptions may be thrown by underlying code when,
 1. Out of memory, new memory can't be allocated.  
 2. The listeners throw exceptions during copying, moving, comparing, or invoking.
 
+<a name="time-complexities" />
 ## Time complexities
 The time complexities being discussed here is about when operating on the listener in the underlying list, and `n` is the number of listeners. It doesn't include the event searching in the underlying `std::map` which is always O(log n).
-* `appendListener`: O(1)
-* `prependListener`: O(1)
-* `insertListener`: O(1)
-* `removeListener`: O(1)
-* `enqueue`: O(1)
+- `appendListener`: O(1)
+- `prependListener`: O(1)
+- `insertListener`: O(1)
+- `removeListener`: O(1)
+- `enqueue`: O(1)
 
+<a name="internal-data-structure" />
 ## Internal data structure
 
 Beside using [CallbackList](doc/callbacklist.md) to manage the listener callbacks, EventDispatcher uses three `std::list` to manage the event queue.  

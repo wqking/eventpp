@@ -1,7 +1,24 @@
 # Class CallbackList reference
 
+## Table Of Contents
+
+- [Tutorials](#tutorials)
+    - [Tutorial 1 -- Basic usage](#tutorial1)
+    - [Tutorial 2 -- Callback with parameters](#tutorial2)
+    - [Tutorial 3 -- Remove](#tutorial3)
+    - [Tutorial 4 -- For each](#tutorial4)
+	
+- [API reference](#apis)
+- [Nested callback safety](#nested-callback-safety)
+- [Thread safety](#thread-safety)
+- [Exception safety](#exception-safety)
+- [Time complexities](#time-complexities)
+- [Internal data structure](#internal-data-structure)
+
+<a name="tutorials" />
 ## Tutorials
 
+<a name="tutorial1" />
 ### CallbackList tutorial 1, basic
 
 **Code**  
@@ -53,6 +70,7 @@ callbackList();
 ```
 During the invoking, all callbacks will be invoked one by one in the order of they were added.
 
+<a name="tutorial2" />
 ### CallbackList tutorial 2, callback with parameters
 
 **Code**  
@@ -81,6 +99,7 @@ callbackList("Hello world", true);
 Now the callback list prototype takes two parameters, `const std::string &` and `const bool`.  
 The callback's prototype is not required to be same as the callback list, it's fine as long as the prototype is compatible with the callback list. See the second callback, `[](std::string s, int b)`, its prototype is not same as the callback list.
 
+<a name="tutorial3" />
 ### CallbackList tutorial 3, remove
 
 **Code**  
@@ -114,6 +133,7 @@ callbackList();
 
 **Remarks**  
 
+<a name="tutorial4" />
 ### CallbackList tutorial 4, for each
 
 **Code**  
@@ -165,6 +185,7 @@ callbackList();
 
 **Remarks**  
 
+<a name="apis" />
 ## API reference
 
 **Template parameters**
@@ -180,8 +201,8 @@ class CallbackList;
 `Prototype`:  the callback prototype. It's C++ function type such as `void(int, std::string, const MyClass *)`.  
 `Callback`: the underlying type to hold the callback. Default is `void`, which will be expanded to `std::function`.  
 `Threading`: threading model. Default is 'MultipleThreading'. Possible values:  
-  * `MultipleThreading`: the core data is protected with mutex. It's the default value.  
-  * `SingleThreading`: the core data is not protected and can't be accessed from multiple threads.  
+  - `MultipleThreading`: the core data is protected with mutex. It's the default value.  
+  - `SingleThreading`: the core data is not protected and can't be accessed from multiple threads.  
 
 **Public types**
 
@@ -252,18 +273,21 @@ Invoke each callbacks in the callback list.
 The callbacks are called with arguments `args`.  
 The callbacks are called in the thread same as the callee of `operator()`.
 
+<a name="nested-callback-safety" />
 ## Nested callback safety
 1. If a callback adds another callback to the callback list during a invoking, the new callback is guaranteed not to be triggered within the same invoking. This is guaranteed by an unsigned 64 bits integer counter. This rule will be broken is the counter is overflowed to zero in a invoking, but this rule will continue working on the subsequence invoking.  
 2. Any callbacks that are removed during a invoking are guaranteed not triggered.  
 3. All above points are not true in multiple threading. That's to say, if one thread is dispatching an event, the other thread add or remove a listener, the added or removed listener may be triggered during the dispatch.
 
 
+<a name="thread-safety" />
 ## Thread safety
 `CallbackList` is thread safe. All public functions can be invoked from multiple threads simultaneously. If it failed, please report a bug.  
 `CallbackList` guarantees the integration of each append/prepend/insert/remove/invoking operations, but it doesn't guarantee the order of the operations in multiple threads. For example, if a thread is invoking a callback list, the other thread removes a callback in the mean time, the removed callback may be still triggered after it's removed.  
 The operations on the listeners, such as copying, moving, comparing, or invoking, may be not thread safe. It depends on listeners.  
 
 
+<a name="exception-safety" />
 ## Exception safety
 
 CallbackList doesn't throw any exceptions.  
@@ -271,12 +295,14 @@ Exceptions may be thrown by underlying code when,
 1. Out of memory, new memory can't be allocated.  
 2. The callbacks throw exceptions during copying, moving, comparing, or invoking.
 
+<a name="time-complexities" />
 ## Time complexities
-* `append`: O(1)
-* `prepend`: O(1)
-* `insert`: O(1)
-* `remove`: O(1)
+- `append`: O(1)
+- `prepend`: O(1)
+- `insert`: O(1)
+- `remove`: O(1)
 
+<a name="internal-data-structure" />
 ## Internal data structure
 
 CallbackList uses doubly linked list to manage the callbacks.  
