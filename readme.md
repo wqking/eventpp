@@ -4,15 +4,14 @@ eventpp provides tools that allow your application components to communicate wit
 
 ## Facts and features
 
-1. Supports nested event. A listener can dispatch event, append/prepend/insert/remove other listeners during capturing an event safely.
-2. Thread safe.
-3. Requires C++ 11 (tested with MSVC 2017, MSVC 2015, MinGW (Msys) gcc 7.2, and Ubuntu gcc 5.4).
-4. Header only, no source file, no need to build.
-5. Template based, less runtime overhead.
-6. Backed by unit tests.
-7. Written in portable and standard C++. (I'm not a C++ standard expert so if you find any non-standard code or undefined behavior please let me know.)
-8. Doesn't depend on any other libraries.
-9. Namespace: `eventpp`.
+- Template based, less runtime overhead, unlimited possibilities. The event and callback can be almost any C++ types meeting minimum requirements.
+- Supports nested event. A listener can dispatch event, append/prepend/insert/remove other listeners during capturing an event safely.
+- Thread safe.
+- Requires C++ 11 (tested with MSVC 2017, MSVC 2015, MinGW (Msys) gcc 7.2, and Ubuntu gcc 5.4).
+- Header only, no source file, no need to build.
+- Backed by unit tests.
+- Written in portable and standard C++. (I'm not a C++ standard expert so if you find any non-standard code or undefined behavior please let me know.)
+- Doesn't depend on any other libraries.
 
 ## License
 
@@ -25,6 +24,10 @@ If you have trouble with the license, contact me.
 
 ## Quick start
 
+### Namespace
+
+`eventpp`
+
 ### Using EventDispatcher
 ```c++
 // Add the folder *include* to include path.
@@ -32,7 +35,8 @@ If you have trouble with the license, contact me.
 
 // The namespace is eventpp
 // The first template parameter int is the event type,
-// the second is the prototype of the listener.
+// the event type can be any type such as std::string, int, etc.
+// The second is the prototype of the listener.
 eventpp::EventDispatcher<int, void ()> dispatcher;
 
 // Add a listener. As the type of dispatcher,
@@ -61,22 +65,20 @@ dispatcher.dispatch(5);
 #include "eventpp/callbacklist.h"
 
 // The namespace is eventpp
-// the first parameter is the prototype of the listener.
-eventpp::CallbackList<void ()> callbackList;
+// The callback list has two parameters.
+eventpp::CallbackList<void (const std::string &, const bool)> callbackList;
 
-// Add a callback.
-// []() {} is the callback.
-// Lambda is not required, any function or std::function
-// or whatever function object with the required prototype is fine.
-callbackList.append([]() {
-	std::cout << "Got callback 1." << std::endl;
+callbackList.append([](const std::string & s, const bool b) {
+	std::cout << std::boolalpha << "Got callback 1, s is " << s << " b is " << b << std::endl;
 });
-callbackList.append([]() {
-	std::cout << "Got callback 2." << std::endl;
+// The callback prototype doesn't need to be exactly same as the callback list.
+// It would be find as long as the arguments is compatible with the dispatcher.
+callbackList.append([](std::string s, int b) {
+	std::cout << std::boolalpha << "Got callback 2, s is " << s << " b is " << b << std::endl;
 });
 
 // Invoke the callback list
-callbackList();
+callbackList("Hello world", true);
 ```
 
 ## Documentations

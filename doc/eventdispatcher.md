@@ -27,7 +27,8 @@
 ```c++
 // The namespace is eventpp
 // The first template parameter int is the event type,
-// the second is the prototype of the listener.
+// the event type can be any type such as std::string, int, etc.
+// The second is the prototype of the listener.
 eventpp::EventDispatcher<int, void ()> dispatcher;
 
 // Add a listener. As the type of dispatcher,
@@ -247,7 +248,7 @@ class EventDispatcher;
 
 `Handle`: the handle type returned by appendListener, prependListener and insertListener. A handle can be used to insert a listener or remove a listener. To check if a `Handle` is empty, convert it to boolean, *false* is empty. `Handle` is copyable.  
 `Callback`: the callback storage type.  
-`Event`: the event type.  
+`Event`: the event type. The event type must be able to be used as the key in `std::map`, so it must be comparable with `operator <`.   
 
 **Functions**
 

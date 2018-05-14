@@ -24,7 +24,8 @@ TEST_CASE("EventDispatcher tutorial 1, basic")
 
 	// The namespace is eventpp
 	// The first template parameter int is the event type,
-	// the second is the prototype of the listener.
+	// the event type can be any type such as std::string, int, etc.
+	// The second is the prototype of the listener.
 	eventpp::EventDispatcher<int, void ()> dispatcher;
 
 	// Add a listener. As the type of dispatcher,
