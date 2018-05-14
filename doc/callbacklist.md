@@ -185,7 +185,7 @@ class CallbackList;
 
 **Public types**
 
-`Handle`: the handle type returned by appendListener, prependListener and insertListener. A handle can be used to insert a callback or remove a callback. To check if a `Handle` is empty, convert it to boolean, *false* is empty.  
+`Handle`: the handle type returned by appendListener, prependListener and insertListener. A handle can be used to insert a callback or remove a callback. To check if a `Handle` is empty, convert it to boolean, *false* is empty. `Handle` is copyable.  
 `Callback`: the callback storage type.
 
 **Functions**
@@ -205,6 +205,7 @@ Handle append(const Callback & callback)
 Add the *callback* to the callback list.  
 The callback is added to the end of the callback list.  
 Return a handle which represents the callback. The handle can be used to remove this callback or insert other callback before this callback.  
+If `append` is called in another callback during the invoking of the callback list, the new callback is guaranteed not triggered during the same callback list invoking.  
 The time complexity is O(1).
 
 ```c++
@@ -213,6 +214,7 @@ Handle prepend(const Callback & callback)
 Add the *callback* to the callback list.  
 The callback is added to the beginning of the callback list.  
 Return a handle which represents the callback. The handle can be used to remove this callback or insert other callback before this callback.  
+If `prepend` is called in another callback during the invoking of the callback list, the new callback is guaranteed not triggered during the same callback list invoking.  
 The time complexity is O(1).
 
 ```c++
@@ -220,6 +222,7 @@ Handle insert(const Callback & callback, const Handle before)
 ```  
 Insert the *callback* to the callback list before the callback handle *before*. If *before* is not found, *callback* is added at the end of the callback list.  
 Return a handle which represents the callback. The handle can be used to remove this callback or insert other callback before this callback.  
+If `insert` is called in another callback during the invoking of the callback list, the new callback is guaranteed not triggered during the same callback list invoking.  
 The time complexity is O(1).  
 
 ```c++
@@ -248,6 +251,31 @@ void operator() (Args ...args)
 Invoke each callbacks in the callback list.  
 The callbacks are called with arguments `args`.  
 The callbacks are called in the thread same as the callee of `operator()`.
+
+## Nested callback safety
+1. If a callback adds another callback to the callback list during a invoking, the new callback is guaranteed not to be triggered within the same invoking. This is guaranteed by an unsigned 64 bits integer counter. This rule will be broken is the counter is overflowed to zero in a invoking, but this rule will continue working on the subsequence invoking.  
+2. Any callbacks that are removed during a invoking are guaranteed not triggered.  
+3. All above points are not true in multiple threading. That's to say, if one thread is dispatching an event, the other thread add or remove a listener, the added or removed listener may be triggered during the dispatch.
+
+
+## Thread safety
+`CallbackList` is thread safe. All public functions can be invoked from multiple threads simultaneously. If it failed, please report a bug.  
+`CallbackList` guarantees the integration of each append/prepend/insert/remove/invoking operations, but it doesn't guarantee the order of the operations in multiple threads. For example, if a thread is invoking a callback list, the other thread removes a callback in the mean time, the removed callback may be still triggered after it's removed.  
+The operations on the listeners, such as copying, moving, comparing, or invoking, may be not thread safe. It depends on listeners.  
+
+
+## Exception safety
+
+CallbackList doesn't throw any exceptions.  
+Exceptions may be thrown by underlying code when,  
+1. Out of memory, new memory can't be allocated.  
+2. The callbacks throw exceptions during copying, moving, comparing, or invoking.
+
+## Time complexities
+* `append`: O(1)
+* `prepend`: O(1)
+* `insert`: O(1)
+* `remove`: O(1)
 
 ## Internal data structure
 

@@ -63,7 +63,7 @@ TEST_CASE("dispatch, int, void ()")
 	REQUIRE(b == 8);
 }
 
-TEST_CASE("add/remove by handle, int, void ()")
+TEST_CASE("add/remove, int, void ()")
 {
 	eventpp::EventDispatcher<int, void ()> dispatcher;
 	constexpr int event = 3;
@@ -126,7 +126,7 @@ TEST_CASE("dispatch, add another listener inside a listener, int, void ()")
 
 	dispatcher.dispatch(event);
 	REQUIRE(a == 2);
-	REQUIRE(b == 8);
+	REQUIRE(b != 8);
 }
 
 TEST_CASE("dispatch inside dispatch, int, void ()")

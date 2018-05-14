@@ -4,14 +4,14 @@ eventpp provides tools that allow your application components to communicate wit
 
 ## Facts and features
 
-1. Supports nested event. A listener can dispatch event, add other listeners, when capturing an event.
+1. Supports nested event. A listener can dispatch event, append/prepend/insert/remove other listeners, when capturing an event.
 2. Thread safe.
 3. Requires C++ 11 (tested with MSVC 2017, MSVC 2015, MinGW (Msys) gcc 7.2, and Ubuntu gcc 5.4).
 4. Header only, no source file, no need to build.
 5. Template based, less runtime overhead.
 6. Backed by unit tests.
 7. Written in portable and standard C++. (I'm not a C++ standard expert so if you find any non-standard code or undefined behavior please let me know.)
-8. Doesn't depend any other libraries.
+8. Doesn't depend on any other libraries.
 9. Namespace: `eventpp`.
 
 ## License
@@ -23,49 +23,13 @@ If you have trouble with the license, contact me.
 
 [https://github.com/wqking/eventpp](https://github.com/wqking/eventpp)
 
-## Classes
-
-### EventDispatcher
-
-Declaration
-```c++
-template <
-	typename EventGetter,
-	typename Prototype,
-	typename Callback = void,
-	typename ArgumentPassingMode = ArgumentPassingAutoDetect,
-	typename Threading = MultipleThreading
->
-class EventDispatcher;
-```
-
-Header
-```c++
-// Add the folder *include* to include path.
-#include "eventpp/eventdispatcher.h"
-```
-
-### CallbackList
-
-Declaration
-```c++
-template <
-	typename Prototype,
-	typename Callback = void,
-	typename Threading = MultipleThreading
->
-class CallbackList;
-```
-
-Header
-```c++
-#include "eventpp/callbacklist.h"
-```
-
 ## Quick start
 
 ### Using EventDispatcher
 ```c++
+// Add the folder *include* to include path.
+#include "eventpp/eventdispatcher.h"
+
 // The namespace is eventpp
 // The first template parameter int is the event type,
 // the second is the prototype of the listener.
@@ -93,6 +57,9 @@ dispatcher.dispatch(5);
 
 ### Using CallbackList
 ```c++
+// Add the folder *include* to include path.
+#include "eventpp/callbacklist.h"
+
 // The namespace is eventpp
 // the first parameter is the prototype of the listener.
 eventpp::CallbackList<void ()> callbackList;

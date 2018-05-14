@@ -41,39 +41,6 @@ TEST_CASE("queue, std::string, void (const std::string &)")
 	dispatcher.process();
 	REQUIRE(a == 2);
 	REQUIRE(b == 8);
-
-	/*
-	{
-		eventpp::EventDispatcher<
-			eventpp::Policies<int, eventpp::ArgumentPassingMode::either>,
-			void(int, const std::string &)
-		> dispatcher;
-		// or just
-		//eventpp::EventDispatcher<int, void(int, const std::string &)> dispatcher;
-		dispatcher.dispatch(3, "hello"); // Compile OK
-		dispatcher.dispatch(3, 8, "hello"); // Compile OK
-		dispatcher.enqueue(3, "hello"); // Compile OK
-		dispatcher.enqueue(3, 8, "hello"); // Compile OK
-	}{
-			eventpp::EventDispatcher<
-			eventpp::Policies<int, eventpp::ArgumentPassingMode::includeEventType>,
-			void(int, const std::string &)
-			> dispatcher;
-		dispatcher.dispatch(3, "hello"); // Compile OK
-										 //dispatcher.dispatch(3, 8, "hello"); // Compile failure
-		dispatcher.enqueue(3, "hello"); // Compile OK
-										//dispatcher.enqueue(3, 8, "hello"); // Compile failure
-	}{
-			eventpp::EventDispatcher<
-			eventpp::Policies<int, eventpp::ArgumentPassingMode::excludeEventType>,
-			void(int, const std::string &)
-			> dispatcher;
-		//dispatcher.dispatch(3, "hello"); // Compile failure
-		dispatcher.dispatch(3, 8, "hello"); // Compile OK
-											//dispatcher.enqueue(3, "hello"); // Compile failure
-		dispatcher.enqueue(3, 8, "hello"); // Compile OK
-	}
-	*/
 }
 
 TEST_CASE("queue, int, void ()")

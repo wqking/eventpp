@@ -17,6 +17,7 @@
 #include <functional>
 #include <memory>
 #include <mutex>
+#include <atomic>
 #include <utility>
 
 namespace eventpp {
@@ -74,9 +75,17 @@ private:
 
 	struct Node
 	{
-		_Callback callback;
+		using Counter = uint64_t;
+
+		Node(const _Callback & callback, const Counter counter)
+			: callback(callback), counter(counter)
+		{
+		}
+
 		NodePtr previous;
 		NodePtr next;
+		_Callback callback;
+		Counter counter;
 	};
 
 	class _Handle : public std::weak_ptr<Node>
@@ -90,6 +99,11 @@ private:
 		operator bool () const noexcept {
 			return ! this->expired();
 		}
+	};
+
+	using Counter = typename Node::Counter;
+	enum : Counter {
+		removedCounter = 0
 	};
 
 public:
@@ -119,8 +133,7 @@ public:
 
 	Handle append(const Callback & callback)
 	{
-		NodePtr node(std::make_shared<Node>());
-		node->callback = callback;
+		NodePtr node(std::make_shared<Node>(callback, getNextCounter()));
 
 		std::lock_guard<Mutex> lockGuard(mutex);
 
@@ -139,8 +152,7 @@ public:
 
 	Handle prepend(const Callback & callback)
 	{
-		NodePtr node(std::make_shared<Node>());
-		node->callback = callback;
+		NodePtr node(std::make_shared<Node>(callback, getNextCounter()));
 
 		std::lock_guard<Mutex> lockGuard(mutex);
 
@@ -161,8 +173,7 @@ public:
 	{
 		NodePtr beforeNode = before.lock();
 		if(beforeNode) {
-			NodePtr node(std::make_shared<Node>());
-			node->callback = callback;
+			NodePtr node(std::make_shared<Node>(callback, getNextCounter()));
 
 			std::lock_guard<Mutex> lockGuard(mutex);
 
@@ -215,10 +226,14 @@ public:
 			node = head;
 		}
 
+		const Counter counter = currentCounter.load(std::memory_order_acquire);
+
 		while(node) {
-			// Must not hold any lock when invoking the callback
-			// because the callback may append/remove/dispatch again and cause recursive lock
-			node->callback(std::forward<Args>(args)...);
+			if(node->counter != removedCounter && counter >= node->counter) {
+				// Must not hold any lock when invoking the callback
+				// because the callback may append/remove/dispatch again and cause recursive lock
+				node->callback(std::forward<Args>(args)...);
+			}
 
 			{
 				std::lock_guard<Mutex> lockGuard(mutex);
@@ -265,7 +280,10 @@ private:
 			tail = node->previous;
 		}
 
-		// don't modify node->next or node->previous
+		// Mark it as deleted
+		node->counter = removedCounter;
+
+		// don't modify node->previous or node->next
 		// because node may be still used in a loop.
 	}
 
@@ -283,10 +301,32 @@ private:
 		}
 	}
 
+	Counter getNextCounter()
+	{
+		currentCounter.fetch_add(1, std::memory_order_acq_rel);
+
+		Counter result = currentCounter.load(std::memory_order_acquire);
+		if(result == 0) { // overflow, let's reset all nodes' counters.
+			{
+				std::lock_guard<Mutex> lockGuard(mutex);
+				NodePtr node = head;
+				while(node) {
+					node->counter = 1;
+					node = node->next;
+				}
+			}
+			++currentCounter;
+			result = currentCounter.load(std::memory_order_acquire);
+		}
+
+		return result;
+	}
+
 private:
 	NodePtr head;
 	NodePtr tail;
 	Mutex mutex;
+	typename Threading::template Atomic<Counter> currentCounter;
 
 };
 
@@ -297,10 +337,18 @@ private:
 struct MultipleThreading
 {
 	using Mutex = std::mutex;
+
+	template <typename T>
+	using Atomic = std::atomic<T>;
 };
+
 struct SingleThreading
 {
 	using Mutex = _internal::DummyMutex;
+
+	// May replace Atomic with dummy atomic later.
+	template <typename T>
+	using Atomic = std::atomic<T>;
 };
 
 template <

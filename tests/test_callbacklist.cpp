@@ -105,13 +105,167 @@ void verifyNoMemoryLeak(const std::vector<T> & nodeList)
 	}
 }
 
+struct RemovalTester
+{
+	RemovalTester(
+			const int callbackCount,
+			const int removerIndex,
+			const std::vector<int> & indexesToBeRemoved
+		)
+		:
+			callbackCount(callbackCount),
+			removerIndex(removerIndex),
+			indexesToBeRemoved(indexesToBeRemoved)
+	{
+	}
+
+	void test()
+	{
+		using CL = CallbackList<void()>;
+		CL callbackList;
+		std::vector<CL::Handle> handleList(callbackCount);
+		std::vector<int> dataList(callbackCount);
+
+		for(int i = 0; i < callbackCount; ++i) {
+			if(i == removerIndex) {
+				handleList[i] = callbackList.append([this, &dataList, &handleList, &callbackList, i]() {
+					dataList[i] = i + 1;
+					
+					for(auto index : indexesToBeRemoved) {
+						callbackList.remove(handleList[index]);
+					}
+				});
+			}
+			else {
+				handleList[i] = callbackList.append([&dataList, i]() {
+					dataList[i] = i + 1;
+				});
+			}
+		}
+
+		callbackList();
+
+		std::vector<int> compareList(callbackCount);
+		std::iota(compareList.begin(), compareList.end(), 1);
+
+		for (auto index : indexesToBeRemoved) {
+			if(index > removerIndex) {
+				compareList[index] = 0;
+			}
+		}
+
+		REQUIRE(dataList == compareList);
+	}
+
+	const int callbackCount;
+	const int removerIndex;
+	const std::vector<int> indexesToBeRemoved;
+};
+
 } //unnamed namespace
 
-using Prototype = void();
-using CL = CallbackList<Prototype, int>;
+TEST_CASE("CallbackList, nested callbacks, new callbacks should not be triggered")
+{
+	using CL = CallbackList<void()>;
+	CL callbackList;
+	int a = 0, b = 0;
+
+	callbackList.append([&callbackList, &a, &b]() {
+		a = 1;
+
+		auto h1 = callbackList.append([&callbackList, &b] {
+			++b;
+			callbackList.append([&callbackList, &b] {
+				++b;
+			});
+			auto h2 = callbackList.prepend([&callbackList, &b] {
+				++b;
+				callbackList.append([&callbackList, &b] {
+					++b;
+				});
+			});
+			callbackList.append([&callbackList, &b] {
+				++b;
+			});
+			callbackList.insert([&callbackList, &b] {
+				++b;
+			}, h2);
+			callbackList.prepend([&callbackList, &b] {
+				++b;
+			});
+		});
+		callbackList.prepend([&callbackList, &b] {
+			++b;
+		});
+		callbackList.insert([&callbackList, &b] {
+			++b;
+		}, h1);
+	});
+
+	REQUIRE(a == 0);
+	REQUIRE(b == 0);
+
+	callbackList();
+
+	REQUIRE(a == 1);
+	REQUIRE(b == 0);
+
+	callbackList();
+
+	REQUIRE(a == 1);
+	REQUIRE(b == 3); // there are 3 new top level callback
+
+	b = 0;
+	callbackList();
+
+	REQUIRE(a == 1);
+	REQUIRE(b > 3);
+}
+
+TEST_CASE("CallbackList, remove inside callback")
+{
+	RemovalTester(7, 3, { 0 }).test();
+	RemovalTester(7, 3, { 1 }).test();
+	RemovalTester(7, 3, { 2 }).test();
+	RemovalTester(7, 3, { 3 }).test();
+	RemovalTester(7, 3, { 4 }).test();
+	RemovalTester(7, 3, { 5 }).test();
+	RemovalTester(7, 3, { 6 }).test();
+
+	RemovalTester(7, 3, { 0, 3 }).test();
+	RemovalTester(7, 3, { 3, 0 }).test();
+	RemovalTester(7, 3, { 1, 3 }).test();
+	RemovalTester(7, 3, { 3, 1 }).test();
+	RemovalTester(7, 3, { 2, 3 }).test();
+	RemovalTester(7, 3, { 3, 2 }).test();
+	RemovalTester(7, 3, { 3, 4 }).test();
+	RemovalTester(7, 3, { 4, 3 }).test();
+	RemovalTester(7, 3, { 3, 5 }).test();
+	RemovalTester(7, 3, { 5, 3 }).test();
+	RemovalTester(7, 3, { 3, 6 }).test();
+	RemovalTester(7, 3, { 6, 3 }).test();
+
+	RemovalTester(7, 3, { 2, 4 }).test();
+	RemovalTester(7, 3, { 4, 2 }).test();
+	RemovalTester(7, 3, { 0, 6 }).test();
+	RemovalTester(7, 3, { 0, 0 }).test();
+
+	RemovalTester(7, 3, { 4, 5 }).test();
+	RemovalTester(7, 3, { 5, 4 }).test();
+
+	RemovalTester(7, 3, { 3, 4, 5 }).test();
+	RemovalTester(7, 3, { 3, 5, 4 }).test();
+
+	RemovalTester(7, 3, { 0, 1, 2, 3, 4, 5, 6 }).test();
+	RemovalTester(7, 3, { 6, 5, 4, 3, 2, 1, 0 }).test();
+	RemovalTester(7, 3, { 0, 2, 1, 3, 5, 4, 6 }).test();
+	RemovalTester(7, 3, { 6, 4, 5, 3, 1, 2, 0 }).test();
+}
 
 TEST_CASE("CallbackList, no memory leak after callback list is freed")
 {
+	using CL = CallbackList<void(), int>;
+
 	std::vector<CL::Handle> nodeList;
 
 	{
@@ -128,6 +282,8 @@ TEST_CASE("CallbackList, no memory leak after callback list is freed")
 
 TEST_CASE("CallbackList, no memory leak after all callbacks are removed")
 {
+	using CL = CallbackList<void(), int>;
+
 	std::vector<CL::Handle> nodeList;
 	std::vector<CL::Handle> handleList;
 
@@ -147,6 +303,8 @@ TEST_CASE("CallbackList, no memory leak after all callbacks are removed")
 
 TEST_CASE("CallbackList, append/remove/insert")
 {
+	using CL = CallbackList<void(), int>;
+
 	CL callbackList;
 
 	REQUIRE(! callbackList.head);
@@ -213,6 +371,8 @@ TEST_CASE("CallbackList, append/remove/insert")
 
 TEST_CASE("CallbackList, insert")
 {
+	using CL = CallbackList<void(), int>;
+
 	CL callbackList;
 	
 	auto h100 = callbackList.append(100);
@@ -231,7 +391,7 @@ TEST_CASE("CallbackList, insert")
 		verifyLinkedList(callbackList, std::vector<int>{ 100, 105, 101, 102, 103, 104 });
 	}
 
-	SECTION("before nonexist by handle") {
+	SECTION("before nonexist") {
 		callbackList.insert(105, CL::Handle());
 		verifyLinkedList(callbackList, std::vector<int>{ 100, 101, 102, 103, 104, 105 });
 	}
@@ -239,6 +399,8 @@ TEST_CASE("CallbackList, insert")
 
 TEST_CASE("CallbackList, remove")
 {
+	using CL = CallbackList<void(), int>;
+
 	CL callbackList;
 
 	auto h100 = callbackList.append(100);
@@ -292,6 +454,8 @@ TEST_CASE("CallbackList, remove")
 
 TEST_CASE("CallbackList, multi threading, append")
 {
+	using CL = CallbackList<void(), int>;
+
 	CL callbackList;
 
 	constexpr int threadCount = 256;
@@ -325,12 +489,12 @@ TEST_CASE("CallbackList, multi threading, append")
 
 TEST_CASE("CallbackList, multi threading, remove")
 {
+	using CL = CallbackList<void(), int>;
+
 	CL callbackList;
 
-	// total count can't be too large because the time complixity
-	// of remove() is O(n) which is quite slow.
-	constexpr int threadCount = 128;
-	constexpr int taskCountPerThread = 128;
+	constexpr int threadCount = 256;
+	constexpr int taskCountPerThread = 1024 * 4;
 	constexpr int itemCount = threadCount * taskCountPerThread;
 
 	std::vector<int> taskList(itemCount);
@@ -364,91 +528,8 @@ TEST_CASE("CallbackList, multi threading, remove")
 
 TEST_CASE("CallbackList, multi threading, double remove")
 {
-	CL callbackList;
+	using CL = CallbackList<void(), int>;
 
-	// total count can't be too large because the time complixity
-	// of remove() is O(n) which is quite slow.
-	constexpr int threadCount = 128;
-	constexpr int taskCountPerThread = 128;
-	constexpr int itemCount = threadCount * taskCountPerThread;
-
-	std::vector<int> taskList(itemCount);
-	std::iota(taskList.begin(), taskList.end(), 0);
-	std::shuffle(taskList.begin(), taskList.end(), std::mt19937(std::random_device()()));
-
-	std::vector<CL::Handle> handleList;
-
-	for(const auto & item : taskList) {
-		handleList.push_back(callbackList.append(item));
-	}
-
-	std::vector<std::thread> threadList;
-	for(int i = 0; i < threadCount; ++i) {
-		threadList.emplace_back([i, taskCountPerThread, &callbackList, &handleList, threadCount]() {
-			// make start and end overlap other threads to so double remove.
-			int start = i;
-			int end = i + 1;
-			if(i > 0) {
-				--start;
-			}
-			else if(i < threadCount - 1) {
-				++end;
-			}
-			for(int k = start * taskCountPerThread; k < end * taskCountPerThread; ++k) {
-				callbackList.remove(handleList[k]);
-			}
-		});
-	}
-
-	for(auto & thread : threadList) {
-		thread.join();
-	}
-
-	taskList.clear();
-
-	REQUIRE(! callbackList.head);
-	REQUIRE(! callbackList.tail);
-}
-
-TEST_CASE("CallbackList, multi threading, remove by handle")
-{
-	CL callbackList;
-
-	constexpr int threadCount = 256;
-	constexpr int taskCountPerThread = 1024 * 4;
-	constexpr int itemCount = threadCount * taskCountPerThread;
-
-	std::vector<int> taskList(itemCount);
-	std::iota(taskList.begin(), taskList.end(), 0);
-	std::shuffle(taskList.begin(), taskList.end(), std::mt19937(std::random_device()()));
-
-	std::vector<CL::Handle> handleList;
-
-	for(const auto & item : taskList) {
-		handleList.push_back(callbackList.append(item));
-	}
-
-	std::vector<std::thread> threadList;
-	for(int i = 0; i < threadCount; ++i) {
-		threadList.emplace_back([i, taskCountPerThread, &callbackList, &handleList]() {
-			for(int k = i * taskCountPerThread; k < (i + 1) * taskCountPerThread; ++k) {
-				callbackList.remove(handleList[k]);
-			}
-		});
-	}
-
-	for(auto & thread : threadList) {
-		thread.join();
-	}
-
-	taskList.clear();
-
-	REQUIRE(! callbackList.head);
-	REQUIRE(! callbackList.tail);
-}
-
-TEST_CASE("CallbackList, multi threading, double remove by handle")
-{
 	CL callbackList;
 
 	constexpr int threadCount = 256;
@@ -492,8 +573,10 @@ TEST_CASE("CallbackList, multi threading, double remove by handle")
 	REQUIRE(! callbackList.tail);
 }
 
-TEST_CASE("CallbackList, multi threading, append/double remove by handle")
+TEST_CASE("CallbackList, multi threading, append/double remove")
 {
+	using CL = CallbackList<void(), int>;
+
 	CL callbackList;
 
 	constexpr int threadCount = 256;
@@ -536,9 +619,10 @@ TEST_CASE("CallbackList, multi threading, append/double remove by handle")
 	REQUIRE(! callbackList.tail);
 }
 
-
 TEST_CASE("CallbackList, multi threading, insert")
 {
+	using CL = CallbackList<void(), int>;
+
 	CL callbackList;
 
 	constexpr int threadCount = 256;

@@ -223,7 +223,7 @@ class EventDispatcher;
 
 **Public types**
 
-`Handle`: the handle type returned by appendListener, prependListener and insertListener. A handle can be used to insert a listener or remove a listener. To check if a `Handle` is empty, convert it to boolean, *false* is empty.  
+`Handle`: the handle type returned by appendListener, prependListener and insertListener. A handle can be used to insert a listener or remove a listener. To check if a `Handle` is empty, convert it to boolean, *false* is empty. `Handle` is copyable.  
 `Callback`: the callback storage type.  
 `Event`: the event type.  
 
@@ -244,6 +244,7 @@ Handle appendListener(const Event & event, const Callback & callback)
 Add the *callback* to the dispatcher to listen to *event*.  
 The listener is added to the end of the listener list.  
 Return a handle which represents the listener. The handle can be used to remove this listener or insert other listener before this listener.  
+If `appendListener` is called in another listener during a dispatching, the new listener is guaranteed not triggered during the same dispatching.  
 The time complexity is O(1).
 
 ```c++
@@ -252,6 +253,7 @@ Handle prependListener(const Event & event, const Callback & callback)
 Add the *callback* to the dispatcher to listen to *event*.  
 The listener is added to the beginning of the listener list.  
 Return a handle which represents the listener. The handle can be used to remove this listener or insert other listener before this listener.  
+If `prependListener` is called in another listener during a dispatching, the new listener is guaranteed not triggered during the same dispatching.  
 The time complexity is O(1).
 
 ```c++
@@ -259,6 +261,7 @@ Handle insertListener(const Event & event, const Callback & callback, const Hand
 ```  
 Insert the *callback* to the dispatcher to listen to *event* before the listener handle *before*. If *before* is not found, *callback* is added at the end of the listener list.  
 Return a handle which represents the listener. The handle can be used to remove this listener or insert other listener before this listener.  
+If `insertListener` is called in another listener during a dispatching, the new listener is guaranteed not triggered during the same dispatching.  
 The time complexity is O(1).  
 
 ```c++
@@ -442,12 +445,15 @@ dispatcher.dispatch(3, 8, "hello"); // Compile OK
 dispatcher.enqueue(3, 8, "hello"); // Compile OK
 ```
 
-## Notes and caveats
-1. If a listener adds another listener of the same event to the dispatcher during a dispatching, the new listener is guaranteed to be called within the same dispatching. Ideally the new added listener should not be called, but this is limited by the underlying data structure.
+## Nested listener safety
+1. If a listener adds another listener of the same event to the dispatcher during a dispatching, the new listener is guaranteed not to be triggered within the same dispatching. This is guaranteed by an unsigned 64 bits integer counter. This rule will be broken is the counter is overflowed to zero in a dispatching, but this rule will continue working on the subsequence dispatching.  
+2. Any listeners that are removed during a dispatching are guaranteed not triggered.  
+3. All above points are not true in multiple threading. That's to say, if one thread is invoking a callback list, the other thread add or remove a callback, the added or removed callback may be triggered during the invoking.
 
 
 ## Thread safety
 `EventDispatcher` is thread safe. All public functions can be invoked from multiple threads simultaneously. If it failed, please report a bug.  
+`EventDispatcher` guarantees the integration of each append/prepend/insert/remove/dispatching operations, but it doesn't guarantee the order of the operations in multiple threads. For example, if a thread is dispatching an event, the other thread removes a listener in the mean time, the removed listener may be still triggered after it's removed.  
 But the operations on the listeners, such as copying, moving, comparing, or invoking, may be not thread safe. It depends on listeners.  
 
 
@@ -462,8 +468,9 @@ Exceptions may be thrown by underlying code when,
 The time complexities being discussed here is about when operating on the listener in the underlying list, and `n` is the number of listeners. It doesn't include the event searching in the underlying `std::map` which is always O(log n).
 * `appendListener`: O(1)
 * `prependListener`: O(1)
-* `insertListener` before another handle: O(1)
-* `removeListener` by handle: O(1)
+* `insertListener`: O(1)
+* `removeListener`: O(1)
+* `enqueue`: O(1)
 
 ## Internal data structure
 
