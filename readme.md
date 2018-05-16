@@ -1,4 +1,4 @@
-# eventpp -- Event Dispatcher and callback list for C++
+# eventpp -- C++ library for event dispatcher and callback list
 
 eventpp provides tools that allow your application components to communicate with each other by dispatching events and listening to them. With eventpp you can implement signal/slot mechanism, or observer pattern, very easily.
 
@@ -87,6 +87,7 @@ callbackList("Hello world", true);
 * [Event dispatcher](doc/eventdispatcher.md)
 * [Callback list](doc/callbacklist.md)
 * [Frequently Asked Questions](doc/faq.md)
+* There are compilable tutorials in the unit tests.
 
 ## Build the unit tests
 
@@ -100,6 +101,6 @@ Go to folder `tests/build`, then run `make` with different target.
 
 ## Motivations
 
-I (wqking) am a big fan of observer pattern (publish/subscribe pattern), I used such pattern a lot in my code. I either used GCallbackList in my cpgf library which is too simple and not safe, or repeated coding event dispatching mechanism such as I did in my [Gincu game engine](https://github.com/wqking/gincu). Both approaches are neither fun nor robust.  
-Thanking to C++11, now it's quite easy to write a reusable event library with beautiful syntax (it's nightmare to simulate the variadic template in C++03), so here comes `eventpp`.
+I (wqking) am a big fan of observer pattern (publish/subscribe pattern), I used such pattern a lot in my code. I either used GCallbackList in my [cpgf library](https://github.com/cpgf/cpgf) which is too simple and not safe, or repeated coding event dispatching mechanism such as I did in my [Gincu game engine](https://github.com/wqking/gincu). Both approaches are neither fun nor robust.  
+Thanking to C++11, now it's quite easy to write a reusable event library with beautiful syntax (it's a nightmare to simulate the variadic template in C++03), so here comes `eventpp`.
 
