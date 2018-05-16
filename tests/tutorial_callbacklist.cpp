@@ -45,14 +45,14 @@ TEST_CASE("CallbackList tutorial 2, callback with parameters")
 {
 	std::cout << "CallbackList tutorial 2, callback with parameters" << std::endl;
 
-	// The callback list has two parameters.
+	// The callback list prototype has two parameters.
 	eventpp::CallbackList<void (const std::string &, const bool)> callbackList;
 
 	callbackList.append([](const std::string & s, const bool b) {
 		std::cout << std::boolalpha << "Got callback 1, s is " << s << " b is " << b << std::endl;
 	});
 	// The callback prototype doesn't need to be exactly same as the callback list.
-	// It would be find as long as the arguments is compatible with the dispatcher.
+	// It would be find as long as the arguments is compatible with the callbacklist.
 	callbackList.append([](std::string s, int b) {
 		std::cout << std::boolalpha << "Got callback 2, s is " << s << " b is " << b << std::endl;
 	});
