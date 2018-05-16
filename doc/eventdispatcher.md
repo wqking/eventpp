@@ -19,10 +19,10 @@
 - [Time complexities](#time-complexities)
 - [Internal data structure](#internal-data-structure)
 
-<a name="tutorials" />
+<a name="tutorials"></a>
 ## Tutorials
 
-<a name="tutorial1" />
+<a name="tutorial1"></a>
 ### Tutorial 1 -- Basic usage
 
 **Code**  
@@ -85,7 +85,7 @@ dispatcher.dispatch(5);
 Here we dispatched two events, one is event 3, the other is event 5.  
 During the dispatching, all listeners of that event will be invoked one by one in the order of they were added.
 
-<a name="tutorial2" />
+<a name="tutorial2"></a>
 ### Tutorial 2 -- Listener with parameters
 
 **Code**  
@@ -119,7 +119,7 @@ dispatcher.dispatch(5, "World", false);
 Now the dispatcher callback prototype takes two parameters, `const std::string &` and `const bool`.  
 The listener's prototype is not required to be same as the dispatcher, it's fine as long as the prototype is compatible with the dispatcher. See the second listener, `[](std::string s, int b)`, its prototype is not same as the dispatcher.
 
-<a name="tutorial3" />
+<a name="tutorial3"></a>
 ### Tutorial 3 -- Customized event struct
 
 **Code**  
@@ -183,7 +183,7 @@ dispatcher.dispatch(MyEvent { 3, "Hello world", 38 }, true);
 **Remarks**
 Previous tutorials pass the event type as the first argument in `dispatch`, and all other event parameters as other arguments of `dispatch`. Another common situation is an Event class is defined as the base, all other events derive from Event, and the actual event type is a data member of Event (think QEvent in Qt).  
 
-<a name="tutorial4" />
+<a name="tutorial4"></a>
 ### Tutorial 4 -- Event queue
 
 **Code**  
@@ -223,7 +223,7 @@ dispatcher.process();
 A typical use case is in a GUI application, each components call `EventDispatcher<>::enqueue()` to post the events, then the main event loop calls `EventDispatcher<>::process()` to dispatch the events.
 
 
-<a name="tutorial5" />
+<a name="tutorial5"></a>
 ### Tutorial 5 -- Event filter
 
 **Code**  
@@ -284,7 +284,7 @@ dispatcher.dispatch(5, 2, "World");
 `EventDispatcher<>::appendFilter(filter)` adds an event filter to the dispatcher. The `filter` receives the arguments which types are the callback prototype with lvalue reference, and must return a boolean value. Return `true` to allow the dispatcher continues the dispatching, `false` to prevent the dispatcher from invoking any subsequence listeners and filters.  
 The event filters are invoked before any listeners are invoked.
 
-<a name="apis" />
+<a name="apis"></a>
 ## API reference
 
 **Template parameters**
@@ -416,7 +416,7 @@ bool removeFilter(const FilterHandle & filterHandle)
 Remove a filter from the dispatcher.  
 Return true if the filter is removed successfully.
 
-<a name="event-getter" />
+<a name="event-getter"></a>
 ## Event getter
 
 The first template parameter of EventDispatcher is the *event getter*.  
@@ -470,7 +470,7 @@ Note the first argument is `MyEvent`, not `Event`.
 `dispatch` and `enqueue` don't assume the meaning of any arguments. How to get the event type completely depends on `getEvent`.   `getEvent` can simple return a member for the first argument, or concatenate all arguments, or even hash the arguments and return the hash value as the event type.
 
 
-<a name="event-filter" />
+<a name="event-filter"></a>
 ## Event filter
 
 `EventDispatcher<>::appendFilter(filter)` adds an event filter to the dispatcher. The `filter` receives the arguments which types are the callback prototype with lvalue reference, and must return a boolean value. Return `true` to allow the dispatcher continues the dispatching, `false` to prevent the dispatcher from invoking any subsequence listeners and filters.  
@@ -493,7 +493,7 @@ Event filter is a powerful and useful technology, below is some sample use cases
 2, Setup catch-all event listener. For example, in a phone book system, the system sends events based on the actions, such as adding a phone number, remove a phone number, look up a phone number, etc. A module may be only interested in special area code of a phone number, not the actions. One approach is the module can listen to all possible events (add, remove, look up), but this is very fragile -- how about a new action event is added and the module forgets to listen on it? The better approach is the module add a filter and check the area code in the filter.
 
 
-<a name="argument-passing-mode" />
+<a name="argument-passing-mode"></a>
 ## Argument passing mode
 
 We have the dispatcher  
@@ -574,21 +574,21 @@ dispatcher.dispatch(3, 8, "hello"); // Compile OK
 dispatcher.enqueue(3, 8, "hello"); // Compile OK
 ```
 
-<a name="nested-listener-safety" />
+<a name="nested-listener-safety"></a>
 ## Nested listener safety
 1. If a listener adds another listener of the same event to the dispatcher during a dispatching, the new listener is guaranteed not to be triggered within the same dispatching. This is guaranteed by an unsigned 64 bits integer counter. This rule will be broken is the counter is overflowed to zero in a dispatching, but this rule will continue working on the subsequence dispatching.  
 2. Any listeners that are removed during a dispatching are guaranteed not triggered.  
 3. All above points are not true in multiple threading. That's to say, if one thread is invoking a callback list, the other thread add or remove a callback, the added or removed callback may be triggered during the invoking.
 
 
-<a name="thread-safety" />
+<a name="thread-safety"></a>
 ## Thread safety
 `EventDispatcher` is thread safe. All public functions can be invoked from multiple threads simultaneously. If it failed, please report a bug.  
 `EventDispatcher` guarantees the integration of each append/prepend/insert/remove/dispatching operations, but it doesn't guarantee the order of the operations in multiple threads. For example, if a thread is dispatching an event, the other thread removes a listener in the mean time, the removed listener may be still triggered after it's removed.  
 But the operations on the listeners, such as copying, moving, comparing, or invoking, may be not thread safe. It depends on listeners.  
 
 
-<a name="exception-safety" />
+<a name="exception-safety"></a>
 ## Exception safety
 
 EventDispatcher doesn't throw any exceptions.  
@@ -596,7 +596,7 @@ Exceptions may be thrown by underlying code when,
 1. Out of memory, new memory can't be allocated.  
 2. The listeners throw exceptions during copying, moving, comparing, or invoking.
 
-<a name="time-complexities" />
+<a name="time-complexities"></a>
 ## Time complexities
 The time complexities being discussed here is about when operating on the listener in the underlying list, and `n` is the number of listeners. It doesn't include the event searching in the underlying `std::map` which is always O(log n).
 - `appendListener`: O(1)
@@ -605,7 +605,7 @@ The time complexities being discussed here is about when operating on the listen
 - `removeListener`: O(1)
 - `enqueue`: O(1)
 
-<a name="internal-data-structure" />
+<a name="internal-data-structure"></a>
 ## Internal data structure
 
 Beside using [CallbackList](doc/callbacklist.md) to manage the listener callbacks, EventDispatcher uses three `std::list` to manage the event queue.  
