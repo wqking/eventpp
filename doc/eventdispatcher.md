@@ -268,7 +268,7 @@ dispatcher.appendFilter([](const int e, int & i, std::string & s) -> bool {
 // Dispatch the events, the first argument is always the event type.
 dispatcher.dispatch(3, 1, "Hello");
 dispatcher.dispatch(5, 2, "World");
-···
+```
 
 **Output**  
 > Filter 1, e is 3 passed in i is 1 s is Hello  
