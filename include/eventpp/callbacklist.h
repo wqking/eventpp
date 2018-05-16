@@ -131,19 +131,27 @@ public:
 		node.reset();
 	}
 
+	bool empty() const {
+		// Don't lock the mutex for performance reason.
+		// !head still works even when the underlying raw pointer is garbled (for other thread is writting to head)
+		//std::lock_guard<Mutex> lockGuard(mutex);
+
+		return ! head;
+	}
+
 	Handle append(const Callback & callback)
 	{
 		NodePtr node(std::make_shared<Node>(callback, getNextCounter()));
 
 		std::lock_guard<Mutex> lockGuard(mutex);
 
-		if(! head) {
-			head = node;
+		if(head) {
+			node->previous = tail;
+			tail->next = node;
 			tail = node;
 		}
 		else {
-			node->previous = tail;
-			tail->next = node;
+			head = node;
 			tail = node;
 		}
 
@@ -156,14 +164,14 @@ public:
 
 		std::lock_guard<Mutex> lockGuard(mutex);
 
-		if(! head) {
-			head = node;
-			tail = node;
-		}
-		else {
+		if(head) {
 			node->next = head;
 			head->previous = node;
 			head = node;
+		}
+		else {
+			head = node;
+			tail = node;
 		}
 
 		return Handle(node);
@@ -177,7 +185,7 @@ public:
 
 			std::lock_guard<Mutex> lockGuard(mutex);
 
-			doInert(beforeNode, node);
+			doInsert(node, beforeNode);
 
 			return Handle(node);
 		}
@@ -198,26 +206,32 @@ public:
 	}
 
 	template <typename Func>
-	void forEach(Func && func)
+	void forEach(Func && func) const
 	{
-		NodePtr node;
-
-		{
-			std::lock_guard<Mutex> lockGuard(mutex);
-			node = head;
-		}
-
-		while(node) {
-			doForEachInvoke(func, Handle(node), node->callback);
-
-			{
-				std::lock_guard<Mutex> lockGuard(mutex);
-				node = node->next;
-			}
-		}
+		doForEachIf([&func, this](NodePtr & node) -> bool {
+			doForEachInvoke<void>(func, node);
+			return true;
+		});
 	}
 
-	void operator() (Args ...args)
+	template <typename Func>
+	bool forEachIf(Func && func) const
+	{
+		return doForEachIf([&func, this](NodePtr & node) -> bool {
+			return doForEachInvoke<bool>(func, node);
+		});
+	}
+
+	void operator() (Args ...args) const
+	{
+		forEach([&args...](Callback & callback) -> void {
+			callback(args...);
+		});
+	}
+
+private:
+	template <typename F>
+	bool doForEachIf(F && f) const
 	{
 		NodePtr node;
 
@@ -230,9 +244,9 @@ public:
 
 		while(node) {
 			if(node->counter != removedCounter && counter >= node->counter) {
-				// Must not hold any lock when invoking the callback
-				// because the callback may append/remove/dispatch again and cause recursive lock
-				node->callback(std::forward<Args>(args)...);
+				if(! f(node)) {
+					return false;
+				}
 			}
 
 			{
@@ -240,28 +254,29 @@ public:
 				node = node->next;
 			}
 		}
+
+		return true;
 	}
 
-private:
-	template <typename Func>
-	auto doForEachInvoke(Func && func, const Handle & handle, const Callback & callback)
-		-> typename std::enable_if<CanInvoke<Func, Handle, Callback>::value, void>::type
+	template <typename RT, typename Func>
+	auto doForEachInvoke(Func && func, NodePtr & node) const
+		-> typename std::enable_if<CanInvoke<Func, Handle, Callback &>::value, RT>::type
 	{
-		func(handle, callback);
+		return func(Handle(node), node->callback);
 	}
 
-	template <typename Func>
-	auto doForEachInvoke(Func && func, const Handle & handle, const Callback & callback)
-		-> typename std::enable_if<CanInvoke<Func, Handle>::value, void>::type
+	template <typename RT, typename Func>
+	auto doForEachInvoke(Func && func, NodePtr & node) const
+		-> typename std::enable_if<CanInvoke<Func, Handle>::value, RT>::type
 	{
-		func(handle);
+		return func(Handle(node));
 	}
 
-	template <typename Func>
-	auto doForEachInvoke(Func && func, const Handle & handle, const Callback & callback)
-		-> typename std::enable_if<CanInvoke<Func, Callback>::value, void>::type
+	template <typename RT, typename Func>
+	auto doForEachInvoke(Func && func, NodePtr & node) const
+		-> typename std::enable_if<CanInvoke<Func, Callback &>::value, RT>::type
 	{
-		func(callback);
+		return func(node->callback);
 	}
 
 	void doRemoveNode(NodePtr & node)
@@ -287,16 +302,16 @@ private:
 		// because node may be still used in a loop.
 	}
 
-	void doInert(NodePtr & before, NodePtr & node)
+	void doInsert(NodePtr & node, NodePtr & beforeNode)
 	{
-		node->previous = before->previous;
-		node->next = before;
-		if(before->previous) {
-			before->previous->next = node;
+		node->previous = beforeNode->previous;
+		node->next = beforeNode;
+		if(beforeNode->previous) {
+			beforeNode->previous->next = node;
 		}
-		before->previous = node;
+		beforeNode->previous = node;
 
-		if(before == head) {
+		if(beforeNode == head) {
 			head = node;
 		}
 	}
@@ -325,7 +340,7 @@ private:
 private:
 	NodePtr head;
 	NodePtr tail;
-	Mutex mutex;
+	mutable Mutex mutex;
 	typename Threading::template Atomic<Counter> currentCounter;
 
 };

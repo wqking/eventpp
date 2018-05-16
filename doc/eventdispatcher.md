@@ -7,9 +7,11 @@
     - [Tutorial 2 -- Listener with parameters](#tutorial2)
     - [Tutorial 3 -- Customized event struct](#tutorial3)
     - [Tutorial 4 -- Event queue](#tutorial4)
+    - [Tutorial 5 -- Event filter](#tutorial5)
 	
 - [API reference](#apis)
 - [Event getter](#event-getter)
+- [Event filter](#event-filter)
 - [Argument passing mode](#argument-passing-mode)
 - [Nested listener safety](#nested-listener-safety)
 - [Thread safety](#thread-safety)
@@ -221,6 +223,67 @@ dispatcher.process();
 A typical use case is in a GUI application, each components call `EventDispatcher<>::enqueue()` to post the events, then the main event loop calls `EventDispatcher<>::process()` to dispatch the events.
 
 
+<a name="tutorial5" />
+### Tutorial 5 -- Event filter
+
+**Code**  
+```c++
+eventpp::EventDispatcher<int, void (int e, int i, std::string)> dispatcher;
+
+dispatcher.appendListener(3, [](const int e, const int i, const std::string & s) {
+	std::cout << "Got event 3, i was 1 but actural is " << i << " s was Hello but actural is " << s << std::endl;
+});
+dispatcher.appendListener(5, [](const int e, const int i, const std::string & s) {
+	std::cout << "Shout not got event 5" << std::endl;
+});
+
+// Add three event filters.
+
+// The first filter modifies the input arguments to other values, then the subsequence filters
+// and listeners will see the modified values.
+dispatcher.appendFilter([](const int e, int & i, std::string & s) -> bool {
+	std::cout << "Filter 1, e is " << e << " passed in i is " << i << " s is " << s << std::endl;
+	i = 38;
+	s = "Hi";
+	std::cout << "Filter 1, changed i is " << i << " s is " << s << std::endl;
+	return true;
+});
+
+// The second filter filters out all event of 5. So no listeners on event 5 can be triggered.
+// The third filter is not invoked on event 5 also.
+dispatcher.appendFilter([](const int e, int & i, std::string & s) -> bool {
+	std::cout << "Filter 2, e is " << e << " passed in i is " << i << " s is " << s << std::endl;
+	if(e == 5) {
+		return false;
+	}
+	return true;
+});
+
+// The third filter just prints the input arguments.
+dispatcher.appendFilter([](const int e, int & i, std::string & s) -> bool {
+	std::cout << "Filter 3, e is " << e << " passed in i is " << i << " s is " << s << std::endl;
+	return true;
+});
+
+// Dispatch the events, the first argument is always the event type.
+dispatcher.dispatch(3, 1, "Hello");
+dispatcher.dispatch(5, 2, "World");
+···
+
+**Output**  
+> Filter 1, e is 3 passed in i is 1 s is Hello  
+> Filter 1, changed i is 38 s is Hi  
+> Filter 2, e is 3 passed in i is 38 s is Hi  
+> Filter 3, e is 3 passed in i is 38 s is Hi  
+> Got event 3, i was 1 but actural is 38 s was Hello but actural is Hi  
+> Filter 1, e is 5 passed in i is 2 s is World  
+> Filter 1, changed i is 38 s is Hi  
+> Filter 2, e is 5 passed in i is 38 s is Hi  
+
+**Remarks**  
+`EventDispatcher<>::appendFilter(filter)` adds an event filter to the dispatcher. The `filter` receives the arguments which types are the callback prototype with lvalue reference, and must return a boolean value. Return `true` to allow the dispatcher continues the dispatching, `false` to prevent the dispatcher from invoking any subsequence listeners and filters.  
+The event filters are invoked before any listeners are invoked.
+
 <a name="apis" />
 ## API reference
 
@@ -249,6 +312,7 @@ class EventDispatcher;
 `Handle`: the handle type returned by appendListener, prependListener and insertListener. A handle can be used to insert a listener or remove a listener. To check if a `Handle` is empty, convert it to boolean, *false* is empty. `Handle` is copyable.  
 `Callback`: the callback storage type.  
 `Event`: the event type. The event type must be able to be used as the key in `std::map`, so it must be comparable with `operator <`.   
+`FilterHandle`: the handle type returned by appendFilter. A filter handle can be used to remove a filter. To check if a `FilterHandle` is empty, convert it to boolean, *false* is empty. `FilterHandle` is copyable.  
 
 **Functions**
 
@@ -333,6 +397,25 @@ AnyReturnType func(const EventDispatcher::Callback &);
 ```
 **Note**: the `func` can remove any listeners, or add other listeners, safely.
 
+```c++
+template <typename Func>  
+bool forEachIf(const Event & event, Func && func)
+```  
+Apply `func` to all listeners of `event`. `func` must return a boolean value, and if the return value is false, forEachIf stops the looping immediately.  
+Return `true` if all listeners are invoked, or `event` is not found, `false` if `func` returns `false`.
+
+```c++
+FilterHandle appendFilter(const Filter & filter)
+```
+Add the *filter* to the dispatcher.  
+Return a handle which can be used in removeFilter.
+
+```c++
+bool removeFilter(const FilterHandle & filterHandle)
+```
+Remove a filter from the dispatcher.  
+Return true if the filter is removed successfully.
+
 <a name="event-getter" />
 ## Event getter
 
@@ -385,6 +468,29 @@ dispatcher.dispatch(myEvent, true);
 Note the first argument is `MyEvent`, not `Event`.  
 `dispatch` and `enqueue` use the function `getEvent` in the *event getter* to deduct the event type.  
 `dispatch` and `enqueue` don't assume the meaning of any arguments. How to get the event type completely depends on `getEvent`.   `getEvent` can simple return a member for the first argument, or concatenate all arguments, or even hash the arguments and return the hash value as the event type.
+
+
+<a name="event-filter" />
+## Event filter
+
+`EventDispatcher<>::appendFilter(filter)` adds an event filter to the dispatcher. The `filter` receives the arguments which types are the callback prototype with lvalue reference, and must return a boolean value. Return `true` to allow the dispatcher continues the dispatching, `false` to prevent the dispatcher from invoking any subsequence listeners and filters.  
+
+The event filters are invoked for all events, and invoked before any listeners are invoked.  
+The event filters can modify the arguments since the arguments are passed as lvalue reference, no matter whether they are reference in the callback prototype (of course we can't modify a reference to const).  
+
+Below table shows the cases of how event filters receive the arguments.
+
+|Argument type in callback prototype |Argument type received by filter |Can filter modify the argument? | Comment |
+|-----|-----|:-----:|-----|
+|int, const int |int &, int & |Yes |The constness of the value is discarded|
+|int &, std::string & |int &, std::string & |Yes ||
+|const int &, const int *|const int &, const int * & |No |The constness of the reference/pointer must be respected|
+
+Event filter is a powerful and useful technology, below is some sample use cases, though the real world use cases are unlimited.  
+
+1, Capture and block all interested events. For example, in a GUI window system, all windows can receive mouse events. However, when a window is under mouse dragging, only the window under dragging should receive the mouse events even when the mouse is moving on other window. So when the dragging starts, the window can add a filter. The filter redirects all mouse events to the window and prevent other listeners from the mouse events, and bypass all other events.  
+
+2, Setup catch-all event listener. For example, in a phone book system, the system sends events based on the actions, such as adding a phone number, remove a phone number, look up a phone number, etc. A module may be only interested in special area code of a phone number, not the actions. One approach is the module can listen to all possible events (add, remove, look up), but this is very fragile -- how about a new action event is added and the module forgets to listen on it? The better approach is the module add a filter and check the area code in the filter.
 
 
 <a name="argument-passing-mode" />

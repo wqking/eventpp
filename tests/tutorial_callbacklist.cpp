@@ -109,7 +109,7 @@ TEST_CASE("CallbackList tutorial 4, for each")
 	// Now call forEach to remove the second callback
 	// The forEach callback prototype is void(const CallbackList::Handle & handle, const CallbackList::Callback & callback)
 	int index = 0;
-	callbackList.forEach([&callbackList, &index](const CL::Handle & handle, const CL::Callback & callback) {
+	callbackList.forEach([&callbackList, &index](const CL::Handle & handle, const CL::Callback & /*callback*/) {
 		std::cout << "forEach(Handle, Callback), invoked " << index << std::endl;
 		if(index == 1) {
 			callbackList.remove(handle);
@@ -119,12 +119,12 @@ TEST_CASE("CallbackList tutorial 4, for each")
 	});
 
 	// The forEach callback prototype can also be void(const CallbackList::Handle & handle)
-	callbackList.forEach([&callbackList, &index](const CL::Handle & handle) {
+	callbackList.forEach([&callbackList, &index](const CL::Handle & /*handle*/) {
 		std::cout << "forEach(Handle), invoked" << std::endl;
 	});
 
 	// The forEach callback prototype can also be void(const CallbackList::Callback & callback)
-	callbackList.forEach([&callbackList, &index](const CL::Callback & callback) {
+	callbackList.forEach([&callbackList, &index](const CL::Callback & /*callback*/) {
 		std::cout << "forEach(Callback), invoked" << std::endl;
 	});
 

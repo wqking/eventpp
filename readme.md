@@ -6,12 +6,13 @@ eventpp provides tools that allow your application components to communicate wit
 
 - Template based, less runtime overhead, unlimited possibilities. The event and callback can be almost any C++ types meeting minimum requirements.
 - Supports nested event. A listener can dispatch event, append/prepend/insert/remove other listeners during capturing an event safely.
+- Support event filter.
 - Thread safe.
 - Requires C++ 11 (tested with MSVC 2017, MSVC 2015, MinGW (Msys) gcc 7.2, and Ubuntu gcc 5.4).
-- Header only, no source file, no need to build.
 - Backed by unit tests.
 - Written in portable and standard C++. (I'm not a C++ standard expert so if you find any non-standard code or undefined behavior please let me know.)
 - Doesn't depend on any other libraries.
+- Header only, no source file, no need to build.
 
 ## License
 
@@ -85,6 +86,7 @@ callbackList("Hello world", true);
 
 * [Event dispatcher](doc/eventdispatcher.md)
 * [Callback list](doc/callbacklist.md)
+* [Frequently Asked Questions](doc/faq.md)
 
 ## Build the unit tests
 
@@ -95,12 +97,6 @@ Go to folder `tests/build`, then run `make` with different target.
 - `make vc15` #generate solution files for Microsoft Visual Studio 2015, then open eventpptest.sln in folder project_vc15
 - `make mingw` #build using MinGW
 - `make linux` #build on Linux
-
-## Roadmap (what's next)
-
-- Move GCallback from my [cpgf library](https://github.com/cpgf/cpgf), so eventpp becomes a completed callback, callback list, and event dispatcher library.
-
-- Let me know your requirement.
 
 ## Motivations
 

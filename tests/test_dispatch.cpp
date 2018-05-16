@@ -275,6 +275,106 @@ TEST_CASE("dispatch many, int, void (int)")
 	REQUIRE(eventList == dataList);
 }
 
+TEST_CASE("event filter")
+{
+	using ED = eventpp::EventDispatcher<int, void (int, int)>;
+	ED dispatcher;
+
+	constexpr int itemCount = 5;
+	std::vector<int> dataList(itemCount);
+
+	for(int i = 0; i < itemCount; ++i) {
+		dispatcher.appendListener(i, [&dataList, i](int e, int index) {
+			dataList[e] = index;
+		});
+	}
+
+
+	constexpr int filterCount = 2;
+	std::vector<int> filterData(filterCount);
+
+	SECTION("Filter invoked count") {
+		dispatcher.appendFilter([&filterData](int /*e*/, int /*index*/) -> bool {
+			++filterData[0];
+			return true;
+		});
+		dispatcher.appendFilter([&filterData](int /*e*/, int /*index*/) -> bool {
+			++filterData[1];
+			return true;
+		});
+
+		for(int i = 0; i < itemCount; ++i) {
+			dispatcher.dispatch(i, 58);
+		}
+
+		REQUIRE(filterData == std::vector<int>{ itemCount, itemCount });
+		REQUIRE(dataList == std::vector<int>{ 58, 58, 58, 58, 58 });
+	}
+
+	SECTION("First filter blocks all other filters and listeners") {
+		dispatcher.appendFilter([&filterData](int e, int /*index*/) -> bool {
+			++filterData[0];
+			if(e >= 2) {
+				return false;
+			}
+			return true;
+		});
+		dispatcher.appendFilter([&filterData](int /*e*/, int /*index*/) -> bool {
+			++filterData[1];
+			return true;
+		});
+
+		for(int i = 0; i < itemCount; ++i) {
+			dispatcher.dispatch(i, 58);
+		}
+
+		REQUIRE(filterData == std::vector<int>{ itemCount, 2 });
+		REQUIRE(dataList == std::vector<int>{ 58, 58, 0, 0, 0 });
+	}
+
+	SECTION("Second filter doesn't block first filter but all listeners") {
+		dispatcher.appendFilter([&filterData](int /*e*/, int /*index*/) -> bool {
+			++filterData[0];
+			return true;
+		});
+		dispatcher.appendFilter([&filterData](int e, int /*index*/) -> bool {
+			++filterData[1];
+			if(e >= 2) {
+				return false;
+			}
+			return true;
+		});
+
+		for(int i = 0; i < itemCount; ++i) {
+			dispatcher.dispatch(i, 58);
+		}
+
+		REQUIRE(filterData == std::vector<int>{ itemCount, itemCount });
+		REQUIRE(dataList == std::vector<int>{ 58, 58, 0, 0, 0 });
+	}
+
+	SECTION("Filter manipulates the parameters") {
+		dispatcher.appendFilter([&filterData](int e, int & index) -> bool {
+			++filterData[0];
+			if(e >= 2) {
+				++index;
+			}
+			return true;
+		});
+		dispatcher.appendFilter([&filterData](int /*e*/, int /*index*/) -> bool {
+			++filterData[1];
+			return true;
+		});
+
+		for(int i = 0; i < itemCount; ++i) {
+			dispatcher.dispatch(i, 58);
+		}
+
+		REQUIRE(filterData == std::vector<int>{ itemCount, itemCount });
+		REQUIRE(dataList == std::vector<int>{ 58, 58, 59, 59, 59 });
+	}
+}
+
 TEST_CASE("dispatch multi threading, int, void (int)")
 {
 	using ED = eventpp::EventDispatcher<int, void (int)>;

@@ -267,6 +267,13 @@ AnyReturnType func(const EventDispatcher::Callback &);
 **Note**: the `func` can remove any callbacks, or add other callbacks, safely.
 
 ```c++
+template <typename Func>  
+bool forEachIf(Func && func)
+```  
+Apply `func` to all callbacks. `func` must return a boolean value, and if the return value is false, forEachIf stops the looping immediately.  
+Return `true` if all callbacks are invoked, or `event` is not found, `false` if `func` returns `false`.
+
+```c++
 void operator() (Args ...args)
 ```  
 Invoke each callbacks in the callback list.  

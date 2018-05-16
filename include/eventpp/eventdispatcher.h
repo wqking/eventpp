@@ -20,12 +20,9 @@
 #include <functional>
 #include <type_traits>
 #include <map>
-#include <vector>
 #include <list>
 #include <tuple>
 #include <mutex>
-#include <cstdint>
-#include <climits>
 #include <algorithm>
 #include <memory>
 
@@ -122,8 +119,10 @@ private:
 		std::function<ReturnType (Args...)>,
 		CallbackType
 	>::type;
-
 	using _CallbackList = CallbackList<ReturnType (Args...), _Callback, Threading>;
+
+	using Filter = std::function<bool (typename std::add_lvalue_reference<Args>::type...)>;
+	using FilterList = CallbackList<bool (Args...), Filter, Threading>;
 
 	enum {
 		canIncludeEventType = ArgumentPassingMode::canIncludeEventType,
@@ -142,6 +141,7 @@ public:
 	using Handle = _Handle;
 	using Callback = _Callback;
 	using Event = _Event;
+	using FilterHandle = typename FilterList::Handle;;
 
 public:
 	EventDispatcherBase() = default;
@@ -181,33 +181,48 @@ public:
 	}
 
 	template <typename Func>
-	void forEach(const Event & event, Func && func)
+	void forEach(const Event & event, Func && func) const
 	{
-		_CallbackList * callableList = doFindCallableList(event);
+		const _CallbackList * callableList = doFindCallableList(event);
 		if(callableList) {
 			callableList->forEach(std::forward<Func>(func));
 		}
 	}
 
-	void dispatch(Args ...args)
+	template <typename Func>
+	bool forEachIf(const Event & event, Func && func) const
+	{
+		const _CallbackList * callableList = doFindCallableList(event);
+		if (callableList) {
+			return callableList->forEachIf(std::forward<Func>(func));
+		}
+
+		return true;
+	}
+
+	void dispatch(Args ...args) const
 	{
 		static_assert(canIncludeEventType, "Dispatching arguments count doesn't match required (Event type should be included).");
 
-		_CallbackList * callableList = doFindCallableList(EventGetter::getEvent(std::forward<Args>(args)...));
-		if(callableList) {
-			(*callableList)(std::forward<Args>(args)...);
-		}
+		// can't std::forward<Args>(args) in EventGetter::getEvent because the pass by value arguments will be moved to getEvent
+		// then the other std::forward<Args>(args) to doDispatch will get empty values.
+		doDispatch(
+			EventGetter::getEvent(args...),
+			std::forward<Args>(args)...
+		);
 	}
 
 	template <typename T>
-	void dispatch(T && first, Args ...args)
+	void dispatch(T && first, Args ...args) const
 	{
 		static_assert(canExcludeEventType, "Dispatching arguments count doesn't match required (Event type should NOT be included).");
 
-		_CallbackList * callableList = doFindCallableList(EventGetter::getEvent(std::forward<T>(first), std::forward<Args>(args)...));
-		if(callableList) {
-			(*callableList)(std::forward<Args>(args)...);
-		}
+		// can't std::forward<Args>(args) in EventGetter::getEvent because the pass by value arguments will be moved to getEvent
+		// then the other std::forward<Args>(args) to doDispatch will get empty values.
+		doDispatch(
+			EventGetter::getEvent(std::forward<T>(first), args...),
+			std::forward<Args>(args)...
+		);
 	}
 
 	void enqueue(Args ...args)
@@ -248,7 +263,35 @@ public:
 		}
 	}
 
+	FilterHandle appendFilter(const Filter & filter)
+	{
+		return filterList.append(filter);
+	}
+
+	bool removeFilter(const FilterHandle & filterHandle)
+	{
+		return filterList.remove(filterHandle);
+	}
+
 private:
+	void doDispatch(const Event & e, Args ...args) const
+	{
+		if(! filterList.empty()) {
+			if(
+				! filterList.forEachIf([&args...](typename FilterList::Callback & callback) {
+				return callback(typename std::add_lvalue_reference<Args>::type(args)...);
+			})
+				) {
+				return;
+			}
+		}
+
+		const _CallbackList * callableList = doFindCallableList(e);
+		if(callableList) {
+			(*callableList)(std::forward<Args>(args)...);
+		}
+	}
+
 	template <size_t ...Indexes>
 	void doProcessItem(QueueItem & item, _internal::IndexSequence<Indexes...>)
 	{
@@ -282,12 +325,15 @@ private:
 		queueList.emplace_back(item);
 	}
 
-	_CallbackList * doFindCallableList(const Event & e)
+	// template helper to avoid code duplication in doFindCallableList
+	template <typename T>
+	static auto doFindCallableListHelper(T * self, const Event & e)
+		-> typename std::conditional<std::is_const<T>::value, const _CallbackList *, _CallbackList *>::type
 	{
-		std::lock_guard<Mutex> lockGuard(listenerMutex);
+		std::lock_guard<Mutex> lockGuard(self->listenerMutex);
 
-		auto it = eventCallbackListMap.find(e);
-		if(it != eventCallbackListMap.end()) {
+		auto it = self->eventCallbackListMap.find(e);
+		if(it != self->eventCallbackListMap.end()) {
 			return &it->second;
 		}
 		else {
@@ -295,14 +341,26 @@ private:
 		}
 	}
 
+	const _CallbackList * doFindCallableList(const Event & e) const
+	{
+		return doFindCallableListHelper(this, e);
+	}
+
+	_CallbackList * doFindCallableList(const Event & e)
+	{
+		return doFindCallableListHelper(this, e);
+	}
+
 private:
 	std::map<Event, _CallbackList> eventCallbackListMap;
-	Mutex listenerMutex;
+	mutable Mutex listenerMutex;
 
 	Mutex queueListMutex;
 	std::list<QueueItem> queueList;
 	Mutex freeListMutex;
 	std::list<QueueItem> freeList;
+
+	FilterList filterList;
 };
 
 

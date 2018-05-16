@@ -301,6 +301,100 @@ TEST_CASE("CallbackList, no memory leak after all callbacks are removed")
 	verifyNoMemoryLeak(nodeList);
 }
 
+TEST_CASE("CallbackList, forEach and forEachIf")
+{
+	using CL = CallbackList<void()>;
+	CL callbackList;
+
+	const int itemCount = 5;
+	std::vector<int> dataList(itemCount);
+	for(int i = 0; i < itemCount; ++i) {
+		callbackList.append([&dataList, i]() {
+			dataList[i] = i + 1;
+		});
+	}
+
+	SECTION("forEach") {
+		callbackList.forEach([](const CL::Callback & callback) -> void {
+			callback();
+		});
+
+		REQUIRE(dataList == std::vector<int>{ 1, 2, 3, 4, 5 });
+	}
+	
+	SECTION("forEachIf") {
+		const bool result = callbackList.forEachIf([&dataList](const CL::Callback & callback) -> bool {
+			constexpr int index = 2;
+			const bool isZero = (dataList[index] == 0);
+			callback();
+			if(isZero && dataList[index] != 0) {
+				return false;
+			}
+			return true;
+		});
+
+		REQUIRE(! result);
+		REQUIRE(dataList == std::vector<int>{ 1, 2, 3, 0, 0 });
+	}
+}
+
+TEST_CASE("CallbackList, non-lvaue-reference arguments should not be modified by callbacks")
+{
+	using CL = CallbackList<void(std::string)>;
+	CL callbackList;
+
+	constexpr int itemCount = 2;
+	std::vector<std::string> dataList(itemCount);
+
+	// "std::string & s" can compile in MSVC 2017 but not GCC 7.2
+	callbackList.append([&dataList](std::string && s) {
+		dataList[0] = s;
+		s = "modified";
+	});
+	callbackList.append([&dataList](const std::string & s) {
+		dataList[1] = s;
+	});
+
+	SECTION("lvalue") {
+		std::string s = "hello";
+		callbackList(s);
+		REQUIRE(dataList[0] == "hello");
+		REQUIRE(dataList[1] == "hello");
+		REQUIRE(s == "hello");
+	}
+	SECTION("rvalue") {
+		callbackList("hello");
+		REQUIRE(dataList[0] == "hello");
+		REQUIRE(dataList[1] == "hello");
+	}
+}
+
+TEST_CASE("CallbackList, lvaue-reference arguments cant be modified by callbacks")
+{
+	using CL = CallbackList<void(std::string &)>;
+	CL callbackList;
+
+	constexpr int itemCount = 2;
+	std::vector<std::string> dataList(itemCount);
+
+	callbackList.append([&dataList](std::string & s) {
+		s = "modified";
+		dataList[0] = s;
+	});
+	callbackList.append([&dataList](std::string & s) {
+		s += "2";
+		dataList[1] = s;
+	});
+
+	SECTION("lvalue") {
+		std::string s = "hello";
+		callbackList(s);
+		REQUIRE(dataList[0] == "modified");
+		REQUIRE(dataList[1] == "modified2");
+		REQUIRE(s == "modified2");
+	}
+}
+
 TEST_CASE("CallbackList, append/remove/insert")
 {
 	using CL = CallbackList<void(), int>;
