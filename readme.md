@@ -89,6 +89,50 @@ callbackList("Hello world", true);
 * [Frequently Asked Questions](doc/faq.md)
 * There are compilable tutorials in the unit tests.
 
+## EventDispatcher VS CallbackList
+
+In brief, EventDispatcher equals to std::map<EventType, CallbackList>.  
+CallbackList holds a list of callbacks. On invocation, CallbackList simply invokes each callbacks one by one. Think CallbackList as the signal/slot system in Qt, or the callback function pointer in some Windows APIs (such as lpCompletionRoutine in `ReadFileEx`).  
+EventDispatcher holds a map of `EventType, CallbackList` pairs. On dispatching, EventDispatcher finds the CallbackList at the event type, then invoke the callback list. Think EventDispatcher as the event system (QEvent) in Qt, or the message processing in Windows.  
+
+CallbackList is ideal when there are very few kinds of events. Each event can have its own CallbackList, and each CallbackList can have different prototype. For example,
+```c++
+eventpp::CallbackList<void()> onStart;
+eventpp::CallbackList<void(MyStopReason)> onStop;
+```
+However, if there are lots of kinds of events, hundreds to unlimited (this is quite common in a GUI or game system), using CallbackList for each events will be crazy. This is how EventDispatcher comes useful.  
+
+EventDispatcher is ideal when there are lots of kinds of events, or the number of events can't be determined. Each event is distinguished by an event type. For example,
+```c++
+enum class MyEventType
+{
+	redraw,
+	mouseDown,
+	mouseUp,
+	//... maybe 200 other events here
+};
+
+struct MyEvent {
+	MyEventType type;
+	// data that all events may need
+};
+
+struct MyEventTypeGetter : public eventpp::EventGetterBase
+{
+	using Event = MyEventType;
+
+	static Event getEvent(const std::shared_ptr<MyEvent> & e) {
+		return e->type;
+	}
+};
+
+eventpp::EventDispatcher<MyEventTypeGetter, void(std::shared_ptr<MyEvent>)> dispatcher;
+```
+(Note: if you are confused with MyEventTypeGetter in above sample, please read the "Event getter" section in [Event dispatcher](doc/eventdispatcher.md), and just consider the dispatcher as `eventpp::EventDispatcher<MyEventType, void(std::shared_ptr<MyEvent>)> dispatcher` for now.)  
+The disadvantage of EventDispatcher is that all events must have the same callback prototype (`void(std::shared_ptr<MyEvent>)` in the sample code). The common solution is that the callback takes a base class of Event and all events derive their own event data from Event. In the sample code, MyEvent is the base event class, the callback takes one argument of shared pointer to MyEvent.  
+The advantage of EventDispatcher is it has more features than CallbackList, such as event queue.
+
+
 ## Build the unit tests
 
 The library itself is header only and doesn't need building.  

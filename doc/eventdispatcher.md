@@ -375,7 +375,9 @@ template <typename T>
 void enqueue(T && first, Args ...args);
 ```  
 Put an event into the event queue. The event type is deducted from the arguments of `enqueue`.  
-All arguments are copied to internal data structure, so the arguments must be copyable.
+All arguments are copied to internal data structure, so the arguments must be copyable.  
+If an argument is a reference to a base class and a derived object is passed in, only the base object will be stored and the derived object is lost. Usually shared pointer should be used in such situation.  
+If an argument is a pointer, only the pointer will be stored. The object it points must be available until the event is processed.  
 
 ```c++
 void process()
