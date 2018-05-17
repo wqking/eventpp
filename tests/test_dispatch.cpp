@@ -425,3 +425,26 @@ TEST_CASE("dispatch multi threading, int, void (int)")
 	REQUIRE(eventList == dataList);
 }
 
+TEST_CASE("dispatch explicit single threading, int, void (int)")
+{
+	using ED = eventpp::EventDispatcher<int, void (int), void, eventpp::ArgumentPassingAutoDetect, eventpp::SingleThreading>;
+	ED dispatcher;
+
+	int a = 1;
+	int b = 5;
+
+	dispatcher.appendListener(3, [&a](int n) {
+		a += n;
+	});
+	dispatcher.appendListener(3, [&b](const int & n) {
+		b += n;
+	});
+
+	REQUIRE(a != 6);
+	REQUIRE(b != 10);
+
+	dispatcher.dispatch(3, 5);
+	REQUIRE(a == 6);
+	REQUIRE(b == 10);
+}
+
