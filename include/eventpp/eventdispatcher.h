@@ -65,7 +65,7 @@ struct ArgumentPassingExcludeEvent
 	};
 };
 
-namespace _internal {
+namespace internal_ {
 
 template <size_t ...Indexes>
 struct IndexSequence
@@ -114,12 +114,12 @@ private:
 		PrimaryEventGetter<EventGetterType>
 	>::type;
 	using Mutex = typename Threading::Mutex;
-	using _Callback = typename std::conditional<
+	using Callback_ = typename std::conditional<
 		std::is_same<CallbackType, void>::value,
 		std::function<ReturnType (Args...)>,
 		CallbackType
 	>::type;
-	using _CallbackList = CallbackList<ReturnType (Args...), _Callback, Threading>;
+	using CallbackList_ = CallbackList<ReturnType (Args...), Callback_, Threading>;
 
 	using Filter = std::function<bool (typename std::add_lvalue_reference<Args>::type...)>;
 	using FilterList = CallbackList<bool (Args...), Filter, Threading>;
@@ -129,18 +129,18 @@ private:
 		canExcludeEventType = ArgumentPassingMode::canExcludeEventType
 	};
 
-	using _Handle = typename _CallbackList::Handle;
-	using _Event = typename EventGetter::Event;
+	using Handle_ = typename CallbackList_::Handle;
+	using Event_ = typename EventGetter::Event;
 
 	using QueueItem = std::tuple<
-		typename std::remove_cv<typename std::remove_reference<_Event>::type>::type,
+		typename std::remove_cv<typename std::remove_reference<Event_>::type>::type,
 		typename std::remove_cv<typename std::remove_reference<Args>::type>::type...
 	>;
 
 public:
-	using Handle = _Handle;
-	using Callback = _Callback;
-	using Event = _Event;
+	using Handle = Handle_;
+	using Callback = Callback_;
+	using Event = Event_;
 	using FilterHandle = typename FilterList::Handle;;
 
 public:
@@ -172,7 +172,7 @@ public:
 
 	bool removeListener(const Event & event, const Handle handle)
 	{
-		_CallbackList * callableList = doFindCallableList(event);
+		CallbackList_ * callableList = doFindCallableList(event);
 		if(callableList) {
 			return callableList->remove(handle);
 		}
@@ -183,7 +183,7 @@ public:
 	template <typename Func>
 	void forEach(const Event & event, Func && func) const
 	{
-		const _CallbackList * callableList = doFindCallableList(event);
+		const CallbackList_ * callableList = doFindCallableList(event);
 		if(callableList) {
 			callableList->forEach(std::forward<Func>(func));
 		}
@@ -192,7 +192,7 @@ public:
 	template <typename Func>
 	bool forEachIf(const Event & event, Func && func) const
 	{
-		const _CallbackList * callableList = doFindCallableList(event);
+		const CallbackList_ * callableList = doFindCallableList(event);
 		if (callableList) {
 			return callableList->forEachIf(std::forward<Func>(func));
 		}
@@ -253,7 +253,7 @@ public:
 
 			if(! tempList.empty()) {
 				for(auto & item : tempList) {
-					doProcessItem(item, typename _internal::MakeIndexSequence<sizeof...(Args) + 1>::Type());
+					doProcessItem(item, typename internal_::MakeIndexSequence<sizeof...(Args) + 1>::Type());
 					item = QueueItem();
 				}
 
@@ -286,14 +286,14 @@ private:
 			}
 		}
 
-		const _CallbackList * callableList = doFindCallableList(e);
+		const CallbackList_ * callableList = doFindCallableList(e);
 		if(callableList) {
 			(*callableList)(std::forward<Args>(args)...);
 		}
 	}
 
 	template <size_t ...Indexes>
-	void doProcessItem(QueueItem & item, _internal::IndexSequence<Indexes...>)
+	void doProcessItem(QueueItem & item, internal_::IndexSequence<Indexes...>)
 	{
 		dispatch(std::get<Indexes>(item)...);
 	}
@@ -328,7 +328,7 @@ private:
 	// template helper to avoid code duplication in doFindCallableList
 	template <typename T>
 	static auto doFindCallableListHelper(T * self, const Event & e)
-		-> typename std::conditional<std::is_const<T>::value, const _CallbackList *, _CallbackList *>::type
+		-> typename std::conditional<std::is_const<T>::value, const CallbackList_ *, CallbackList_ *>::type
 	{
 		std::lock_guard<Mutex> lockGuard(self->listenerMutex);
 
@@ -341,18 +341,18 @@ private:
 		}
 	}
 
-	const _CallbackList * doFindCallableList(const Event & e) const
+	const CallbackList_ * doFindCallableList(const Event & e) const
 	{
 		return doFindCallableListHelper(this, e);
 	}
 
-	_CallbackList * doFindCallableList(const Event & e)
+	CallbackList_ * doFindCallableList(const Event & e)
 	{
 		return doFindCallableListHelper(this, e);
 	}
 
 private:
-	std::map<Event, _CallbackList> eventCallbackListMap;
+	std::map<Event, CallbackList_> eventCallbackListMap;
 	mutable Mutex listenerMutex;
 
 	Mutex queueListMutex;
@@ -364,7 +364,7 @@ private:
 };
 
 
-} //namespace _internal
+} //namespace internal_
 
 template <
 	typename EventGetter,
@@ -373,7 +373,7 @@ template <
 	typename ArgumentPassingMode = ArgumentPassingAutoDetect,
 	typename Threading = MultipleThreading
 >
-class EventDispatcher : public _internal::EventDispatcherBase<
+class EventDispatcher : public internal_::EventDispatcherBase<
 	EventGetter, Callback, ArgumentPassingMode, Threading, Prototype>
 {
 };

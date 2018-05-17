@@ -22,7 +22,7 @@
 
 namespace eventpp {
 
-namespace _internal {
+namespace internal_ {
 
 struct DummyMutex
 {
@@ -64,7 +64,7 @@ class CallbackListBase<
 {
 private:
 	using Mutex = typename Threading::Mutex;
-	using _Callback = typename std::conditional<
+	using Callback_ = typename std::conditional<
 		std::is_same<CallbackType, void>::value,
 		std::function<ReturnType (Args...)>,
 		CallbackType
@@ -77,18 +77,18 @@ private:
 	{
 		using Counter = uint64_t;
 
-		Node(const _Callback & callback, const Counter counter)
+		Node(const Callback_ & callback, const Counter counter)
 			: callback(callback), counter(counter)
 		{
 		}
 
 		NodePtr previous;
 		NodePtr next;
-		_Callback callback;
+		Callback_ callback;
 		Counter counter;
 	};
 
-	class _Handle : public std::weak_ptr<Node>
+	class Handle_ : public std::weak_ptr<Node>
 	{
 	private:
 		using super = std::weak_ptr<Node>;
@@ -107,8 +107,8 @@ private:
 	};
 
 public:
-	using Callback = _Callback;
-	using Handle = _Handle;
+	using Callback = Callback_;
+	using Handle = Handle_;
 
 public:
 	CallbackListBase() = default;
@@ -346,7 +346,7 @@ private:
 };
 
 
-} //namespace _internal
+} //namespace internal_
 
 
 struct MultipleThreading
@@ -359,7 +359,7 @@ struct MultipleThreading
 
 struct SingleThreading
 {
-	using Mutex = _internal::DummyMutex;
+	using Mutex = internal_::DummyMutex;
 
 	// May replace Atomic with dummy atomic later.
 	template <typename T>
@@ -371,7 +371,7 @@ template <
 	typename Callback = void,
 	typename Threading = MultipleThreading
 >
-class CallbackList : public _internal::CallbackListBase<Callback, Threading, Prototype>
+class CallbackList : public internal_::CallbackListBase<Callback, Threading, Prototype>
 {
 };
 
