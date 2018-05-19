@@ -12,6 +12,7 @@ set(SRC_TEST
 	testmain.cpp
 	tutorial_callbacklist.cpp
 	tutorial_eventdispatcher.cpp
+	tutorial_eventqueue.cpp
 	test_dispatch.cpp
 	test_callbacklist.cpp
 	test_queue.cpp

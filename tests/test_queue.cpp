@@ -23,46 +23,46 @@
 
 TEST_CASE("queue, std::string, void (const std::string &)")
 {
-	eventpp::EventQueue<std::string, void (const std::string &)> dispatcher;
+	eventpp::EventQueue<std::string, void (const std::string &)> queue;
 
 	int a = 1;
 	int b = 5;
 
-	dispatcher.appendListener("event1", [&a](const std::string &) {
+	queue.appendListener("event1", [&a](const std::string &) {
 		a = 2;
 	});
-	dispatcher.appendListener("event1", eraseArgs1([&b]() {
+	queue.appendListener("event1", eraseArgs1([&b]() {
 		b = 8;
 	}));
 
 	REQUIRE(a != 2);
 	REQUIRE(b != 8);
 
-	dispatcher.enqueue("event1");
-	dispatcher.process();
+	queue.enqueue("event1");
+	queue.process();
 	REQUIRE(a == 2);
 	REQUIRE(b == 8);
 }
 
 TEST_CASE("queue, int, void ()")
 {
-	eventpp::EventQueue<int, void ()> dispatcher;
+	eventpp::EventQueue<int, void ()> queue;
 
 	int a = 1;
 	int b = 5;
 
-	dispatcher.appendListener(3, [&a]() {
+	queue.appendListener(3, [&a]() {
 		a += 1;
 	});
-	dispatcher.appendListener(3, [&b]() {
+	queue.appendListener(3, [&b]() {
 		b += 3;
 	});
 
 	REQUIRE(a != 2);
 	REQUIRE(b != 8);
 
-	dispatcher.enqueue(3);
-	dispatcher.process();
+	queue.enqueue(3);
+	queue.process();
 
 	REQUIRE(a == 2);
 	REQUIRE(b == 8);
@@ -70,18 +70,18 @@ TEST_CASE("queue, int, void ()")
 
 TEST_CASE("queue, int, void (const std::string &, int)")
 {
-	eventpp::EventQueue<int, void (const std::string &, int)> dispatcher;
+	eventpp::EventQueue<int, void (const std::string &, int)> queue;
 
 	const int event = 3;
 
 	std::vector<std::string> sList(2);
 	std::vector<int> iList(sList.size());
 
-	dispatcher.appendListener(event, [&sList, &iList](const std::string & s, const int i) {
+	queue.appendListener(event, [&sList, &iList](const std::string & s, const int i) {
 		sList[0] = s;
 		iList[0] = i;
 	});
-	dispatcher.appendListener(event, [&sList, &iList](const std::string & s, const int i) {
+	queue.appendListener(event, [&sList, &iList](const std::string & s, const int i) {
 		sList[1] = s + "2";
 		iList[1] = i + 5;
 	});
@@ -92,8 +92,8 @@ TEST_CASE("queue, int, void (const std::string &, int)")
 	REQUIRE(iList[1] != 8);
 
 	SECTION("Parameters") {
-		dispatcher.enqueue(event, "first", 3);
-		dispatcher.process();
+		queue.enqueue(event, "first", 3);
+		queue.process();
 
 		REQUIRE(sList[0] == "first");
 		REQUIRE(sList[1] == "first2");
@@ -103,9 +103,9 @@ TEST_CASE("queue, int, void (const std::string &, int)")
 
 	SECTION("Reference parameters should not be modified") {
 		std::string s = "first";
-		dispatcher.enqueue(event, s, 3);
+		queue.enqueue(event, s, 3);
 		s = "";
-		dispatcher.process();
+		queue.process();
 
 		REQUIRE(sList[0] == "first");
 		REQUIRE(sList[1] == "first2");
@@ -116,8 +116,8 @@ TEST_CASE("queue, int, void (const std::string &, int)")
 
 TEST_CASE("queue multi threading, int, void (int)")
 {
-	using ED = eventpp::EventQueue<int, void (int)>;
-	ED dispatcher;
+	using EQ = eventpp::EventQueue<int, void (int)>;
+	EQ queue;
 
 	constexpr int threadCount = 256;
 	constexpr int dataCountPerThread = 1024 * 4;
@@ -130,19 +130,19 @@ TEST_CASE("queue multi threading, int, void (int)")
 	std::vector<int> dataList(itemCount);
 
 	for(int i = 0; i < itemCount; ++i) {
-		dispatcher.appendListener(eventList[i], [&dispatcher, i, &dataList](const int d) {
+		queue.appendListener(eventList[i], [&queue, i, &dataList](const int d) {
 			dataList[i] += d;
 		});
 	}
 
 	std::vector<std::thread> threadList;
 	for(int i = 0; i < threadCount; ++i) {
-		threadList.emplace_back([i, dataCountPerThread, &dispatcher, itemCount]() {
+		threadList.emplace_back([i, dataCountPerThread, &queue, itemCount]() {
 			for(int k = i * dataCountPerThread; k < (i + 1) * dataCountPerThread; ++k) {
-				dispatcher.enqueue(k, 3);
+				queue.enqueue(k, 3);
 			}
 			for(int k = 0; k < 10; ++k) {
-				dispatcher.process();
+				queue.process();
 			}
 		});
 	}
@@ -157,8 +157,8 @@ TEST_CASE("queue multi threading, int, void (int)")
 
 TEST_CASE("queue multi threading wait")
 {
-	using ED = eventpp::EventQueue<int, void (int)>;
-	ED dispatcher;
+	using EQ = eventpp::EventQueue<int, void (int)>;
+	EQ queue;
 
 	// note, all events will be process from the other thread instead of main thread
 	constexpr int stopEvent = 1;
@@ -170,51 +170,51 @@ TEST_CASE("queue multi threading wait")
 
 	std::atomic<int> threadProcessCount(0);
 
-	std::thread thread([stopEvent, otherEvent, &dataList, &dispatcher, &threadProcessCount]() {
+	std::thread thread([stopEvent, otherEvent, &dataList, &queue, &threadProcessCount]() {
 		volatile bool shouldStop = false;
-		dispatcher.appendListener(stopEvent, [&shouldStop](int) {
+		queue.appendListener(stopEvent, [&shouldStop](int) {
 			shouldStop = true;
 		});
-		dispatcher.appendListener(otherEvent, [&dataList](const int index) {
+		queue.appendListener(otherEvent, [&dataList](const int index) {
 			dataList[index] += index + 1;
 		});
 
 		while(! shouldStop) {
-			dispatcher.wait();
+			queue.wait();
 
 			++threadProcessCount;
 
-			dispatcher.process();
+			queue.process();
 		}
 	});
 	
 	REQUIRE(threadProcessCount.load() == 0);
 
-	auto waitUntilQueueEmpty = [&dispatcher]() {
-		while(dispatcher.waitFor(std::chrono::nanoseconds(0))) ;
+	auto waitUntilQueueEmpty = [&queue]() {
+		while(queue.waitFor(std::chrono::nanoseconds(0))) ;
 	};
 
 	SECTION("Enqueue one by one") {
-		dispatcher.enqueue(otherEvent, 1);
+		queue.enqueue(otherEvent, 1);
 		waitUntilQueueEmpty();
 		REQUIRE(threadProcessCount.load() == 1);
-		REQUIRE(dispatcher.isQueueEmpty());
+		REQUIRE(queue.empty());
 		REQUIRE(dataList == std::vector<int>{ 0, 2, 0, 0, 0 });
 
-		dispatcher.enqueue(otherEvent, 3);
+		queue.enqueue(otherEvent, 3);
 		waitUntilQueueEmpty();
 		REQUIRE(threadProcessCount.load() == 2);
-		REQUIRE(dispatcher.isQueueEmpty());
+		REQUIRE(queue.empty());
 		REQUIRE(dataList == std::vector<int>{ 0, 2, 0, 4, 0 });
 	}
 
 	SECTION("Enqueue two") {
-		dispatcher.enqueue(otherEvent, 1);
+		queue.enqueue(otherEvent, 1);
 		std::this_thread::sleep_for(std::chrono::milliseconds(10));
 		REQUIRE(threadProcessCount.load() == 1);
-		REQUIRE(dispatcher.isQueueEmpty());
+		REQUIRE(queue.empty());
 
-		dispatcher.enqueue(otherEvent, 3);
+		queue.enqueue(otherEvent, 3);
 		waitUntilQueueEmpty();
 
 		REQUIRE(threadProcessCount.load() == 2);
@@ -223,17 +223,17 @@ TEST_CASE("queue multi threading wait")
 
 	SECTION("Batching enqueue") {
 		{
-			ED::DisableQueueNotify disableNotify(&dispatcher);
+			EQ::DisableQueueNotify disableNotify(&queue);
 
-			dispatcher.enqueue(otherEvent, 2);
+			queue.enqueue(otherEvent, 2);
 			std::this_thread::sleep_for(std::chrono::milliseconds(10));
 			REQUIRE(threadProcessCount.load() == 0);
-			REQUIRE(! dispatcher.isQueueEmpty());
+			REQUIRE(! queue.empty());
 
-			dispatcher.enqueue(otherEvent, 4);
+			queue.enqueue(otherEvent, 4);
 			std::this_thread::sleep_for(std::chrono::milliseconds(10));
 			REQUIRE(threadProcessCount.load() == 0);
-			REQUIRE(! dispatcher.isQueueEmpty());
+			REQUIRE(! queue.empty());
 		}
 
 		waitUntilQueueEmpty();
@@ -241,7 +241,7 @@ TEST_CASE("queue multi threading wait")
 		REQUIRE(dataList == std::vector<int>{ 0, 0, 3, 0, 5 });
 	}
 
-	dispatcher.enqueue(stopEvent, 1);
+	queue.enqueue(stopEvent, 1);
 	thread.join();
 }
 
