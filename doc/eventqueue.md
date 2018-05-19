@@ -50,6 +50,7 @@ Put an event into the event queue. The event type is deducted from the arguments
 All arguments are copied to internal data structure, so the arguments must be copyable.  
 If an argument is a reference to a base class and a derived object is passed in, only the base object will be stored and the derived object is lost. Usually shared pointer should be used in such situation.  
 If an argument is a pointer, only the pointer will be stored. The object it points must be available until the event is processed.  
+`enqueue` wakes up any threads that are blocked by `wait` or `waitFor`.  
 The time complexity is O(1).  
 
 ```c++
@@ -57,6 +58,7 @@ void process();
 ```  
 Process the event queue. All events in the event queue are dispatched once and then removed from the queue.  
 The listeners are called in the thread same as the caller of `process`.  
+Any new events added to the queue during `process` are not dispatched during current `process`.  
 Note: if `process()` is called from multiple threads simultaneously, the events in the event queue are guaranteed dispatched only once.  
 
 ```c++

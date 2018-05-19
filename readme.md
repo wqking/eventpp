@@ -83,11 +83,11 @@ queue.process();
 ## Documentations
 
 * [An overview introduction](doc/introduction.md)
-* [Tutorials of EventDispatcher](doc/tutorial_eventdispatcher.md)
 * [Tutorials of CallbackList](doc/tutorial_callbacklist.md)
+* [Tutorials of EventDispatcher](doc/tutorial_eventdispatcher.md)
 * [Tutorials of EventQueue](doc/tutorial_eventqueue.md)
-* [Document of EventDispatcher](doc/eventdispatcher.md)
 * [Document of CallbackList](doc/callbacklist.md)
+* [Document of EventDispatcher](doc/eventdispatcher.md)
 * [Document of EventQueue](doc/eventqueue.md)
 * [Frequently Asked Questions](doc/faq.md)
 * There are compilable tutorials in the unit tests.
