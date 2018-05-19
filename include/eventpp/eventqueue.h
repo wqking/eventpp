@@ -203,7 +203,7 @@ private:
 	template <size_t ...Indexes>
 	void doProcessItem(QueueItem & item, internal_::IndexSequence<Indexes...>)
 	{
-		this->dispatch(std::get<Indexes>(item)...);
+		this->doDispatch(std::get<Indexes>(item)...);
 	}
 
 	void doEnqueue(QueueItem && item)
