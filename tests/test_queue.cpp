@@ -12,7 +12,7 @@
 // limitations under the License.
 
 #include "test.h"
-#include "eventpp/eventdispatcher.h"
+#include "eventpp/eventqueue.h"
 
 #include <thread>
 #include <numeric>
@@ -23,7 +23,7 @@
 
 TEST_CASE("queue, std::string, void (const std::string &)")
 {
-	eventpp::EventDispatcher<std::string, void (const std::string &)> dispatcher;
+	eventpp::EventQueue<std::string, void (const std::string &)> dispatcher;
 
 	int a = 1;
 	int b = 5;
@@ -46,7 +46,7 @@ TEST_CASE("queue, std::string, void (const std::string &)")
 
 TEST_CASE("queue, int, void ()")
 {
-	eventpp::EventDispatcher<int, void ()> dispatcher;
+	eventpp::EventQueue<int, void ()> dispatcher;
 
 	int a = 1;
 	int b = 5;
@@ -70,7 +70,7 @@ TEST_CASE("queue, int, void ()")
 
 TEST_CASE("queue, int, void (const std::string &, int)")
 {
-	eventpp::EventDispatcher<int, void (const std::string &, int)> dispatcher;
+	eventpp::EventQueue<int, void (const std::string &, int)> dispatcher;
 
 	const int event = 3;
 
@@ -116,7 +116,7 @@ TEST_CASE("queue, int, void (const std::string &, int)")
 
 TEST_CASE("queue multi threading, int, void (int)")
 {
-	using ED = eventpp::EventDispatcher<int, void (int)>;
+	using ED = eventpp::EventQueue<int, void (int)>;
 	ED dispatcher;
 
 	constexpr int threadCount = 256;
@@ -157,7 +157,7 @@ TEST_CASE("queue multi threading, int, void (int)")
 
 TEST_CASE("queue multi threading wait")
 {
-	using ED = eventpp::EventDispatcher<int, void (int)>;
+	using ED = eventpp::EventQueue<int, void (int)>;
 	ED dispatcher;
 
 	// note, all events will be process from the other thread instead of main thread

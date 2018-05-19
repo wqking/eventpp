@@ -20,12 +20,9 @@
 #include <functional>
 #include <type_traits>
 #include <map>
-#include <list>
-#include <tuple>
 #include <mutex>
 #include <algorithm>
 #include <memory>
-#include <chrono>
 
 namespace eventpp {
 
@@ -122,7 +119,7 @@ class EventDispatcherBase <
 	ReturnType (Args...)
 >
 {
-private:
+protected:
 	using EventGetter = typename std::conditional<
 		std::is_base_of<EventGetterBase, EventGetterType>::value,
 		EventGetterType,
@@ -130,7 +127,6 @@ private:
 	>::type;
 
 	using Mutex = typename Threading::Mutex;
-	using ConditionVariable = typename Threading::ConditionVariable;
 
 	using Callback_ = typename std::conditional<
 		std::is_same<CallbackType, void>::value,
@@ -150,11 +146,6 @@ private:
 	using Handle_ = typename CallbackList_::Handle;
 	using Event_ = typename EventGetter::Event;
 
-	using QueueItem = std::tuple<
-		typename std::remove_cv<typename std::remove_reference<Event_>::type>::type,
-		typename std::remove_cv<typename std::remove_reference<Args>::type>::type...
-	>;
-
 public:
 	using Handle = Handle_;
 	using Callback = Callback_;
@@ -162,40 +153,10 @@ public:
 	using FilterHandle = typename FilterList::Handle;;
 
 public:
-	struct DisableQueueNotify
-	{
-		DisableQueueNotify(EventDispatcherBase * dispatcher)
-			: dispatcher(dispatcher)
-		{
-			++dispatcher->queueNotifyCounter;
-		}
-
-		~DisableQueueNotify()
-		{
-			--dispatcher->queueNotifyCounter;
-
-			if(dispatcher->doCanNotifyQueueAvailable() && ! dispatcher->isQueueEmpty()) {
-				dispatcher->queueListConditionVariable.notify_one();
-			}
-		}
-
-		EventDispatcherBase * dispatcher;
-	};
-
-	friend struct QueueNotifyDiable;
-
-public:
 	EventDispatcherBase()
 		:
 			eventCallbackListMap(),
 			listenerMutex(),
-			queueListConditionVariable(),
-			queueEmptyCounter(0),
-			queueNotifyCounter(0),
-			queueListMutex(),
-			queueList(),
-			freeListMutex(),
-			freeList(),
 			filterList()
 	{
 	}
@@ -288,94 +249,7 @@ public:
 		);
 	}
 
-	void enqueue(Args ...args)
-	{
-		static_assert(canIncludeEventType, "Enqueuing arguments count doesn't match required (Event type should be included).");
-
-		doEnqueue(QueueItem(
-			EventGetter::getEvent(args...),
-			std::forward<Args>(args)...
-		));
-
-		if(doCanNotifyQueueAvailable()) {
-			queueListConditionVariable.notify_one();
-		}
-	}
-
-	template <typename T>
-	void enqueue(T && first, Args ...args)
-	{
-		static_assert(canExcludeEventType, "Enqueuing arguments count doesn't match required (Event type should NOT be included).");
-
-		doEnqueue(QueueItem(
-			EventGetter::getEvent(std::forward<T>(first), args...),
-			std::forward<Args>(args)...
-		));
-
-		if(doCanNotifyQueueAvailable()) {
-			queueListConditionVariable.notify_one();
-		}
-	}
-
-	bool isQueueEmpty() const {
-		return queueList.empty() && (queueEmptyCounter.load(std::memory_order_acquire) == 0);
-	}
-
-	void process()
-	{
-		if(! queueList.empty()) {
-			std::list<QueueItem> tempList;
-
-			// Use a counter to tell the queue list is not empty during processing
-			// even though queueList is swapped to empty.
-			CounterGuard<decltype(queueEmptyCounter)> counterGuard(queueEmptyCounter);
-
-			{
-				std::lock_guard<Mutex> queueListLock(queueListMutex);
-				using namespace std;
-				swap(queueList, tempList);
-			}
-
-			if(! tempList.empty()) {
-				for(auto & item : tempList) {
-					doProcessItem(item, typename internal_::MakeIndexSequence<sizeof...(Args) + 1>::Type());
-					item = QueueItem();
-				}
-
-				std::lock_guard<Mutex> queueListLock(freeListMutex);
-				freeList.splice(freeList.end(), tempList);
-			}
-		}
-	}
-
-	bool wait() const
-	{
-		std::unique_lock<Mutex> queueListLock(queueListMutex);
-		queueListConditionVariable.wait(queueListLock, [this]() -> bool {
-			return doCanStopWaiting();
-		});
-
-		return true;
-	}
-
-	template <class Rep, class Period>
-	bool waitFor(const std::chrono::duration<Rep, Period> & duration) const
-	{
-		std::unique_lock<Mutex> queueListLock(queueListMutex);
-		return queueListConditionVariable.wait_for(queueListLock, duration, [this]() -> bool {
-			return doCanStopWaiting();
-		});
-	}
-
 private:
-	bool doCanStopWaiting() const {
-		return ! isQueueEmpty() && doCanNotifyQueueAvailable();
-	}
-
-	bool doCanNotifyQueueAvailable() const {
-		return queueNotifyCounter.load(std::memory_order_acquire) == 0;
-	}
-
 	void doDispatch(const Event & e, Args ...args) const
 	{
 		if(! filterList.empty()) {
@@ -392,39 +266,6 @@ private:
 		if(callableList) {
 			(*callableList)(std::forward<Args>(args)...);
 		}
-	}
-
-	template <size_t ...Indexes>
-	void doProcessItem(QueueItem & item, internal_::IndexSequence<Indexes...>)
-	{
-		dispatch(std::get<Indexes>(item)...);
-	}
-
-	void doEnqueue(QueueItem && item)
-	{
-		if(! freeList.empty()) {
-			std::list<QueueItem> tempList;
-
-			{
-				std::lock_guard<Mutex> queueListLock(freeListMutex);
-				if(! freeList.empty()) {
-					tempList.splice(tempList.end(), freeList, freeList.begin());
-				}
-			}
-
-			if(! tempList.empty()) {
-				auto it = tempList.begin();
-				*it = item;
-
-				std::lock_guard<Mutex> queueListLock(queueListMutex);
-				queueList.splice(queueList.end(), tempList, it);
-
-				return;
-			}
-		}
-
-		std::lock_guard<Mutex> queueListLock(queueListMutex);
-		queueList.emplace_back(item);
 	}
 
 	// template helper to avoid code duplication in doFindCallableList
@@ -456,14 +297,6 @@ private:
 private:
 	std::map<Event, CallbackList_> eventCallbackListMap;
 	mutable Mutex listenerMutex;
-
-	mutable ConditionVariable queueListConditionVariable;
-	typename Threading::template Atomic<int> queueEmptyCounter;
-	typename Threading::template Atomic<int> queueNotifyCounter;
-	mutable Mutex queueListMutex;
-	std::list<QueueItem> queueList;
-	Mutex freeListMutex;
-	std::list<QueueItem> freeList;
 
 	FilterList filterList;
 };

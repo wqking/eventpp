@@ -13,6 +13,7 @@
 
 // Include the head
 #include "eventpp/eventdispatcher.h"
+#include "eventpp/eventqueue.h"
 
 #include "test.h"
 
@@ -128,27 +129,27 @@ TEST_CASE("EventDispatcher tutorial 4, event queue")
 {
 	std::cout << "EventDispatcher tutorial 4, event queue" << std::endl;
 
-	eventpp::EventDispatcher<int, void (const std::string &, const bool)> dispatcher;
+	eventpp::EventQueue<int, void (const std::string &, const bool)> queue;
 
-	dispatcher.appendListener(3, [](const std::string & s, const bool b) {
+	queue.appendListener(3, [](const std::string & s, const bool b) {
 		std::cout << std::boolalpha << "Got event 3, s is " << s << " b is " << b << std::endl;
 	});
 	// The listener prototype doesn't need to be exactly same as the dispatcher.
 	// It would be find as long as the arguments is compatible with the dispatcher.
-	dispatcher.appendListener(5, [](std::string s, int b) {
+	queue.appendListener(5, [](std::string s, int b) {
 		std::cout << std::boolalpha << "Got event 5, s is " << s << " b is " << b << std::endl;
 	});
-	dispatcher.appendListener(5, [](const std::string & s, const bool b) {
+	queue.appendListener(5, [](const std::string & s, const bool b) {
 		std::cout << std::boolalpha << "Got another event 5, s is " << s << " b is " << b << std::endl;
 	});
 
 	// Enqueue the events, the first argument is always the event type.
 	// The listeners are not triggered during enqueue.
-	dispatcher.enqueue(3, "Hello", true);
-	dispatcher.enqueue(5, "World", false);
+	queue.enqueue(3, "Hello", true);
+	queue.enqueue(5, "World", false);
 
 	// Process the event queue, dispatch all queued events.
-	dispatcher.process();
+	queue.process();
 }
 
 TEST_CASE("EventDispatcher tutorial 5, event filter")
