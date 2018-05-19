@@ -249,7 +249,7 @@ public:
 		);
 	}
 
-private:
+protected:
 	void doDispatch(const Event & e, Args ...args) const
 	{
 		if(! filterList.empty()) {
@@ -268,6 +268,7 @@ private:
 		}
 	}
 
+private:
 	// template helper to avoid code duplication in doFindCallableList
 	template <typename T>
 	static auto doFindCallableListHelper(T * self, const Event & e)

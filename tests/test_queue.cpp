@@ -114,6 +114,45 @@ TEST_CASE("queue, int, void (const std::string &, int)")
 	}
 }
 
+TEST_CASE("queue, customized event")
+{
+	struct MyEvent {
+		int type;
+		std::string message;
+		int param;
+	};
+
+	struct MyEventTypeGetter : public eventpp::EventGetterBase
+	{
+		using Event = int;
+
+		static Event getEvent(const MyEvent & e, std::string) {
+			return e.type;
+		}
+	};
+
+	eventpp::EventQueue<MyEventTypeGetter, void (const MyEvent &, std::string)> queue;
+
+	std::string a = "Hello ";
+	std::string b = "World ";
+
+	queue.appendListener(3, [&a](const MyEvent & e, const std::string & s) {
+		a += e.message + s + std::to_string(e.param);
+	});
+	queue.appendListener(3, [&b](const MyEvent & e, const std::string & s) {
+		b += e.message + s + std::to_string(e.param);
+	});
+
+	REQUIRE(a == "Hello ");
+	REQUIRE(b == "World ");
+
+	queue.enqueue({ 3, "very ", 38 }, "good");
+	queue.process();
+
+	REQUIRE(a == "Hello very good38");
+	REQUIRE(b == "World very good38");
+}
+
 TEST_CASE("queue multi threading, int, void (int)")
 {
 	using EQ = eventpp::EventQueue<int, void (int)>;
