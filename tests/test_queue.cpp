@@ -273,8 +273,8 @@ TEST_CASE("queue multi threading, many threads wait")
 	for(int i = 0; i < itemCount; ++i) {
 		threadList.emplace_back([stopEvent, otherEvent, i, &dataList, &queue, &shouldStop]() {
 			for(;;) {
-				while(! queue.waitFor(std::chrono::milliseconds(1))
-					&& ! shouldStop.load()) ;
+				// can't use queue.wait() because the thread can't be waken up by shouldStop = true
+				while(! queue.waitFor(std::chrono::milliseconds(10)) && ! shouldStop.load()) ;
 
 				if(shouldStop.load()) {
 					break;

@@ -48,6 +48,8 @@ TEST_CASE("EventQueue tutorial 1, basic")
 
 TEST_CASE("EventQueue tutorial 2, multiple threading")
 {
+	std::cout << "EventQueue tutorial 2, multiple threading" << std::endl;
+
 	using EQ = eventpp::EventQueue<int, void (int)>;
 	EQ queue;
 

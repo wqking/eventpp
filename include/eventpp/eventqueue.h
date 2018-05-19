@@ -174,14 +174,12 @@ public:
 		}
 	}
 
-	bool wait() const
+	void wait() const
 	{
 		std::unique_lock<Mutex> queueListLock(queueListMutex);
 		queueListConditionVariable.wait(queueListLock, [this]() -> bool {
 			return doCanProcess();
 		});
-
-		return true;
 	}
 
 	template <class Rep, class Period>

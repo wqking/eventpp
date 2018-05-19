@@ -4,7 +4,7 @@ eventpp provides tools that allow your application components to communicate wit
 
 ## Facts and features
 
-- Support both synchronous event dispatching and asynchronous event queue.  
+- Support both synchronous event dispatching (EventDispatcher) and asynchronous event queue (EventQueue).  
 - Supports nested event. A listener can dispatch event, append/prepend/insert/remove other listeners during capturing an event safely.
 - Support event filter.
 - Template based, less runtime overhead, unlimited possibilities. The event and callback can be almost any C++ types meeting minimum requirements.
@@ -18,7 +18,6 @@ eventpp provides tools that allow your application components to communicate wit
 ## License
 
 Apache License, Version 2.0  
-If you have trouble with the license, contact me.
 
 ## Source code
 
@@ -30,22 +29,23 @@ If you have trouble with the license, contact me.
 
 `eventpp`
 
+### Using CallbackList
+```c++
+#include "eventpp/callbacklist.h"
+eventpp::CallbackList<void (const std::string &, const bool)> callbackList;
+callbackList.append([](const std::string & s, const bool b) {
+	std::cout << std::boolalpha << "Got callback 1, s is " << s << " b is " << b << std::endl;
+});
+callbackList.append([](std::string s, int b) {
+	std::cout << std::boolalpha << "Got callback 2, s is " << s << " b is " << b << std::endl;
+});
+callbackList("Hello world", true);
+```
+
 ### Using EventDispatcher
 ```c++
-// Add the folder *include* to include path.
 #include "eventpp/eventdispatcher.h"
-
-// The namespace is eventpp
-// The first template parameter int is the event type,
-// the event type can be any type such as std::string, int, etc.
-// The second is the prototype of the listener.
 eventpp::EventDispatcher<int, void ()> dispatcher;
-
-// Add a listener. As the type of dispatcher,
-// here 3 and 5 is the event type,
-// []() {} is the listener.
-// Lambda is not required, any function or std::function
-// or whatever function object with the required prototype is fine.
 dispatcher.appendListener(3, []() {
 	std::cout << "Got event 3." << std::endl;
 });
@@ -55,84 +55,42 @@ dispatcher.appendListener(5, []() {
 dispatcher.appendListener(5, []() {
 	std::cout << "Got another event 5." << std::endl;
 });
-
-// Dispatch the events, the first argument is always the event type.
+// dispatch event 3
 dispatcher.dispatch(3);
+// dispatch event 5
 dispatcher.dispatch(5);
 ```
 
-### Using CallbackList
+### Using EventQueue
 ```c++
-// Add the folder *include* to include path.
-#include "eventpp/callbacklist.h"
+eventpp::EventQueue<int, void (const std::string &, const bool)> queue;
 
-// The namespace is eventpp
-// The callback list prototype has two parameters.
-eventpp::CallbackList<void (const std::string &, const bool)> callbackList;
-
-callbackList.append([](const std::string & s, const bool b) {
-	std::cout << std::boolalpha << "Got callback 1, s is " << s << " b is " << b << std::endl;
+dispatcher.appendListener(3, [](const std::string s, bool b) {
+	std::cout << std::boolalpha << "Got event 3, s is " << s << " b is " << b << std::endl;
 });
-// The callback prototype doesn't need to be exactly same as the callback list.
-// It would be find as long as the arguments is compatible with the callbacklist.
-callbackList.append([](std::string s, int b) {
-	std::cout << std::boolalpha << "Got callback 2, s is " << s << " b is " << b << std::endl;
+dispatcher.appendListener(5, [](const std::string s, bool b) {
+	std::cout << std::boolalpha << "Got event 5, s is " << s << " b is " << b << std::endl;
 });
 
-// Invoke the callback list
-callbackList("Hello world", true);
+// The listeners are not triggered during enqueue.
+queue.enqueue(3, "Hello", true);
+queue.enqueue(5, "World", false);
+
+// Process the event queue, dispatch all queued events.
+queue.process();
 ```
 
 ## Documentations
 
-* [Event dispatcher](doc/eventdispatcher.md)
-* [Callback list](doc/callbacklist.md)
+* [An overview introduction](doc/introduction.md)
+* [Tutorials of EventDispatcher](doc/tutorial_eventdispatcher.md)
+* [Tutorials of CallbackList](doc/tutorial_callbacklist.md)
+* [Tutorials of EventQueue](doc/tutorial_eventqueue.md)
+* [Document of EventDispatcher](doc/eventdispatcher.md)
+* [Document of CallbackList](doc/callbacklist.md)
+* [Document of EventQueue](doc/eventqueue.md)
 * [Frequently Asked Questions](doc/faq.md)
 * There are compilable tutorials in the unit tests.
-
-## EventDispatcher VS CallbackList
-
-In brief, EventDispatcher equals to std::map<EventType, CallbackList>.  
-CallbackList holds a list of callbacks. On invocation, CallbackList simply invokes each callbacks one by one. Think CallbackList as the signal/slot system in Qt, or the callback function pointer in some Windows APIs (such as lpCompletionRoutine in `ReadFileEx`).  
-EventDispatcher holds a map of `EventType, CallbackList` pairs. On dispatching, EventDispatcher finds the CallbackList at the event type, then invoke the callback list. Think EventDispatcher as the event system (QEvent) in Qt, or the message processing in Windows.  
-
-CallbackList is ideal when there are very few kinds of events. Each event can have its own CallbackList, and each CallbackList can have different prototype. For example,
-```c++
-eventpp::CallbackList<void()> onStart;
-eventpp::CallbackList<void(MyStopReason)> onStop;
-```
-However, if there are lots of kinds of events, hundreds to unlimited (this is quite common in a GUI or game system), using CallbackList for each events will be crazy. This is how EventDispatcher comes useful.  
-
-EventDispatcher is ideal when there are lots of kinds of events, or the number of events can't be determined. Each event is distinguished by an event type. For example,
-```c++
-enum class MyEventType
-{
-	redraw,
-	mouseDown,
-	mouseUp,
-	//... maybe 200 other events here
-};
-
-struct MyEvent {
-	MyEventType type;
-	// data that all events may need
-};
-
-struct MyEventTypeGetter : public eventpp::EventGetterBase
-{
-	using Event = MyEventType;
-
-	static Event getEvent(const std::shared_ptr<MyEvent> & e) {
-		return e->type;
-	}
-};
-
-eventpp::EventDispatcher<MyEventTypeGetter, void(std::shared_ptr<MyEvent>)> dispatcher;
-```
-(Note: if you are confused with MyEventTypeGetter in above sample, please read the "Event getter" section in [Event dispatcher](doc/eventdispatcher.md), and just consider the dispatcher as `eventpp::EventDispatcher<MyEventType, void(std::shared_ptr<MyEvent>)> dispatcher` for now.)  
-The disadvantage of EventDispatcher is that all events must have the same callback prototype (`void(std::shared_ptr<MyEvent>)` in the sample code). The common solution is that the callback takes a base class of Event and all events derive their own event data from Event. In the sample code, MyEvent is the base event class, the callback takes one argument of shared pointer to MyEvent.  
-The advantage of EventDispatcher is it has more features than CallbackList, such as event queue.
-
 
 ## Build the unit tests
 
