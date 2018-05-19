@@ -25,6 +25,7 @@
 #include <mutex>
 #include <algorithm>
 #include <memory>
+#include <chrono>
 
 namespace eventpp {
 
@@ -83,6 +84,20 @@ struct MakeIndexSequence<0, Indexes...>
 	using Type = IndexSequence<Indexes...>;
 };
 
+template <typename T>
+struct CounterGuard
+{
+	explicit CounterGuard(T & v) : value(v) {
+		++value;
+	}
+
+	~CounterGuard() {
+		--value;
+	}
+
+	T & value;
+};
+
 template <
 	typename EventGetterType,
 	typename CallbackType,
@@ -113,7 +128,10 @@ private:
 		EventGetterType,
 		PrimaryEventGetter<EventGetterType>
 	>::type;
+
 	using Mutex = typename Threading::Mutex;
+	using ConditionVariable = typename Threading::ConditionVariable;
+
 	using Callback_ = typename std::conditional<
 		std::is_same<CallbackType, void>::value,
 		std::function<ReturnType (Args...)>,
@@ -144,7 +162,44 @@ public:
 	using FilterHandle = typename FilterList::Handle;;
 
 public:
-	EventDispatcherBase() = default;
+	struct DisableQueueNotify
+	{
+		DisableQueueNotify(EventDispatcherBase * dispatcher)
+			: dispatcher(dispatcher)
+		{
+			++dispatcher->queueNotifyCounter;
+		}
+
+		~DisableQueueNotify()
+		{
+			--dispatcher->queueNotifyCounter;
+
+			if(dispatcher->doCanNotifyQueueAvailable() && ! dispatcher->isQueueEmpty()) {
+				dispatcher->queueListConditionVariable.notify_one();
+			}
+		}
+
+		EventDispatcherBase * dispatcher;
+	};
+
+	friend struct QueueNotifyDiable;
+
+public:
+	EventDispatcherBase()
+		:
+			eventCallbackListMap(),
+			listenerMutex(),
+			queueListConditionVariable(),
+			queueEmptyCounter(0),
+			queueNotifyCounter(0),
+			queueListMutex(),
+			queueList(),
+			freeListMutex(),
+			freeList(),
+			filterList()
+	{
+	}
+
 	EventDispatcherBase(EventDispatcherBase &&) = delete;
 	EventDispatcherBase(const EventDispatcherBase &) = delete;
 	EventDispatcherBase & operator = (const EventDispatcherBase &) = delete;
@@ -217,8 +272,6 @@ public:
 	{
 		static_assert(canExcludeEventType, "Dispatching arguments count doesn't match required (Event type should NOT be included).");
 
-		// can't std::forward<Args>(args) in EventGetter::getEvent because the pass by value arguments will be moved to getEvent
-		// then the other std::forward<Args>(args) to doDispatch will get empty values.
 		doDispatch(
 			EventGetter::getEvent(std::forward<T>(first), args...),
 			std::forward<Args>(args)...
@@ -230,6 +283,10 @@ public:
 		static_assert(canIncludeEventType, "Enqueuing arguments count doesn't match required (Event type should be included).");
 
 		doEnqueue(QueueItem(std::get<0>(std::tie(args...)), std::forward<Args>(args)...));
+
+		if(doCanNotifyQueueAvailable()) {
+			queueListConditionVariable.notify_one();
+		}
 	}
 
 	template <typename T>
@@ -238,12 +295,24 @@ public:
 		static_assert(canExcludeEventType, "Enqueuing arguments count doesn't match required (Event type should NOT be included).");
 
 		doEnqueue(QueueItem(std::forward<T>(first), std::forward<Args>(args)...));
+
+		if(doCanNotifyQueueAvailable()) {
+			queueListConditionVariable.notify_one();
+		}
+	}
+
+	bool isQueueEmpty() const {
+		return queueList.empty() && (queueEmptyCounter.load(std::memory_order_acquire) == 0);
 	}
 
 	void process()
 	{
 		if(! queueList.empty()) {
 			std::list<QueueItem> tempList;
+
+			// Use a counter to tell the queue list is not empty during processing
+			// even though queueList is swapped to empty.
+			CounterGuard<decltype(queueEmptyCounter)> counterGuard(queueEmptyCounter);
 
 			{
 				std::lock_guard<Mutex> queueListLock(queueListMutex);
@@ -263,6 +332,25 @@ public:
 		}
 	}
 
+	bool wait() const
+	{
+		std::unique_lock<Mutex> queueListLock(queueListMutex);
+		queueListConditionVariable.wait(queueListLock, [this]() -> bool {
+			return doCanStopWaiting();
+		});
+
+		return true;
+	}
+
+	template <class Rep, class Period>
+	bool waitFor(const std::chrono::duration<Rep, Period> & duration) const
+	{
+		std::unique_lock<Mutex> queueListLock(queueListMutex);
+		return queueListConditionVariable.wait_for(queueListLock, duration, [this]() -> bool {
+			return doCanStopWaiting();
+		});
+	}
+
 	FilterHandle appendFilter(const Filter & filter)
 	{
 		return filterList.append(filter);
@@ -274,6 +362,14 @@ public:
 	}
 
 private:
+	bool doCanStopWaiting() const {
+		return ! isQueueEmpty() && doCanNotifyQueueAvailable();
+	}
+
+	bool doCanNotifyQueueAvailable() const {
+		return queueNotifyCounter.load(std::memory_order_acquire) == 0;
+	}
+
 	void doDispatch(const Event & e, Args ...args) const
 	{
 		if(! filterList.empty()) {
@@ -355,7 +451,10 @@ private:
 	std::map<Event, CallbackList_> eventCallbackListMap;
 	mutable Mutex listenerMutex;
 
-	Mutex queueListMutex;
+	mutable ConditionVariable queueListConditionVariable;
+	typename Threading::template Atomic<int> queueEmptyCounter;
+	typename Threading::template Atomic<int> queueNotifyCounter;
+	mutable Mutex queueListMutex;
 	std::list<QueueItem> queueList;
 	Mutex freeListMutex;
 	std::list<QueueItem> freeList;
