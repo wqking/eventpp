@@ -155,7 +155,7 @@ TEST_CASE("queue multi threading, int, void (int)")
 	REQUIRE(dataList == compareList);
 }
 
-TEST_CASE("queue multi threading wait")
+TEST_CASE("queue multi threading, one thread waits")
 {
 	using EQ = eventpp::EventQueue<int, void (int)>;
 	EQ queue;
@@ -243,5 +243,67 @@ TEST_CASE("queue multi threading wait")
 
 	queue.enqueue(stopEvent, 1);
 	thread.join();
+}
+
+TEST_CASE("queue multi threading, many threads wait")
+{
+	using EQ = eventpp::EventQueue<int, void (int)>;
+	EQ queue;
+
+	// note, all events will be process from the other thread instead of main thread
+	constexpr int stopEvent = 1;
+	constexpr int otherEvent = 2;
+
+	constexpr int unit = 3;
+	constexpr int itemCount = 30 * unit;
+
+	std::vector<int> dataList(itemCount);
+
+	std::vector<std::thread> threadList;
+
+	std::atomic<bool> shouldStop(false);
+
+	queue.appendListener(stopEvent, [&shouldStop](int) {
+		shouldStop = true;
+	});
+	queue.appendListener(otherEvent, [&dataList](const int index) {
+		++dataList[index];
+	});
+
+	for(int i = 0; i < itemCount; ++i) {
+		threadList.emplace_back([stopEvent, otherEvent, i, &dataList, &queue, &shouldStop]() {
+			for(;;) {
+				while(! queue.waitFor(std::chrono::milliseconds(1))
+					&& ! shouldStop.load()) ;
+
+				if(shouldStop.load()) {
+					break;
+				}
+
+				queue.process();
+			}
+		});
+	}
+
+	for(int i = 0; i < itemCount; ++i) {
+		queue.enqueue(otherEvent, i);
+		std::this_thread::sleep_for(std::chrono::milliseconds(0));
+	}
+
+	for(int i = 0; i < itemCount; i += unit) {
+		EQ::DisableQueueNotify disableNotify(&queue);
+		for(int k = 0; k < unit; ++k) {
+			queue.enqueue(otherEvent, i);
+			std::this_thread::sleep_for(std::chrono::milliseconds(0));
+		}
+	}
+
+	queue.enqueue(stopEvent);
+
+	for(auto & thread : threadList) {
+		thread.join();
+	}
+
+	REQUIRE(std::accumulate(dataList.begin(), dataList.end(), 0) == itemCount * 2);
 }
 

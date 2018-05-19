@@ -148,6 +148,10 @@ public:
 		return ! head;
 	}
 
+	operator bool() const {
+		return ! empty();
+	}
+
 	Handle append(const Callback & callback)
 	{
 		NodePtr node(std::make_shared<Node>(callback, getNextCounter()));

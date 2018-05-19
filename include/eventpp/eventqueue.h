@@ -123,7 +123,7 @@ public:
 			std::forward<Args>(args)...
 		));
 
-		if(doCanNotifyQueueAvailable()) {
+		if(doCanProcess()) {
 			queueListConditionVariable.notify_one();
 		}
 	}
@@ -138,7 +138,7 @@ public:
 			std::forward<Args>(args)...
 		));
 
-		if(doCanNotifyQueueAvailable()) {
+		if(doCanProcess()) {
 			queueListConditionVariable.notify_one();
 		}
 	}
@@ -178,7 +178,7 @@ public:
 	{
 		std::unique_lock<Mutex> queueListLock(queueListMutex);
 		queueListConditionVariable.wait(queueListLock, [this]() -> bool {
-			return doCanStopWaiting();
+			return doCanProcess();
 		});
 
 		return true;
@@ -189,12 +189,12 @@ public:
 	{
 		std::unique_lock<Mutex> queueListLock(queueListMutex);
 		return queueListConditionVariable.wait_for(queueListLock, duration, [this]() -> bool {
-			return doCanStopWaiting();
+			return doCanProcess();
 		});
 	}
 
 private:
-	bool doCanStopWaiting() const {
+	bool doCanProcess() const {
 		return ! empty() && doCanNotifyQueueAvailable();
 	}
 
