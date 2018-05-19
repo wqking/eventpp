@@ -12,56 +12,57 @@
 // limitations under the License.
 
 #include "test.h"
-#include "eventpp/eventdispatcher.h"
+#include "eventpp/eventqueue.h"
 
 #include <thread>
 #include <numeric>
 #include <algorithm>
 #include <random>
 #include <vector>
+#include <atomic>
 
 TEST_CASE("queue, std::string, void (const std::string &)")
 {
-	eventpp::EventDispatcher<std::string, void (const std::string &)> dispatcher;
+	eventpp::EventQueue<std::string, void (const std::string &)> queue;
 
 	int a = 1;
 	int b = 5;
 
-	dispatcher.appendListener("event1", [&a](const std::string &) {
+	queue.appendListener("event1", [&a](const std::string &) {
 		a = 2;
 	});
-	dispatcher.appendListener("event1", eraseArgs1([&b]() {
+	queue.appendListener("event1", eraseArgs1([&b]() {
 		b = 8;
 	}));
 
 	REQUIRE(a != 2);
 	REQUIRE(b != 8);
 
-	dispatcher.enqueue("event1");
-	dispatcher.process();
+	queue.enqueue("event1");
+	queue.process();
 	REQUIRE(a == 2);
 	REQUIRE(b == 8);
 }
 
 TEST_CASE("queue, int, void ()")
 {
-	eventpp::EventDispatcher<int, void ()> dispatcher;
+	eventpp::EventQueue<int, void ()> queue;
 
 	int a = 1;
 	int b = 5;
 
-	dispatcher.appendListener(3, [&a]() {
+	queue.appendListener(3, [&a]() {
 		a += 1;
 	});
-	dispatcher.appendListener(3, [&b]() {
+	queue.appendListener(3, [&b]() {
 		b += 3;
 	});
 
 	REQUIRE(a != 2);
 	REQUIRE(b != 8);
 
-	dispatcher.enqueue(3);
-	dispatcher.process();
+	queue.enqueue(3);
+	queue.process();
 
 	REQUIRE(a == 2);
 	REQUIRE(b == 8);
@@ -69,18 +70,18 @@ TEST_CASE("queue, int, void ()")
 
 TEST_CASE("queue, int, void (const std::string &, int)")
 {
-	eventpp::EventDispatcher<int, void (const std::string &, int)> dispatcher;
+	eventpp::EventQueue<int, void (const std::string &, int)> queue;
 
 	const int event = 3;
 
 	std::vector<std::string> sList(2);
 	std::vector<int> iList(sList.size());
 
-	dispatcher.appendListener(event, [&sList, &iList](const std::string & s, const int i) {
+	queue.appendListener(event, [&sList, &iList](const std::string & s, const int i) {
 		sList[0] = s;
 		iList[0] = i;
 	});
-	dispatcher.appendListener(event, [&sList, &iList](const std::string & s, const int i) {
+	queue.appendListener(event, [&sList, &iList](const std::string & s, const int i) {
 		sList[1] = s + "2";
 		iList[1] = i + 5;
 	});
@@ -91,8 +92,8 @@ TEST_CASE("queue, int, void (const std::string &, int)")
 	REQUIRE(iList[1] != 8);
 
 	SECTION("Parameters") {
-		dispatcher.enqueue(event, "first", 3);
-		dispatcher.process();
+		queue.enqueue(event, "first", 3);
+		queue.process();
 
 		REQUIRE(sList[0] == "first");
 		REQUIRE(sList[1] == "first2");
@@ -102,9 +103,9 @@ TEST_CASE("queue, int, void (const std::string &, int)")
 
 	SECTION("Reference parameters should not be modified") {
 		std::string s = "first";
-		dispatcher.enqueue(event, s, 3);
+		queue.enqueue(event, s, 3);
 		s = "";
-		dispatcher.process();
+		queue.process();
 
 		REQUIRE(sList[0] == "first");
 		REQUIRE(sList[1] == "first2");
@@ -113,10 +114,10 @@ TEST_CASE("queue, int, void (const std::string &, int)")
 	}
 }
 
-TEST_CASE("queue multi threading, int, void ()")
+TEST_CASE("queue multi threading, int, void (int)")
 {
-	using ED = eventpp::EventDispatcher<int, void (int)>;
-	ED dispatcher;
+	using EQ = eventpp::EventQueue<int, void (int)>;
+	EQ queue;
 
 	constexpr int threadCount = 256;
 	constexpr int dataCountPerThread = 1024 * 4;
@@ -129,19 +130,19 @@ TEST_CASE("queue multi threading, int, void ()")
 	std::vector<int> dataList(itemCount);
 
 	for(int i = 0; i < itemCount; ++i) {
-		dispatcher.appendListener(eventList[i], [&dispatcher, i, &dataList](const int d) {
+		queue.appendListener(eventList[i], [&queue, i, &dataList](const int d) {
 			dataList[i] += d;
 		});
 	}
 
 	std::vector<std::thread> threadList;
 	for(int i = 0; i < threadCount; ++i) {
-		threadList.emplace_back([i, dataCountPerThread, &dispatcher, itemCount]() {
+		threadList.emplace_back([i, dataCountPerThread, &queue, itemCount]() {
 			for(int k = i * dataCountPerThread; k < (i + 1) * dataCountPerThread; ++k) {
-				dispatcher.enqueue(k, 3);
+				queue.enqueue(k, 3);
 			}
 			for(int k = 0; k < 10; ++k) {
-				dispatcher.process();
+				queue.process();
 			}
 		});
 	}
@@ -152,5 +153,157 @@ TEST_CASE("queue multi threading, int, void ()")
 	std::vector<int> compareList(itemCount);
 	std::fill(compareList.begin(), compareList.end(), 3);
 	REQUIRE(dataList == compareList);
+}
+
+TEST_CASE("queue multi threading, one thread waits")
+{
+	using EQ = eventpp::EventQueue<int, void (int)>;
+	EQ queue;
+
+	// note, all events will be process from the other thread instead of main thread
+	constexpr int stopEvent = 1;
+	constexpr int otherEvent = 2;
+
+	constexpr int itemCount = 5;
+
+	std::vector<int> dataList(itemCount);
+
+	std::atomic<int> threadProcessCount(0);
+
+	std::thread thread([stopEvent, otherEvent, &dataList, &queue, &threadProcessCount]() {
+		volatile bool shouldStop = false;
+		queue.appendListener(stopEvent, [&shouldStop](int) {
+			shouldStop = true;
+		});
+		queue.appendListener(otherEvent, [&dataList](const int index) {
+			dataList[index] += index + 1;
+		});
+
+		while(! shouldStop) {
+			queue.wait();
+
+			++threadProcessCount;
+
+			queue.process();
+		}
+	});
+	
+	REQUIRE(threadProcessCount.load() == 0);
+
+	auto waitUntilQueueEmpty = [&queue]() {
+		while(queue.waitFor(std::chrono::nanoseconds(0))) ;
+	};
+
+	SECTION("Enqueue one by one") {
+		queue.enqueue(otherEvent, 1);
+		waitUntilQueueEmpty();
+		REQUIRE(threadProcessCount.load() == 1);
+		REQUIRE(queue.empty());
+		REQUIRE(dataList == std::vector<int>{ 0, 2, 0, 0, 0 });
+
+		queue.enqueue(otherEvent, 3);
+		waitUntilQueueEmpty();
+		REQUIRE(threadProcessCount.load() == 2);
+		REQUIRE(queue.empty());
+		REQUIRE(dataList == std::vector<int>{ 0, 2, 0, 4, 0 });
+	}
+
+	SECTION("Enqueue two") {
+		queue.enqueue(otherEvent, 1);
+		std::this_thread::sleep_for(std::chrono::milliseconds(10));
+		REQUIRE(threadProcessCount.load() == 1);
+		REQUIRE(queue.empty());
+
+		queue.enqueue(otherEvent, 3);
+		waitUntilQueueEmpty();
+
+		REQUIRE(threadProcessCount.load() == 2);
+		REQUIRE(dataList == std::vector<int>{ 0, 2, 0, 4, 0 });
+	}
+
+	SECTION("Batching enqueue") {
+		{
+			EQ::DisableQueueNotify disableNotify(&queue);
+
+			queue.enqueue(otherEvent, 2);
+			std::this_thread::sleep_for(std::chrono::milliseconds(10));
+			REQUIRE(threadProcessCount.load() == 0);
+			REQUIRE(! queue.empty());
+
+			queue.enqueue(otherEvent, 4);
+			std::this_thread::sleep_for(std::chrono::milliseconds(10));
+			REQUIRE(threadProcessCount.load() == 0);
+			REQUIRE(! queue.empty());
+		}
+
+		waitUntilQueueEmpty();
+		REQUIRE(threadProcessCount.load() == 1);
+		REQUIRE(dataList == std::vector<int>{ 0, 0, 3, 0, 5 });
+	}
+
+	queue.enqueue(stopEvent, 1);
+	thread.join();
+}
+
+TEST_CASE("queue multi threading, many threads wait")
+{
+	using EQ = eventpp::EventQueue<int, void (int)>;
+	EQ queue;
+
+	// note, all events will be process from the other thread instead of main thread
+	constexpr int stopEvent = 1;
+	constexpr int otherEvent = 2;
+
+	constexpr int unit = 3;
+	constexpr int itemCount = 30 * unit;
+
+	std::vector<int> dataList(itemCount);
+
+	std::vector<std::thread> threadList;
+
+	std::atomic<bool> shouldStop(false);
+
+	queue.appendListener(stopEvent, [&shouldStop](int) {
+		shouldStop = true;
+	});
+	queue.appendListener(otherEvent, [&dataList](const int index) {
+		++dataList[index];
+	});
+
+	for(int i = 0; i < itemCount; ++i) {
+		threadList.emplace_back([stopEvent, otherEvent, i, &dataList, &queue, &shouldStop]() {
+			for(;;) {
+				// can't use queue.wait() because the thread can't be waken up by shouldStop = true
+				while(! queue.waitFor(std::chrono::milliseconds(10)) && ! shouldStop.load()) ;
+
+				if(shouldStop.load()) {
+					break;
+				}
+
+				queue.process();
+			}
+		});
+	}
+
+	for(int i = 0; i < itemCount; ++i) {
+		queue.enqueue(otherEvent, i);
+		std::this_thread::sleep_for(std::chrono::milliseconds(0));
+	}
+
+	for(int i = 0; i < itemCount; i += unit) {
+		EQ::DisableQueueNotify disableNotify(&queue);
+		for(int k = 0; k < unit; ++k) {
+			queue.enqueue(otherEvent, i);
+			std::this_thread::sleep_for(std::chrono::milliseconds(0));
+		}
+	}
+
+	queue.enqueue(stopEvent);
+
+	for(auto & thread : threadList) {
+		thread.join();
+	}
+
+	REQUIRE(std::accumulate(dataList.begin(), dataList.end(), 0) == itemCount * 2);
 }
 

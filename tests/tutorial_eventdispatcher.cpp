@@ -124,36 +124,9 @@ TEST_CASE("EventDispatcher tutorial 3, customized Event struct")
 	dispatcher.dispatch(MyEvent { 3, "Hello world", 38 }, true);
 }
 
-TEST_CASE("EventDispatcher tutorial 4, event queue")
+TEST_CASE("EventDispatcher tutorial 4, event filter")
 {
-	std::cout << "EventDispatcher tutorial 4, event queue" << std::endl;
-
-	eventpp::EventDispatcher<int, void (const std::string &, const bool)> dispatcher;
-
-	dispatcher.appendListener(3, [](const std::string & s, const bool b) {
-		std::cout << std::boolalpha << "Got event 3, s is " << s << " b is " << b << std::endl;
-	});
-	// The listener prototype doesn't need to be exactly same as the dispatcher.
-	// It would be find as long as the arguments is compatible with the dispatcher.
-	dispatcher.appendListener(5, [](std::string s, int b) {
-		std::cout << std::boolalpha << "Got event 5, s is " << s << " b is " << b << std::endl;
-	});
-	dispatcher.appendListener(5, [](const std::string & s, const bool b) {
-		std::cout << std::boolalpha << "Got another event 5, s is " << s << " b is " << b << std::endl;
-	});
-
-	// Enqueue the events, the first argument is always the event type.
-	// The listeners are not triggered during enqueue.
-	dispatcher.enqueue(3, "Hello", true);
-	dispatcher.enqueue(5, "World", false);
-
-	// Process the event queue, dispatch all queued events.
-	dispatcher.process();
-}
-
-TEST_CASE("EventDispatcher tutorial 5, event filter")
-{
-	std::cout << "EventDispatcher tutorial 5, event filter" << std::endl;
+	std::cout << "EventDispatcher tutorial 4, event filter" << std::endl;
 
 	eventpp::EventDispatcher<int, void (int e, int i, std::string)> dispatcher;
 

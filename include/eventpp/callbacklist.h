@@ -18,6 +18,7 @@
 #include <memory>
 #include <mutex>
 #include <atomic>
+#include <condition_variable>
 #include <utility>
 
 namespace eventpp {
@@ -111,7 +112,15 @@ public:
 	using Handle = Handle_;
 
 public:
-	CallbackListBase() = default;
+	CallbackListBase()
+		:
+			head(),
+			tail(),
+			mutex(),
+			currentCounter(0)
+	{
+	}
+
 	CallbackListBase(CallbackListBase &&) = delete;
 	CallbackListBase(const CallbackListBase &) = delete;
 	CallbackListBase & operator = (const CallbackListBase &) = delete;
@@ -137,6 +146,10 @@ public:
 		//std::lock_guard<Mutex> lockGuard(mutex);
 
 		return ! head;
+	}
+
+	operator bool() const {
+		return ! empty();
 	}
 
 	Handle append(const Callback & callback)
@@ -355,6 +368,8 @@ struct MultipleThreading
 
 	template <typename T>
 	using Atomic = std::atomic<T>;
+
+	using ConditionVariable = std::condition_variable;
 };
 
 struct SingleThreading
@@ -364,6 +379,9 @@ struct SingleThreading
 	// May replace Atomic with dummy atomic later.
 	template <typename T>
 	using Atomic = std::atomic<T>;
+
+	// May replace ConditionVariable with dummy condition variable later.
+	using ConditionVariable = std::condition_variable;
 };
 
 template <

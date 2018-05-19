@@ -20,8 +20,6 @@
 #include <functional>
 #include <type_traits>
 #include <map>
-#include <list>
-#include <tuple>
 #include <mutex>
 #include <algorithm>
 #include <memory>
@@ -83,6 +81,20 @@ struct MakeIndexSequence<0, Indexes...>
 	using Type = IndexSequence<Indexes...>;
 };
 
+template <typename T>
+struct CounterGuard
+{
+	explicit CounterGuard(T & v) : value(v) {
+		++value;
+	}
+
+	~CounterGuard() {
+		--value;
+	}
+
+	T & value;
+};
+
 template <
 	typename EventGetterType,
 	typename CallbackType,
@@ -107,13 +119,15 @@ class EventDispatcherBase <
 	ReturnType (Args...)
 >
 {
-private:
+protected:
 	using EventGetter = typename std::conditional<
 		std::is_base_of<EventGetterBase, EventGetterType>::value,
 		EventGetterType,
 		PrimaryEventGetter<EventGetterType>
 	>::type;
+
 	using Mutex = typename Threading::Mutex;
+
 	using Callback_ = typename std::conditional<
 		std::is_same<CallbackType, void>::value,
 		std::function<ReturnType (Args...)>,
@@ -132,11 +146,6 @@ private:
 	using Handle_ = typename CallbackList_::Handle;
 	using Event_ = typename EventGetter::Event;
 
-	using QueueItem = std::tuple<
-		typename std::remove_cv<typename std::remove_reference<Event_>::type>::type,
-		typename std::remove_cv<typename std::remove_reference<Args>::type>::type...
-	>;
-
 public:
 	using Handle = Handle_;
 	using Callback = Callback_;
@@ -144,7 +153,14 @@ public:
 	using FilterHandle = typename FilterList::Handle;;
 
 public:
-	EventDispatcherBase() = default;
+	EventDispatcherBase()
+		:
+			eventCallbackListMap(),
+			listenerMutex(),
+			filterList()
+	{
+	}
+
 	EventDispatcherBase(EventDispatcherBase &&) = delete;
 	EventDispatcherBase(const EventDispatcherBase &) = delete;
 	EventDispatcherBase & operator = (const EventDispatcherBase &) = delete;
@@ -178,6 +194,16 @@ public:
 		}
 
 		return false;
+	}
+
+	FilterHandle appendFilter(const Filter & filter)
+	{
+		return filterList.append(filter);
+	}
+
+	bool removeFilter(const FilterHandle & filterHandle)
+	{
+		return filterList.remove(filterHandle);
 	}
 
 	template <typename Func>
@@ -217,60 +243,10 @@ public:
 	{
 		static_assert(canExcludeEventType, "Dispatching arguments count doesn't match required (Event type should NOT be included).");
 
-		// can't std::forward<Args>(args) in EventGetter::getEvent because the pass by value arguments will be moved to getEvent
-		// then the other std::forward<Args>(args) to doDispatch will get empty values.
 		doDispatch(
 			EventGetter::getEvent(std::forward<T>(first), args...),
 			std::forward<Args>(args)...
 		);
-	}
-
-	void enqueue(Args ...args)
-	{
-		static_assert(canIncludeEventType, "Enqueuing arguments count doesn't match required (Event type should be included).");
-
-		doEnqueue(QueueItem(std::get<0>(std::tie(args...)), std::forward<Args>(args)...));
-	}
-
-	template <typename T>
-	void enqueue(T && first, Args ...args)
-	{
-		static_assert(canExcludeEventType, "Enqueuing arguments count doesn't match required (Event type should NOT be included).");
-
-		doEnqueue(QueueItem(std::forward<T>(first), std::forward<Args>(args)...));
-	}
-
-	void process()
-	{
-		if(! queueList.empty()) {
-			std::list<QueueItem> tempList;
-
-			{
-				std::lock_guard<Mutex> queueListLock(queueListMutex);
-				using namespace std;
-				swap(queueList, tempList);
-			}
-
-			if(! tempList.empty()) {
-				for(auto & item : tempList) {
-					doProcessItem(item, typename internal_::MakeIndexSequence<sizeof...(Args) + 1>::Type());
-					item = QueueItem();
-				}
-
-				std::lock_guard<Mutex> queueListLock(freeListMutex);
-				freeList.splice(freeList.end(), tempList);
-			}
-		}
-	}
-
-	FilterHandle appendFilter(const Filter & filter)
-	{
-		return filterList.append(filter);
-	}
-
-	bool removeFilter(const FilterHandle & filterHandle)
-	{
-		return filterList.remove(filterHandle);
 	}
 
 private:
@@ -290,39 +266,6 @@ private:
 		if(callableList) {
 			(*callableList)(std::forward<Args>(args)...);
 		}
-	}
-
-	template <size_t ...Indexes>
-	void doProcessItem(QueueItem & item, internal_::IndexSequence<Indexes...>)
-	{
-		dispatch(std::get<Indexes>(item)...);
-	}
-
-	void doEnqueue(QueueItem && item)
-	{
-		if(! freeList.empty()) {
-			std::list<QueueItem> tempList;
-
-			{
-				std::lock_guard<Mutex> queueListLock(freeListMutex);
-				if(! freeList.empty()) {
-					tempList.splice(tempList.end(), freeList, freeList.begin());
-				}
-			}
-
-			if(! tempList.empty()) {
-				auto it = tempList.begin();
-				*it = item;
-
-				std::lock_guard<Mutex> queueListLock(queueListMutex);
-				queueList.splice(queueList.end(), tempList, it);
-
-				return;
-			}
-		}
-
-		std::lock_guard<Mutex> queueListLock(queueListMutex);
-		queueList.emplace_back(item);
 	}
 
 	// template helper to avoid code duplication in doFindCallableList
@@ -354,11 +297,6 @@ private:
 private:
 	std::map<Event, CallbackList_> eventCallbackListMap;
 	mutable Mutex listenerMutex;
-
-	Mutex queueListMutex;
-	std::list<QueueItem> queueList;
-	Mutex freeListMutex;
-	std::list<QueueItem> freeList;
 
 	FilterList filterList;
 };
