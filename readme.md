@@ -4,9 +4,10 @@ eventpp provides tools that allow your application components to communicate wit
 
 ## Facts and features
 
-- Template based, less runtime overhead, unlimited possibilities. The event and callback can be almost any C++ types meeting minimum requirements.
+- Support both synchronous event dispatching and asynchronous event queue.  
 - Supports nested event. A listener can dispatch event, append/prepend/insert/remove other listeners during capturing an event safely.
 - Support event filter.
+- Template based, less runtime overhead, unlimited possibilities. The event and callback can be almost any C++ types meeting minimum requirements.
 - Thread safe.
 - Requires C++ 11 (tested with MSVC 2017, MSVC 2015, MinGW (Msys) gcc 7.2, and Ubuntu gcc 5.4).
 - Backed by unit tests.

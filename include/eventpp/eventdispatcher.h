@@ -235,6 +235,16 @@ public:
 		return false;
 	}
 
+	FilterHandle appendFilter(const Filter & filter)
+	{
+		return filterList.append(filter);
+	}
+
+	bool removeFilter(const FilterHandle & filterHandle)
+	{
+		return filterList.remove(filterHandle);
+	}
+
 	template <typename Func>
 	void forEach(const Event & event, Func && func) const
 	{
@@ -282,7 +292,10 @@ public:
 	{
 		static_assert(canIncludeEventType, "Enqueuing arguments count doesn't match required (Event type should be included).");
 
-		doEnqueue(QueueItem(std::get<0>(std::tie(args...)), std::forward<Args>(args)...));
+		doEnqueue(QueueItem(
+			EventGetter::getEvent(args...),
+			std::forward<Args>(args)...
+		));
 
 		if(doCanNotifyQueueAvailable()) {
 			queueListConditionVariable.notify_one();
@@ -294,7 +307,10 @@ public:
 	{
 		static_assert(canExcludeEventType, "Enqueuing arguments count doesn't match required (Event type should NOT be included).");
 
-		doEnqueue(QueueItem(std::forward<T>(first), std::forward<Args>(args)...));
+		doEnqueue(QueueItem(
+			EventGetter::getEvent(std::forward<T>(first), args...),
+			std::forward<Args>(args)...
+		));
 
 		if(doCanNotifyQueueAvailable()) {
 			queueListConditionVariable.notify_one();
@@ -349,16 +365,6 @@ public:
 		return queueListConditionVariable.wait_for(queueListLock, duration, [this]() -> bool {
 			return doCanStopWaiting();
 		});
-	}
-
-	FilterHandle appendFilter(const Filter & filter)
-	{
-		return filterList.append(filter);
-	}
-
-	bool removeFilter(const FilterHandle & filterHandle)
-	{
-		return filterList.remove(filterHandle);
 	}
 
 private:
