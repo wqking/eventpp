@@ -80,4 +80,7 @@ Exceptions may be thrown by underlying code when,
 1. Out of memory, new memory can't be allocated.  
 2. The listeners (callbacks) throw exceptions during copying, moving, comparing, or invoking.
 
+Almost all operations guarantee strong exception safety, which means the underlying data remains original value.  
+An except is `EventQueue::process`, on exception, the remaining events will not be dispatched, and the queue becomes empty.
+
 

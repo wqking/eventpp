@@ -39,5 +39,17 @@ EraseArgs1<Callable> eraseArgs1(const Callable & callable)
 	return EraseArgs1<Callable>(callable);
 }
 
+template <typename T>
+bool checkAllWeakPtrAreFreed(const T & nodeList)
+{
+	for(const auto & node : nodeList) {
+		if(node.lock()) {
+			return false;
+		}
+	}
+
+	return true;
+}
+
 
 #endif

@@ -29,6 +29,17 @@ class EventQueue;
 
 EventQueue has the exactly same template parameters with EventDispatcher. Please reference [EventDispatcher document](eventdispatcher.md) for details.
 
+**Public types**  
+
+`QueuedEvent`: the data type of event stored in the queue. It's declaration is,  
+```c++
+using QueuedEvent = std::tuple<
+	typename std::remove_cv<typename std::remove_reference<Event>::type>::type,
+	typename std::remove_cv<typename std::remove_reference<Args>::type>::type...
+>;
+```
+It's a `std::tuple`, the first member is always the event type, the other members are the arguments.
+
 **Functions**
 
 ```c++
@@ -100,6 +111,26 @@ for(;;) {
 	eventQueue.process();
 }
 ```
+
+```c++
+bool peekEvent(EventQueue::QueuedEvent * queuedEvent);
+```
+Retrieve an event from the queue. The event is returned in `queuedEvent`.  
+If the queue is empty, the function returns false, otherwise true if an event is retrieved successfully.  
+After the function returns, the original even is still in the queue.
+
+```c++
+bool takeEvent(EventQueue::QueuedEvent * queuedEvent);
+```
+Take an event from the queue and remove the original event from the queue. The event is returned in `queuedEvent`.  
+If the queue is empty, the function returns false, otherwise true if an event is retrieved successfully.  
+After the function returns, the original even is removed from the queue.
+
+```c++
+void dispatch(const QueuedEvent & queuedEvent);
+void dispatch(QueuedEvent && queuedEvent);
+```
+Dispatch an event which was returned by `peekEvent` or `takeEvent`.  
 
 **Inner class EventQueue::DisableQueueNotify**  
 
