@@ -10,6 +10,7 @@ set(THIRDPARTY_PATH ../../thirdparty)
 
 set(SRC_TEST
 	testmain.cpp
+	benchmark.cpp
 	tutorial_callbacklist.cpp
 	tutorial_eventdispatcher.cpp
 	tutorial_eventqueue.cpp
