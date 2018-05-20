@@ -29,6 +29,17 @@ class EventQueue;
 
 EventQueue has the exactly same template parameters with EventDispatcher. Please reference [EventDispatcher document](eventdispatcher.md) for details.
 
+**Public types**  
+
+`QueuedEvent`: the data type of event stored in the queue. It's declaration is,  
+```c++
+using QueuedEvent = std::tuple<
+	typename std::remove_cv<typename std::remove_reference<Event>::type>::type,
+	typename std::remove_cv<typename std::remove_reference<Args>::type>::type...
+>;
+```
+It's a `std::tuple`, the first member is always the event type, the other members are the arguments.
+
 **Functions**
 
 ```c++
@@ -41,13 +52,15 @@ EventQueue & operator = (const EventQueue &) = delete;
 EventQueue can not be copied, moved, or assigned.
 
 ```c++
-void enqueue(Args ...args);
+template <typename ...A>
+void enqueue(A ...args);
 
-template <typename T>  
-void enqueue(T && first, Args ...args);
+template <typename T, typename ...A>
+void enqueue(T && first, A ...args);
 ```  
 Put an event into the event queue. The event type is deducted from the arguments of `enqueue`.  
-All arguments are copied to internal data structure, so the arguments must be copyable.  
+All copyable arguments are copied to internal data structure. All non-copyable but movable arguments are moved.  
+EventQueue requires the arguments either copyable or movable.  
 If an argument is a reference to a base class and a derived object is passed in, only the base object will be stored and the derived object is lost. Usually shared pointer should be used in such situation.  
 If an argument is a pointer, only the pointer will be stored. The object it points must be available until the event is processed.  
 `enqueue` wakes up any threads that are blocked by `wait` or `waitFor`.  
@@ -100,6 +113,28 @@ for(;;) {
 	eventQueue.process();
 }
 ```
+
+```c++
+bool peekEvent(EventQueue::QueuedEvent * queuedEvent);
+```
+Retrieve an event from the queue. The event is returned in `queuedEvent`.  
+If the queue is empty, the function returns false, otherwise true if an event is retrieved successfully.  
+After the function returns, the original even is still in the queue.  
+Note: `peekEvent` doesn't work with any non-copyable event arguments. If `peekEvent` is called when any arguments are non-copyable, compile fails.
+
+```c++
+bool takeEvent(EventQueue::QueuedEvent * queuedEvent);
+```
+Take an event from the queue and remove the original event from the queue. The event is returned in `queuedEvent`.  
+If the queue is empty, the function returns false, otherwise true if an event is retrieved successfully.  
+After the function returns, the original even is removed from the queue.  
+Note: `takeEvent` works with non-copyable event arguments.
+
+```c++
+void dispatch(const QueuedEvent & queuedEvent);
+void dispatch(QueuedEvent && queuedEvent);
+```
+Dispatch an event which was returned by `peekEvent` or `takeEvent`.  
 
 **Inner class EventQueue::DisableQueueNotify**  
 

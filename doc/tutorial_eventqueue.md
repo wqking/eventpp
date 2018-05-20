@@ -10,39 +10,40 @@
 
 **Code**  
 ```c++
-eventpp::EventQueue<int, void (const std::string &, const bool)> queue;
+eventpp::EventQueue<int, void (const std::string &, std::unique_ptr<int> &)> queue;
 
-queue.appendListener(3, [](const std::string & s, const bool b) {
-	std::cout << std::boolalpha << "Got event 3, s is " << s << " b is " << b << std::endl;
+queue.appendListener(3, [](const std::string & s, std::unique_ptr<int> & n) {
+	std::cout << "Got event 3, s is " << s << " n is " << *n << std::endl;
 });
 // The listener prototype doesn't need to be exactly same as the dispatcher.
 // It would be find as long as the arguments is compatible with the dispatcher.
-queue.appendListener(5, [](std::string s, int b) {
-	std::cout << std::boolalpha << "Got event 5, s is " << s << " b is " << b << std::endl;
+queue.appendListener(5, [](std::string s, const std::unique_ptr<int> & n) {
+	std::cout << "Got event 5, s is " << s << " n is " << *n << std::endl;
 });
-queue.appendListener(5, [](const std::string & s, const bool b) {
-	std::cout << std::boolalpha << "Got another event 5, s is " << s << " b is " << b << std::endl;
+queue.appendListener(5, [](const std::string & s, std::unique_ptr<int> & n) {
+	std::cout << "Got another event 5, s is " << s << " n is " << *n << std::endl;
 });
 
 // Enqueue the events, the first argument is always the event type.
 // The listeners are not triggered during enqueue.
-queue.enqueue(3, "Hello", true);
-queue.enqueue(5, "World", false);
+queue.enqueue(3, "Hello", std::unique_ptr<int>(new int(38)));
+queue.enqueue(5, "World", std::unique_ptr<int>(new int(58)));
 
 // Process the event queue, dispatch all queued events.
 queue.process();
 ```
 
 **Output**  
-> Got event 3, s is Hello b is true  
-> Got event 5, s is World b is 0  
-> Got another event 5, s is World b is false  
+> Got event 3, s is Hello n is 38  
+> Got event 5, s is World n is 58  
+> Got another event 5, s is World n is 58  
 
 **Remarks**  
 `EventDispatcher<>::dispatch()` invokes the listeners synchronously. Sometimes an asynchronous event queue is more useful (think about Windows message queue, or an event queue in a game). EventQueue supports such kind of event queue.  
 `EventQueue<>::enqueue()` puts an event to the queue. Its parameters are exactly same as `dispatch`.  
 `EventQueue<>::process()` must be called to dispatch the queued events.  
-A typical use case is in a GUI application, each components call `EventQueue<>::enqueue()` to post the events, then the main event loop calls `EventQueue<>::process()` to dispatch the events.
+A typical use case is in a GUI application, each components call `EventQueue<>::enqueue()` to post the events, then the main event loop calls `EventQueue<>::process()` to dispatch the events.  
+`EventQueue` supports non-copyable object as the event arguments, such as the unique pointer in the tutorial.
 
 
 <a name="tutorial2"></a>

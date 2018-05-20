@@ -97,14 +97,6 @@ auto extractCallbackListHandles(CL & callbackList)
 	return result;
 }
 
-template <typename T>
-void verifyNoMemoryLeak(const std::vector<T> & nodeList)
-{
-	for(const auto & node : nodeList) {
-		REQUIRE(! node.lock());
-	}
-}
-
 struct RemovalTester
 {
 	RemovalTester(
@@ -277,7 +269,7 @@ TEST_CASE("CallbackList, no memory leak after callback list is freed")
 		nodeList = extractCallbackListHandles(callbackList);
 	}
 
-	verifyNoMemoryLeak(nodeList);
+	REQUIRE(checkAllWeakPtrAreFreed(nodeList));
 }
 
 TEST_CASE("CallbackList, no memory leak after all callbacks are removed")
@@ -298,7 +290,7 @@ TEST_CASE("CallbackList, no memory leak after all callbacks are removed")
 		callbackList.remove(handle);
 	}
 
-	verifyNoMemoryLeak(nodeList);
+	REQUIRE(checkAllWeakPtrAreFreed(nodeList));
 }
 
 TEST_CASE("CallbackList, forEach and forEachIf")

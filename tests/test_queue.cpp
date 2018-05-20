@@ -70,20 +70,26 @@ TEST_CASE("queue, int, void ()")
 
 TEST_CASE("queue, int, void (const std::string &, int)")
 {
-	eventpp::EventQueue<int, void (const std::string &, int)> queue;
+	struct NonDefaultConstructible
+	{
+		explicit NonDefaultConstructible(const int i) : i(i) {}
+		int i;
+	};
+
+	eventpp::EventQueue<int, void (const std::string &, const NonDefaultConstructible &)> queue;
 
 	const int event = 3;
 
 	std::vector<std::string> sList(2);
 	std::vector<int> iList(sList.size());
 
-	queue.appendListener(event, [&sList, &iList](const std::string & s, const int i) {
+	queue.appendListener(event, [&sList, &iList](const std::string & s, const NonDefaultConstructible & n) {
 		sList[0] = s;
-		iList[0] = i;
+		iList[0] = n.i;
 	});
-	queue.appendListener(event, [&sList, &iList](const std::string & s, const int i) {
+	queue.appendListener(event, [&sList, &iList](const std::string & s, NonDefaultConstructible n) {
 		sList[1] = s + "2";
-		iList[1] = i + 5;
+		iList[1] = n.i + 5;
 	});
 
 	REQUIRE(sList[0] != "first");
@@ -92,7 +98,7 @@ TEST_CASE("queue, int, void (const std::string &, int)")
 	REQUIRE(iList[1] != 8);
 
 	SECTION("Parameters") {
-		queue.enqueue(event, "first", 3);
+		queue.enqueue(event, "first", NonDefaultConstructible(3));
 		queue.process();
 
 		REQUIRE(sList[0] == "first");
@@ -103,7 +109,7 @@ TEST_CASE("queue, int, void (const std::string &, int)")
 
 	SECTION("Reference parameters should not be modified") {
 		std::string s = "first";
-		queue.enqueue(event, s, 3);
+		queue.enqueue(event, s, NonDefaultConstructible(3));
 		s = "";
 		queue.process();
 
@@ -146,11 +152,275 @@ TEST_CASE("queue, customized event")
 	REQUIRE(a == "Hello ");
 	REQUIRE(b == "World ");
 
-	queue.enqueue({ 3, "very ", 38 }, "good");
+	queue.enqueue(MyEvent { 3, "very ", 38 }, "good");
 	queue.process();
 
 	REQUIRE(a == "Hello very good38");
 	REQUIRE(b == "World very good38");
+}
+
+TEST_CASE("queue, no memory leak in queued arguments")
+{
+	using SP = std::shared_ptr<int>;
+	using WP = std::weak_ptr<int>;
+	using EQ = eventpp::EventQueue<int, void (SP)>;
+
+	std::unique_ptr<EQ> queue(new EQ());
+	std::vector<WP> wpList;
+
+	auto add = [&wpList, &queue](int n) {
+		SP sp(std::make_shared<int>(n));
+		queue->enqueue(n, sp);
+		wpList.push_back(WP(sp));
+	};
+
+	add(1);
+	add(2);
+	add(3);
+
+	REQUIRE(! checkAllWeakPtrAreFreed(wpList));
+
+	SECTION("No memory leak after process()") {
+		queue->process();
+		REQUIRE(checkAllWeakPtrAreFreed(wpList));
+	}
+
+	SECTION("No memory leak after queue is deleted") {
+		queue.reset();
+		REQUIRE(checkAllWeakPtrAreFreed(wpList));
+	}
+}
+
+TEST_CASE("queue, no memory leak or double free in queued arguments")
+{
+	struct Item {
+		Item(const int index, std::vector<int> * counterList)
+			: index(index), counterList(counterList)
+		{
+			++(*counterList)[index];
+		}
+
+		~Item()
+		{
+			--(*counterList)[index];
+		}
+
+		Item(Item && other)
+			: index(other.index), counterList(other.counterList)
+		{
+			++(*counterList)[index];
+		}
+
+		Item(const Item & other)
+			: index(other.index), counterList(other.counterList)
+		{
+			++(*counterList)[index];
+		}
+
+		Item & operator = (const Item & other)
+		{
+			index = other.index;
+			counterList = other.counterList;
+			++(*counterList)[index];
+			return *this;
+		}
+
+		int index;
+		std::vector<int> * counterList;
+	};
+	using EQ = eventpp::EventQueue<int, void (const Item &)>;
+
+	std::vector<int> counterList(4);
+	std::unique_ptr<EQ> queue(new EQ());
+
+	auto add = [&counterList, &queue](int n) {
+		queue->enqueue(n, Item(n, &counterList));
+	};
+
+	add(0);
+	add(1);
+	add(2);
+	add(3);
+
+	REQUIRE(counterList == std::vector<int>{ 1, 1, 1, 1 });
+
+	SECTION("No memory leak or double free after process()") {
+		queue->process();
+		REQUIRE(counterList == std::vector<int>{ 0, 0, 0, 0 });
+	}
+
+	SECTION("No memory leak or double free after queue is deleted") {
+		queue.reset();
+		REQUIRE(counterList == std::vector<int>{ 0, 0, 0, 0 });
+	}
+}
+
+TEST_CASE("queue, non-copyable but movable unique_ptr")
+{
+	using PTR = std::unique_ptr<int>;
+	using EQ = eventpp::EventQueue<int, void (const PTR &)>;
+	EQ queue;
+
+	constexpr int itemCount = 3;
+
+	std::vector<int> dataList(itemCount);
+
+	queue.appendListener(3, [&dataList](const PTR & ptr) {
+		++dataList[*ptr];
+	});
+
+	queue.enqueue(3, PTR(new int(0)));
+	queue.enqueue(3, PTR(new int(1)));
+	queue.enqueue(3, PTR(new int(2)));
+
+	SECTION("process") {
+		queue.process();
+		REQUIRE(dataList == std::vector<int>{ 1, 1, 1 });
+	}
+
+	// peekEvent doesn't compile, it requires the argument copyable.
+
+	SECTION("takeEvent/dispatch") {
+		EQ::QueuedEvent event;
+		REQUIRE(queue.takeEvent(&event));
+		queue.dispatch(event);
+		REQUIRE(dataList == std::vector<int>{ 1, 0, 0 });
+	}
+
+	SECTION("takeEvent/process") {
+		EQ::QueuedEvent event;
+		REQUIRE(queue.takeEvent(&event));
+		queue.process();
+		REQUIRE(dataList == std::vector<int>{ 0, 1, 1 });
+	}
+}
+
+TEST_CASE("queue, peekEvent/takeEvent/dispatch")
+{
+	using SP = std::shared_ptr<int>;
+	using WP = std::weak_ptr<int>;
+	using EQ = eventpp::EventQueue<int, void (SP)>;
+
+	std::unique_ptr<EQ> queue(new EQ());
+	std::vector<WP> wpList;
+	constexpr int itemCount = 3;
+
+	std::vector<int> dataList(itemCount);
+
+	queue->appendListener(3, [&dataList](const SP & sp) {
+		++dataList[*sp];
+	});
+
+	auto add = [&wpList, &queue](int e, int n) {
+		SP sp(std::make_shared<int>(n));
+		queue->enqueue(e, sp);
+		wpList.push_back(WP(sp));
+	};
+
+	add(3, 0);
+	add(3, 1);
+	add(3, 2);
+
+	SECTION("peek") {
+		EQ::QueuedEvent event;
+		REQUIRE(queue->peekEvent(&event));
+		REQUIRE(std::get<0>(event) == 3);
+		REQUIRE(*std::get<1>(event) == 0);
+		REQUIRE(wpList[0].use_count() == 2);
+	}
+
+	SECTION("peek/peek") {
+		EQ::QueuedEvent event;
+		REQUIRE(queue->peekEvent(&event));
+		REQUIRE(std::get<0>(event) == 3);
+		REQUIRE(*std::get<1>(event) == 0);
+		REQUIRE(wpList[0].use_count() == 2);
+
+		EQ::QueuedEvent event2;
+		REQUIRE(queue->peekEvent(&event2));
+		REQUIRE(std::get<0>(event2) == 3);
+		REQUIRE(*std::get<1>(event2) == 0);
+		REQUIRE(wpList[0].use_count() == 3);
+	}
+
+	SECTION("peek/take") {
+		EQ::QueuedEvent event;
+		REQUIRE(queue->peekEvent(&event));
+		REQUIRE(std::get<0>(event) == 3);
+		REQUIRE(*std::get<1>(event) == 0);
+		REQUIRE(wpList[0].use_count() == 2);
+
+		EQ::QueuedEvent event2;
+		REQUIRE(queue->takeEvent(&event2));
+		REQUIRE(std::get<0>(event2) == 3);
+		REQUIRE(*std::get<1>(event2) == 0);
+		REQUIRE(wpList[0].use_count() == 2);
+	}
+
+	SECTION("peek/take/peek") {
+		EQ::QueuedEvent event;
+		REQUIRE(queue->peekEvent(&event));
+		REQUIRE(std::get<0>(event) == 3);
+		REQUIRE(*std::get<1>(event) == 0);
+		REQUIRE(wpList[0].use_count() == 2);
+
+		EQ::QueuedEvent event2;
+		REQUIRE(queue->takeEvent(&event2));
+		REQUIRE(std::get<0>(event2) == 3);
+		REQUIRE(*std::get<1>(event2) == 0);
+		REQUIRE(wpList[0].use_count() == 2);
+
+		EQ::QueuedEvent event3;
+		REQUIRE(queue->peekEvent(&event3));
+		REQUIRE(std::get<0>(event3) == 3);
+		REQUIRE(*std::get<1>(event3) == 1);
+		REQUIRE(wpList[0].use_count() == 2);
+		REQUIRE(wpList[1].use_count() == 2);
+	}
+
+	SECTION("peek/dispatch/peek/dispatch again") {
+		EQ::QueuedEvent event;
+		REQUIRE(queue->peekEvent(&event));
+		REQUIRE(std::get<0>(event) == 3);
+		REQUIRE(*std::get<1>(event) == 0);
+		REQUIRE(wpList[0].use_count() == 2);
+
+		queue->dispatch(event);
+
+		EQ::QueuedEvent event2;
+		REQUIRE(queue->peekEvent(&event2));
+		REQUIRE(std::get<0>(event2) == 3);
+		REQUIRE(*std::get<1>(event2) == 0);
+		REQUIRE(wpList[0].use_count() == 3);
+
+		REQUIRE(dataList == std::vector<int>{ 1, 0, 0 });
+
+		queue->dispatch(event);
+		REQUIRE(dataList == std::vector<int>{ 2, 0, 0 });
+	}
+
+	SECTION("process") {
+		// test the queue works with simple process(), ensure the process()
+		// in the next "take all/process" works correctly.
+		REQUIRE(dataList == std::vector<int>{ 0, 0, 0 });
+		queue->process();
+		REQUIRE(dataList == std::vector<int>{ 1, 1, 1 });
+	}
+
+	SECTION("take all/process") {
+		for(int i = 0; i < itemCount; ++i) {
+			EQ::QueuedEvent event;
+			REQUIRE(queue->takeEvent(&event));
+		}
+
+		EQ::QueuedEvent event;
+		REQUIRE(! queue->peekEvent(&event));
+		REQUIRE(! queue->takeEvent(&event));
+
+		REQUIRE(dataList == std::vector<int>{ 0, 0, 0 });
+		queue->process();
+		REQUIRE(dataList == std::vector<int>{ 0, 0, 0 });
+	}
 }
 
 TEST_CASE("queue multi threading, int, void (int)")

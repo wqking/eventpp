@@ -23,24 +23,24 @@ TEST_CASE("EventQueue tutorial 1, basic")
 {
 	std::cout << "EventQueue tutorial 1, basic" << std::endl;
 
-	eventpp::EventQueue<int, void (const std::string &, const bool)> queue;
+	eventpp::EventQueue<int, void (const std::string &, std::unique_ptr<int> &)> queue;
 
-	queue.appendListener(3, [](const std::string & s, const bool b) {
-		std::cout << std::boolalpha << "Got event 3, s is " << s << " b is " << b << std::endl;
+	queue.appendListener(3, [](const std::string & s, std::unique_ptr<int> & n) {
+		std::cout << "Got event 3, s is " << s << " n is " << *n << std::endl;
 	});
 	// The listener prototype doesn't need to be exactly same as the dispatcher.
 	// It would be find as long as the arguments is compatible with the dispatcher.
-	queue.appendListener(5, [](std::string s, int b) {
-		std::cout << std::boolalpha << "Got event 5, s is " << s << " b is " << b << std::endl;
+	queue.appendListener(5, [](std::string s, const std::unique_ptr<int> & n) {
+		std::cout << "Got event 5, s is " << s << " n is " << *n << std::endl;
 	});
-	queue.appendListener(5, [](const std::string & s, const bool b) {
-		std::cout << std::boolalpha << "Got another event 5, s is " << s << " b is " << b << std::endl;
+	queue.appendListener(5, [](const std::string & s, std::unique_ptr<int> & n) {
+		std::cout << "Got another event 5, s is " << s << " n is " << *n << std::endl;
 	});
 
 	// Enqueue the events, the first argument is always the event type.
 	// The listeners are not triggered during enqueue.
-	queue.enqueue(3, "Hello", true);
-	queue.enqueue(5, "World", false);
+	queue.enqueue(3, "Hello", std::unique_ptr<int>(new int(38)));
+	queue.enqueue(5, "World", std::unique_ptr<int>(new int(58)));
 
 	// Process the event queue, dispatch all queued events.
 	queue.process();

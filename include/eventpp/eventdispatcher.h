@@ -34,7 +34,7 @@ struct PrimaryEventGetter : public EventGetterBase
 	using Event = E;
 
 	template <typename U, typename ...Args>
-	static Event getEvent(U && e, Args...) {
+	static Event getEvent(U && e, const Args &...) {
 		return e;
 	}
 };
