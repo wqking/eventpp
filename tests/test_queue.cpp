@@ -152,7 +152,7 @@ TEST_CASE("queue, customized event")
 	REQUIRE(a == "Hello ");
 	REQUIRE(b == "World ");
 
-	queue.enqueue({ 3, "very ", 38 }, "good");
+	queue.enqueue(MyEvent { 3, "very ", 38 }, "good");
 	queue.process();
 
 	REQUIRE(a == "Hello very good38");
@@ -252,6 +252,46 @@ TEST_CASE("queue, no memory leak or double free in queued arguments")
 	SECTION("No memory leak or double free after queue is deleted") {
 		queue.reset();
 		REQUIRE(counterList == std::vector<int>{ 0, 0, 0, 0 });
+	}
+}
+
+TEST_CASE("queue, non-copyable but movable unique_ptr")
+{
+	using PTR = std::unique_ptr<int>;
+	using EQ = eventpp::EventQueue<int, void (const PTR &)>;
+	EQ queue;
+
+	constexpr int itemCount = 3;
+
+	std::vector<int> dataList(itemCount);
+
+	queue.appendListener(3, [&dataList](const PTR & ptr) {
+		++dataList[*ptr];
+	});
+
+	queue.enqueue(3, PTR(new int(0)));
+	queue.enqueue(3, PTR(new int(1)));
+	queue.enqueue(3, PTR(new int(2)));
+
+	SECTION("process") {
+		queue.process();
+		REQUIRE(dataList == std::vector<int>{ 1, 1, 1 });
+	}
+
+	// peekEvent doesn't compile, it requires the argument copyable.
+
+	SECTION("takeEvent/dispatch") {
+		EQ::QueuedEvent event;
+		REQUIRE(queue.takeEvent(&event));
+		queue.dispatch(event);
+		REQUIRE(dataList == std::vector<int>{ 1, 0, 0 });
+	}
+
+	SECTION("takeEvent/process") {
+		EQ::QueuedEvent event;
+		REQUIRE(queue.takeEvent(&event));
+		queue.process();
+		REQUIRE(dataList == std::vector<int>{ 0, 1, 1 });
 	}
 }
 

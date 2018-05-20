@@ -185,13 +185,14 @@ public:
 	EventQueueBase(const EventQueueBase &) = delete;
 	EventQueueBase & operator = (const EventQueueBase &) = delete;
 
-	void enqueue(Args ...args)
+	template <typename ...A>
+	auto enqueue(A ...args) -> typename std::enable_if<sizeof...(A) == sizeof...(Args), void>::type
 	{
 		static_assert(super::canIncludeEventType, "Enqueuing arguments count doesn't match required (Event type should be included).");
 
 		doEnqueue(QueuedEvent(
 			EventGetter::getEvent(args...),
-			std::forward<Args>(args)...
+			std::forward<A>(args)...
 		));
 
 		if(doCanProcess()) {
@@ -199,14 +200,14 @@ public:
 		}
 	}
 
-	template <typename T>
-	void enqueue(T && first, Args ...args)
+	template <typename T, typename ...A>
+	auto enqueue(T && first, A ...args) -> typename std::enable_if<sizeof...(A) == sizeof...(Args), void>::type
 	{
 		static_assert(super::canExcludeEventType, "Enqueuing arguments count doesn't match required (Event type should NOT be included).");
 
 		doEnqueue(QueuedEvent(
 			EventGetter::getEvent(std::forward<T>(first), args...),
-			std::forward<Args>(args)...
+			std::forward<A>(args)...
 		));
 
 		if(doCanProcess()) {
