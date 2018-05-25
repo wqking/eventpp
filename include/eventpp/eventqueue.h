@@ -27,22 +27,6 @@ namespace eventpp {
 
 namespace internal_ {
 
-template <bool ...values>
-struct LogicAnd;
-
-template <bool first, bool ...values>
-struct LogicAnd <first, values...>
-{
-	enum { value = first && LogicAnd<values...>::value };
-};
-
-template <>
-struct LogicAnd <>
-{
-	enum { value = true };
-};
-
-
 template <
 	typename KeyType,
 	typename PoliciesType,
@@ -127,14 +111,6 @@ private:
 		bool allocated;
 	};
 
-	enum {
-		isDefaultConstructible = LogicAnd<
-			std::is_default_constructible<
-				typename std::remove_cv<typename std::remove_reference<Args>::type>::type
-			>::value...
-		>::value
-	};
-
 public:
 	using QueuedEvent = QueuedEvent_;
 
@@ -157,8 +133,6 @@ public:
 
 		EventQueueBase * queue;
 	};
-
-	friend struct QueueNotifyDiable;
 
 public:
 	EventQueueBase()
