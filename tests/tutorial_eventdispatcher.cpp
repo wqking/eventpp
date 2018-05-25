@@ -90,19 +90,18 @@ TEST_CASE("EventDispatcher tutorial 3, customized Event struct")
 	// 1, A type named Event indicating the event type.
 	// 2, A static member function named getEvent. It receives all parameters
 	// same as the dispatcher prototype, and returns Event.
-	struct MyEventTypeGetter : public eventpp::EventGetterBase
+	struct MyEventPolicies
 	{
-		using Event = int;
-
-		static Event getEvent(const MyEvent & e, bool /*b*/) {
+		static int getEvent(const MyEvent & e, bool /*b*/) {
 			return e.type;
 		}
 	};
 
 	// Pass MyEventTypeGetter as the first template argument of EventDispatcher
 	eventpp::EventDispatcher<
-		MyEventTypeGetter,
-		void (const MyEvent &, bool)
+		int,
+		void (const MyEvent &, bool),
+		MyEventPolicies
 	> dispatcher;
 
 	// Add a listener.

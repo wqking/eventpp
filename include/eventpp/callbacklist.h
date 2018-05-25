@@ -14,6 +14,8 @@
 #ifndef CALLBACKLIST_H_588722158669
 #define CALLBACKLIST_H_588722158669
 
+#include "eventpolicies.h"
+
 #include <functional>
 #include <memory>
 #include <mutex>
@@ -24,12 +26,6 @@
 namespace eventpp {
 
 namespace internal_ {
-
-struct DummyMutex
-{
-	void lock() {}
-	void unlock() {}
-};
 
 template <typename F, typename ...A>
 struct CanInvoke
@@ -46,24 +42,26 @@ struct CanInvoke
 };
 
 template <
-	typename CallbackType,
-	typename Threading,
+	typename PoliciesType,
 	typename ReturnType, typename ...Args
 >
 class CallbackListBase;
 
 template <
-	typename CallbackType,
-	typename Threading,
+	typename PoliciesType,
 	typename ReturnType, typename ...Args
 >
 class CallbackListBase<
-	CallbackType,
-	Threading,
+	PoliciesType,
 	ReturnType (Args...)
 >
 {
 private:
+	using Policies = PoliciesType;
+
+	using Threading = typename SelectThreading<Policies, HasTypeThreading<Policies>::value>::Type;
+
+	using CallbackType = typename SelectCallback<Policies, HasTypeCallback<Policies>::value>::Type;
 	using Mutex = typename Threading::Mutex;
 	using Callback_ = typename std::conditional<
 		std::is_same<CallbackType, void>::value,
@@ -362,34 +360,11 @@ private:
 } //namespace internal_
 
 
-struct MultipleThreading
-{
-	using Mutex = std::mutex;
-
-	template <typename T>
-	using Atomic = std::atomic<T>;
-
-	using ConditionVariable = std::condition_variable;
-};
-
-struct SingleThreading
-{
-	using Mutex = internal_::DummyMutex;
-
-	// May replace Atomic with dummy atomic later.
-	template <typename T>
-	using Atomic = std::atomic<T>;
-
-	// May replace ConditionVariable with dummy condition variable later.
-	using ConditionVariable = std::condition_variable;
-};
-
 template <
 	typename Prototype,
-	typename Callback = void,
-	typename Threading = MultipleThreading
+	typename Policies = DefaultCallbackListPolicies
 >
-class CallbackList : public internal_::CallbackListBase<Callback, Threading, Prototype>
+class CallbackList : public internal_::CallbackListBase<Policies, Prototype>
 {
 };
 
