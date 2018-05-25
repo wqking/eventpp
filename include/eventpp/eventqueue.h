@@ -333,7 +333,7 @@ private:
 template <
 	typename Key,
 	typename Prototype,
-	typename Policies = DefaultEventPolicies<Key>
+	typename Policies = DefaultPolicies
 >
 class EventQueue : public internal_::EventQueueBase<
 	Key, Prototype, Policies>

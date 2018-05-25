@@ -17,6 +17,8 @@
 #include <mutex>
 #include <atomic>
 #include <condition_variable>
+#include <map>
+#include <unordered_map>
 
 namespace eventpp {
 
@@ -76,23 +78,26 @@ struct ArgumentPassingExcludeEvent
 	};
 };
 
-template <typename E>
-struct DefaultEventPolicies
+struct DefaultPolicies
 {
+	/* default types for CallbackList
+	using Callback = std::function<blah, blah>;
+	using Threading = MultipleThreading;
+	*/
+
+	/* default types/implements for EventDispatch and EventQueue
 	template <typename U, typename ...Args>
 	static E getEvent(U && e, const Args &...) {
-		return e;
+	return e;
 	}
 
-	using Callback = void;
+	using Callback = std::function<blah, blah>;
 	using Threading = MultipleThreading;
 	using ArgumentPassingMode = ArgumentPassingAutoDetect;
-};
 
-struct DefaultCallbackListPolicies
-{
-	using Callback = void;
-	using Threading = MultipleThreading;
+	template <typename Key, typename T>
+	using Map = std::map <Key, T>;
+	*/
 };
 
 namespace internal_ {
@@ -129,9 +134,9 @@ struct HasTypeCallback
 
 	enum { value = !! decltype(test<T>(0))() };
 };
-template <typename T, bool> struct SelectCallback;
-template <typename T> struct SelectCallback<T, true> { using Type = typename T::Callback; };
-template <typename T> struct SelectCallback<T, false> { using Type = void; };
+template <typename T, bool, typename D> struct SelectCallback;
+template <typename T, typename D> struct SelectCallback<T, true, D> { using Type = typename T::Callback; };
+template <typename T, typename D> struct SelectCallback<T, false, D> { using Type = D; };
 
 template <typename T>
 class HasFunctionGetEvent
@@ -143,7 +148,7 @@ public:
 	enum { value = !! decltype(test<T>(0))() };
 };
 template <typename E>
-struct BasicGetEvent
+struct DefaultGetEvent
 {
 	template <typename U, typename ...Args>
 	static E getEvent(U && e, const Args &...) {
@@ -152,7 +157,41 @@ struct BasicGetEvent
 };
 template <typename T, typename Key, bool> struct SelectGetEvent;
 template <typename T, typename Key> struct SelectGetEvent<T, Key, true> { using Type = T; };
-template <typename T, typename Key> struct SelectGetEvent<T, Key, false> { using Type = BasicGetEvent<Key>; };
+template <typename T, typename Key> struct SelectGetEvent<T, Key, false> { using Type = DefaultGetEvent<Key>; };
+
+template <typename T>
+struct HasTemplateMap
+{
+	template <typename C> static std::true_type test(typename C::template Map<int, int> *) ;
+	template <typename C> static std::false_type test(...);    
+
+	enum { value = !! decltype(test<T>(0))() };
+};
+template <typename T>
+class HasHash
+{
+	template <typename C> static std::true_type test(decltype(std::hash<C>()(std::declval<C>())) *) ;
+	template <typename C> static std::false_type test(...);    
+
+public:
+	enum { value = !! decltype(test<T>(0))() };
+};
+template <typename Key, typename Value, typename T, bool>
+struct SelectMap;
+template <typename Key, typename Value, typename T>
+struct SelectMap<Key, Value, T, true>
+{
+	using Type = typename T::template Map<Key, Value>;
+};
+template <typename Key, typename Value, typename T>
+struct SelectMap<Key, Value, T, false> {
+	using Type = typename std::conditional<
+		HasHash<Key>::value,
+		std::unordered_map<Key, Value>,
+		std::map<Key, Value>
+	>::type;
+};
+
 
 } //namespace internal_
 

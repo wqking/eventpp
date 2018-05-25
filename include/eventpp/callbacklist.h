@@ -61,13 +61,12 @@ private:
 
 	using Threading = typename SelectThreading<Policies, HasTypeThreading<Policies>::value>::Type;
 
-	using CallbackType = typename SelectCallback<Policies, HasTypeCallback<Policies>::value>::Type;
 	using Mutex = typename Threading::Mutex;
-	using Callback_ = typename std::conditional<
-		std::is_same<CallbackType, void>::value,
-		std::function<ReturnType (Args...)>,
-		CallbackType
-	>::type;
+	using Callback_ = typename SelectCallback<
+		Policies,
+		HasTypeCallback<Policies>::value,
+		std::function<ReturnType (Args...)>
+	>::Type;
 
 	struct Node;
 	using NodePtr = std::shared_ptr<Node>;
@@ -362,7 +361,7 @@ private:
 
 template <
 	typename Prototype,
-	typename Policies = DefaultCallbackListPolicies
+	typename Policies = DefaultPolicies
 >
 class CallbackList : public internal_::CallbackListBase<Prototype, Policies>
 {

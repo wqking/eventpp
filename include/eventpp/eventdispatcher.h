@@ -20,6 +20,7 @@
 #include <functional>
 #include <type_traits>
 #include <map>
+#include <unordered_map>
 #include <mutex>
 #include <algorithm>
 #include <memory>
@@ -83,16 +84,15 @@ protected:
 
 	using ArgumentPassingMode = typename SelectArgumentPassingMode<Policies, HasTypeArgumentPassingMode<Policies>::value>::Type;
 
-	using CallbackType = typename SelectCallback<Policies, HasTypeCallback<Policies>::value>::Type;
 	using GetEvent = typename SelectGetEvent<Policies, KeyType, HasFunctionGetEvent<Policies>::value>::Type;
 
 	using Mutex = typename Threading::Mutex;
 
-	using Callback_ = typename std::conditional<
-		std::is_same<CallbackType, void>::value,
-		std::function<ReturnType (Args...)>,
-		CallbackType
-	>::type;
+	using Callback_ = typename SelectCallback<
+		Policies,
+		HasTypeCallback<Policies>::value,
+		std::function<ReturnType (Args...)>
+	>::Type;
 	using CallbackList_ = CallbackList<ReturnType (Args...), Policies>;
 
 	using Filter = std::function<bool (typename std::add_lvalue_reference<Args>::type...)>;
@@ -106,11 +106,18 @@ protected:
 	using Handle_ = typename CallbackList_::Handle;
 	using Event_ = KeyType;
 
+	using Map = typename SelectMap<
+		Event_,
+		CallbackList_,
+		Policies,
+		HasTemplateMap<Policies>::value
+	>::Type;
+
 public:
 	using Handle = Handle_;
 	using Callback = Callback_;
 	using Event = Event_;
-	using FilterHandle = typename FilterList::Handle;;
+	using FilterHandle = typename FilterList::Handle;
 
 public:
 	EventDispatcherBase()
@@ -256,7 +263,7 @@ private:
 	}
 
 private:
-	std::map<Event, CallbackList_> eventCallbackListMap;
+	Map eventCallbackListMap;
 	mutable Mutex listenerMutex;
 
 	FilterList filterList;
@@ -268,7 +275,7 @@ private:
 template <
 	typename Key,
 	typename Prototype,
-	typename Policies = DefaultEventPolicies<Key>
+	typename Policies = DefaultPolicies
 >
 class EventDispatcher : public internal_::EventDispatcherBase<
 	Key, Prototype, Policies>
