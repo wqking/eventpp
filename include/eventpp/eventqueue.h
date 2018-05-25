@@ -29,8 +29,8 @@ namespace internal_ {
 
 template <
 	typename KeyType,
-	typename PoliciesType,
-	typename ReturnType, typename ...Args
+	typename Prototype,
+	typename Policies
 >
 class EventQueueBase;
 
@@ -41,19 +41,19 @@ template <
 >
 class EventQueueBase <
 		KeyType,
-		PoliciesType,
-		ReturnType (Args...)
+		ReturnType (Args...),
+		PoliciesType
 	> : public EventDispatcherBase<
 		KeyType,
-		PoliciesType,
-		ReturnType (Args...)
+		ReturnType (Args...),
+		PoliciesType
 	>
 {
 private:
 	using super = EventDispatcherBase<
 		KeyType,
-		PoliciesType,
-		ReturnType (Args...)
+		ReturnType (Args...),
+		PoliciesType
 	>;
 
 	using Policies = typename super::Policies;
@@ -336,7 +336,7 @@ template <
 	typename Policies = DefaultEventPolicies<Key>
 >
 class EventQueue : public internal_::EventQueueBase<
-	Key, Policies, Prototype>
+	Key, Prototype, Policies>
 {
 };
 

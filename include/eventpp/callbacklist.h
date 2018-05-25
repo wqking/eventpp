@@ -42,8 +42,8 @@ struct CanInvoke
 };
 
 template <
-	typename PoliciesType,
-	typename ReturnType, typename ...Args
+	typename Prototype,
+	typename PoliciesType
 >
 class CallbackListBase;
 
@@ -52,8 +52,8 @@ template <
 	typename ReturnType, typename ...Args
 >
 class CallbackListBase<
-	PoliciesType,
-	ReturnType (Args...)
+	ReturnType (Args...),
+	PoliciesType
 >
 {
 private:
@@ -364,7 +364,7 @@ template <
 	typename Prototype,
 	typename Policies = DefaultCallbackListPolicies
 >
-class CallbackList : public internal_::CallbackListBase<Policies, Prototype>
+class CallbackList : public internal_::CallbackListBase<Prototype, Policies>
 {
 };
 

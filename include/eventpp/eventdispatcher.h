@@ -60,8 +60,8 @@ struct CounterGuard
 
 template <
 	typename KeyType,
-	typename PoliciesType,
-	typename ReturnType, typename ...Args
+	typename Prototype,
+	typename Policies
 >
 class EventDispatcherBase;
 
@@ -72,8 +72,8 @@ template <
 >
 class EventDispatcherBase <
 	KeyType,
-	PoliciesType,
-	ReturnType (Args...)
+	ReturnType (Args...),
+	PoliciesType
 >
 {
 protected:
@@ -271,7 +271,7 @@ template <
 	typename Policies = DefaultEventPolicies<Key>
 >
 class EventDispatcher : public internal_::EventDispatcherBase<
-	Key, Policies, Prototype>
+	Key, Prototype, Policies>
 {
 };
 
