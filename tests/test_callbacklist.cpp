@@ -254,9 +254,17 @@ TEST_CASE("CallbackList, remove inside callback")
 	RemovalTester(7, 3, { 6, 4, 5, 3, 1, 2, 0 }).test();
 }
 
+namespace {
+struct FakeCallbackListPolicies
+{
+	using Callback = int;
+};
+
+} //unnamed namespace
+
 TEST_CASE("CallbackList, no memory leak after callback list is freed")
 {
-	using CL = CallbackList<void(), int>;
+	using CL = CallbackList<void(), FakeCallbackListPolicies>;
 
 	std::vector<CL::Handle> nodeList;
 
@@ -274,7 +282,7 @@ TEST_CASE("CallbackList, no memory leak after callback list is freed")
 
 TEST_CASE("CallbackList, no memory leak after all callbacks are removed")
 {
-	using CL = CallbackList<void(), int>;
+	using CL = CallbackList<void(), FakeCallbackListPolicies>;
 
 	std::vector<CL::Handle> nodeList;
 	std::vector<CL::Handle> handleList;
@@ -389,7 +397,7 @@ TEST_CASE("CallbackList, lvaue-reference arguments cant be modified by callbacks
 
 TEST_CASE("CallbackList, append/remove/insert")
 {
-	using CL = CallbackList<void(), int>;
+	using CL = CallbackList<void(), FakeCallbackListPolicies>;
 
 	CL callbackList;
 
@@ -457,7 +465,7 @@ TEST_CASE("CallbackList, append/remove/insert")
 
 TEST_CASE("CallbackList, insert")
 {
-	using CL = CallbackList<void(), int>;
+	using CL = CallbackList<void(), FakeCallbackListPolicies>;
 
 	CL callbackList;
 	
@@ -485,7 +493,7 @@ TEST_CASE("CallbackList, insert")
 
 TEST_CASE("CallbackList, remove")
 {
-	using CL = CallbackList<void(), int>;
+	using CL = CallbackList<void(), FakeCallbackListPolicies>;
 
 	CL callbackList;
 
@@ -540,7 +548,7 @@ TEST_CASE("CallbackList, remove")
 
 TEST_CASE("CallbackList, multi threading, append")
 {
-	using CL = CallbackList<void(), int>;
+	using CL = CallbackList<void(), FakeCallbackListPolicies>;
 
 	CL callbackList;
 
@@ -575,7 +583,7 @@ TEST_CASE("CallbackList, multi threading, append")
 
 TEST_CASE("CallbackList, multi threading, remove")
 {
-	using CL = CallbackList<void(), int>;
+	using CL = CallbackList<void(), FakeCallbackListPolicies>;
 
 	CL callbackList;
 
@@ -614,7 +622,7 @@ TEST_CASE("CallbackList, multi threading, remove")
 
 TEST_CASE("CallbackList, multi threading, double remove")
 {
-	using CL = CallbackList<void(), int>;
+	using CL = CallbackList<void(), FakeCallbackListPolicies>;
 
 	CL callbackList;
 
@@ -661,7 +669,7 @@ TEST_CASE("CallbackList, multi threading, double remove")
 
 TEST_CASE("CallbackList, multi threading, append/double remove")
 {
-	using CL = CallbackList<void(), int>;
+	using CL = CallbackList<void(), FakeCallbackListPolicies>;
 
 	CL callbackList;
 
@@ -707,7 +715,7 @@ TEST_CASE("CallbackList, multi threading, append/double remove")
 
 TEST_CASE("CallbackList, multi threading, insert")
 {
-	using CL = CallbackList<void(), int>;
+	using CL = CallbackList<void(), FakeCallbackListPolicies>;
 
 	CL callbackList;
 

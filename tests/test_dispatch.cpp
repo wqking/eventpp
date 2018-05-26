@@ -203,17 +203,15 @@ TEST_CASE("dispatch, Event struct, void (const std::string &, int)")
 		std::string message;
 		int param;
 	};
-	struct EventTypeGetter : public eventpp::EventGetterBase
+	struct EventPolicies
 	{
-		using Event = int;
-
 		static int getEvent(const MyEvent & e, const std::string &, int) {
 			return e.type;
 		}
 	};
 
 
-	eventpp::EventDispatcher<EventTypeGetter, void (const MyEvent &, const std::string &, int)> dispatcher;
+	eventpp::EventDispatcher<int, void (const MyEvent &, const std::string &, int), EventPolicies> dispatcher;
 	constexpr int event = 3;
 
 	std::vector<std::string> sList(2);
@@ -427,7 +425,15 @@ TEST_CASE("dispatch multi threading, int, void (int)")
 
 TEST_CASE("dispatch explicit single threading, int, void (int)")
 {
-	using ED = eventpp::EventDispatcher<int, void (int), void, eventpp::ArgumentPassingAutoDetect, eventpp::SingleThreading>;
+	struct MyEventPolicies
+	{
+		using Threading = eventpp::SingleThreading;
+		static int getEvent(const int e, const int) {
+			return e;
+		}
+
+	};
+	using ED = eventpp::EventDispatcher<int, void (int), MyEventPolicies>;
 	ED dispatcher;
 
 	int a = 1;

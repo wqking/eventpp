@@ -128,16 +128,14 @@ TEST_CASE("queue, customized event")
 		int param;
 	};
 
-	struct MyEventTypeGetter : public eventpp::EventGetterBase
+	struct MyEventPolicies
 	{
-		using Event = int;
-
-		static Event getEvent(const MyEvent & e, std::string) {
+		static int getEvent(const MyEvent & e, std::string) {
 			return e.type;
 		}
 	};
 
-	eventpp::EventQueue<MyEventTypeGetter, void (const MyEvent &, std::string)> queue;
+	eventpp::EventQueue<int, void (const MyEvent &, std::string), MyEventPolicies> queue;
 
 	std::string a = "Hello ";
 	std::string b = "World ";

@@ -27,65 +27,41 @@ namespace eventpp {
 
 namespace internal_ {
 
-template <bool ...values>
-struct LogicAnd;
-
-template <bool first, bool ...values>
-struct LogicAnd <first, values...>
-{
-	enum { value = first && LogicAnd<values...>::value };
-};
-
-template <>
-struct LogicAnd <>
-{
-	enum { value = true };
-};
-
-
 template <
-	typename EventGetterType,
-	typename CallbackType,
-	typename ArgumentPassingMode,
-	typename Threading,
-	typename ReturnType, typename ...Args
+	typename EventType,
+	typename Prototype,
+	typename Policies
 >
 class EventQueueBase;
 
 template <
-	typename EventGetterType,
-	typename CallbackType,
-	typename ArgumentPassingMode,
-	typename Threading,
+	typename EventType,
+	typename PoliciesType,
 	typename ReturnType, typename ...Args
 >
 class EventQueueBase <
-		EventGetterType,
-		CallbackType,
-		ArgumentPassingMode,
-		Threading,
-		ReturnType (Args...)
+		EventType,
+		ReturnType (Args...),
+		PoliciesType
 	> : public EventDispatcherBase<
-		EventGetterType,
-		CallbackType,
-		ArgumentPassingMode,
-		Threading,
-		ReturnType (Args...)
+		EventType,
+		ReturnType (Args...),
+		PoliciesType
 	>
 {
 private:
 	using super = EventDispatcherBase<
-		EventGetterType,
-		CallbackType,
-		ArgumentPassingMode,
-		Threading,
-		ReturnType (Args...)
+		EventType,
+		ReturnType (Args...),
+		PoliciesType
 	>;
 
-	using EventGetter = typename super::EventGetter;
+	using Policies = typename super::Policies;
 	using Event = typename super::Event;
 	using Mutex = typename super::Mutex;
+	using Threading = typename super::Threading;
 	using ConditionVariable = typename Threading::ConditionVariable;
+	using GetEvent = typename super::GetEvent;
 
 	using QueuedEvent_ = std::tuple<
 		typename std::remove_cv<typename std::remove_reference<Event>::type>::type,
@@ -135,14 +111,6 @@ private:
 		bool allocated;
 	};
 
-	enum {
-		isDefaultConstructible = LogicAnd<
-			std::is_default_constructible<
-				typename std::remove_cv<typename std::remove_reference<Args>::type>::type
-			>::value...
-		>::value
-	};
-
 public:
 	using QueuedEvent = QueuedEvent_;
 
@@ -166,8 +134,6 @@ public:
 		EventQueueBase * queue;
 	};
 
-	friend struct QueueNotifyDiable;
-
 public:
 	EventQueueBase()
 		:
@@ -188,10 +154,10 @@ public:
 	template <typename ...A>
 	auto enqueue(A ...args) -> typename std::enable_if<sizeof...(A) == sizeof...(Args), void>::type
 	{
-		static_assert(super::canIncludeEventType, "Enqueuing arguments count doesn't match required (Event type should be included).");
+		static_assert(super::ArgumentPassingMode::canIncludeEventType, "Enqueuing arguments count doesn't match required (Event type should be included).");
 
 		doEnqueue(QueuedEvent(
-			EventGetter::getEvent(args...),
+			GetEvent::getEvent(args...),
 			std::forward<A>(args)...
 		));
 
@@ -203,10 +169,10 @@ public:
 	template <typename T, typename ...A>
 	auto enqueue(T && first, A ...args) -> typename std::enable_if<sizeof...(A) == sizeof...(Args), void>::type
 	{
-		static_assert(super::canExcludeEventType, "Enqueuing arguments count doesn't match required (Event type should NOT be included).");
+		static_assert(super::ArgumentPassingMode::canExcludeEventType, "Enqueuing arguments count doesn't match required (Event type should NOT be included).");
 
 		doEnqueue(QueuedEvent(
-			EventGetter::getEvent(std::forward<T>(first), args...),
+			GetEvent::getEvent(std::forward<T>(first), args...),
 			std::forward<A>(args)...
 		));
 
@@ -365,14 +331,12 @@ private:
 } //namespace internal_
 
 template <
-	typename EventGetter,
+	typename Event,
 	typename Prototype,
-	typename Callback = void,
-	typename ArgumentPassingMode = ArgumentPassingAutoDetect,
-	typename Threading = MultipleThreading
+	typename Policies = DefaultPolicies
 >
 class EventQueue : public internal_::EventQueueBase<
-	EventGetter, Callback, ArgumentPassingMode, Threading, Prototype>
+	Event, Prototype, Policies>
 {
 };
 

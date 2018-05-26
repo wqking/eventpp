@@ -36,20 +36,18 @@ struct MyEvent {
 	// data that all events may need
 };
 
-struct MyEventTypeGetter : public eventpp::EventGetterBase
+struct MyEventPolicies
 {
-	using Event = MyEventType;
-
-	static Event getEvent(const std::shared_ptr<MyEvent> & e) {
-		return e->type;
+	static MyEventType getEvent(const MyEvent & e) {
+		return e.type;
 	}
 };
 
-eventpp::EventDispatcher<MyEventTypeGetter, void(std::shared_ptr<MyEvent>)> dispatcher;
+eventpp::EventDispatcher<MyEventType, void(const MyEvent &), MyEventPolicies> dispatcher;
 dispatcher.dispatch(MyEvent { MyEventType::redraw });
 ```
-(Note: if you are confused with MyEventTypeGetter in above sample, please read the "Event getter" section in [Event dispatcher](eventdispatcher.md), and just consider the dispatcher as `eventpp::EventDispatcher<MyEventType, void(std::shared_ptr<MyEvent>)> dispatcher` for now.)  
-The disadvantage of EventDispatcher is that all events must have the same callback prototype (`void(std::shared_ptr<MyEvent>)` in the sample code). The common solution is that the callback takes a base class of Event and all events derive their own event data from Event. In the sample code, MyEvent is the base event class, the callback takes one argument of shared pointer to MyEvent.  
+(Note: if you are confused with MyEventPolicies in above sample, please read the [document of policies](policies.md), and just consider the dispatcher as `eventpp::EventDispatcher<MyEventType, void(std::shared_ptr<MyEvent>)> dispatcher` for now.)  
+The disadvantage of EventDispatcher is that all events must have the same callback prototype (`void(const MyEvent &)` in the sample code). The common solution is that the callback takes a base class of Event and all events derive their own event data from Event. In the sample code, MyEvent is the base event class, the callback takes one argument of const reference to MyEvent.  
 
 ## Class EventQueue
 
@@ -80,7 +78,7 @@ Exceptions may be thrown by underlying code when,
 1. Out of memory, new memory can't be allocated.  
 2. The listeners (callbacks) throw exceptions during copying, moving, comparing, or invoking.
 
-Almost all operations guarantee strong exception safety, which means the underlying data remains original value.  
+Almost all operations guarantee strong exception safety, which means the underlying data remains original value on exception is thrown.  
 An except is `EventQueue::process`, on exception, the remaining events will not be dispatched, and the queue becomes empty.
 
 

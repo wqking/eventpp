@@ -83,31 +83,25 @@ TEST_CASE("EventDispatcher tutorial 3, customized Event struct")
 		int param;
 	};
 
-	// Define an event type getter to let the dispatcher knows how to
+	// Define policies to let the dispatcher knows how to
 	// extract the event type.
-	// The getter must derive from eventpp::EventGetterBase
-	// The getter must have:
-	// 1, A type named Event indicating the event type.
-	// 2, A static member function named getEvent. It receives all parameters
-	// same as the dispatcher prototype, and returns Event.
-	struct MyEventTypeGetter : public eventpp::EventGetterBase
+	struct MyEventPolicies
 	{
-		using Event = int;
-
-		static Event getEvent(const MyEvent & e, bool /*b*/) {
+		static int getEvent(const MyEvent & e, bool /*b*/) {
 			return e.type;
 		}
 	};
 
-	// Pass MyEventTypeGetter as the first template argument of EventDispatcher
+	// Pass MyEventPolicies as the third template argument of EventDispatcher.
+	// Note: the first template argument is the event type type int, not MyEvent.
 	eventpp::EventDispatcher<
-		MyEventTypeGetter,
-		void (const MyEvent &, bool)
+		int,
+		void (const MyEvent &, bool),
+		MyEventPolicies
 	> dispatcher;
 
 	// Add a listener.
-	// Note: the first argument, event type, is MyEventTypeGetter::Event,
-	// not Event
+	// Note: the first argument is the event type of type int, not MyEvent.
 	dispatcher.appendListener(3, [](const MyEvent & e, bool b) {
 		std::cout
 			<< std::boolalpha

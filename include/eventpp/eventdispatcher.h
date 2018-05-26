@@ -20,48 +20,12 @@
 #include <functional>
 #include <type_traits>
 #include <map>
+#include <unordered_map>
 #include <mutex>
 #include <algorithm>
 #include <memory>
 
 namespace eventpp {
-
-struct EventGetterBase {};
-
-template <typename E>
-struct PrimaryEventGetter : public EventGetterBase
-{
-	using Event = E;
-
-	template <typename U, typename ...Args>
-	static Event getEvent(U && e, const Args &...) {
-		return e;
-	}
-};
-
-struct ArgumentPassingAutoDetect
-{
-	enum {
-		canIncludeEventType = true,
-		canExcludeEventType = true
-	};
-};
-
-struct ArgumentPassingIncludeEvent
-{
-	enum {
-		canIncludeEventType = true,
-		canExcludeEventType = false
-	};
-};
-
-struct ArgumentPassingExcludeEvent
-{
-	enum {
-		canIncludeEventType = false,
-		canExcludeEventType = true
-	};
-};
 
 namespace internal_ {
 
@@ -96,61 +60,61 @@ struct CounterGuard
 };
 
 template <
-	typename EventGetterType,
-	typename CallbackType,
-	typename ArgumentPassingMode,
-	typename Threading,
-	typename ReturnType, typename ...Args
+	typename EventType,
+	typename Prototype,
+	typename Policies
 >
 class EventDispatcherBase;
 
 template <
-	typename EventGetterType,
-	typename CallbackType,
-	typename ArgumentPassingMode,
-	typename Threading,
+	typename EventType,
+	typename PoliciesType,
 	typename ReturnType, typename ...Args
 >
 class EventDispatcherBase <
-	EventGetterType,
-	CallbackType,
-	ArgumentPassingMode,
-	Threading,
-	ReturnType (Args...)
+	EventType,
+	ReturnType (Args...),
+	PoliciesType
 >
 {
 protected:
-	using EventGetter = typename std::conditional<
-		std::is_base_of<EventGetterBase, EventGetterType>::value,
-		EventGetterType,
-		PrimaryEventGetter<EventGetterType>
-	>::type;
+	using Policies = PoliciesType;
+
+	using Threading = typename SelectThreading<Policies, HasTypeThreading<Policies>::value>::Type;
+
+	using ArgumentPassingMode = typename SelectArgumentPassingMode<Policies, HasTypeArgumentPassingMode<Policies>::value>::Type;
+
+	using GetEvent = typename SelectGetEvent<Policies, EventType, HasFunctionGetEvent<Policies>::value>::Type;
 
 	using Mutex = typename Threading::Mutex;
 
-	using Callback_ = typename std::conditional<
-		std::is_same<CallbackType, void>::value,
-		std::function<ReturnType (Args...)>,
-		CallbackType
-	>::type;
-	using CallbackList_ = CallbackList<ReturnType (Args...), Callback_, Threading>;
+	using Callback_ = typename SelectCallback<
+		Policies,
+		HasTypeCallback<Policies>::value,
+		std::function<ReturnType (Args...)>
+	>::Type;
+	using CallbackList_ = CallbackList<ReturnType (Args...), Policies>;
 
 	using Filter = std::function<bool (typename std::add_lvalue_reference<Args>::type...)>;
-	using FilterList = CallbackList<bool (Args...), Filter, Threading>;
-
-	enum {
-		canIncludeEventType = ArgumentPassingMode::canIncludeEventType,
-		canExcludeEventType = ArgumentPassingMode::canExcludeEventType
+	struct FilterCallbackListPolicies
+	{
+		using Callback = Filter;
+		using Threading = EventDispatcherBase::Threading;
 	};
+	using FilterList = CallbackList<bool (Args...), FilterCallbackListPolicies>;
 
-	using Handle_ = typename CallbackList_::Handle;
-	using Event_ = typename EventGetter::Event;
+	using Map = typename SelectMap<
+		EventType,
+		CallbackList_,
+		Policies,
+		HasTemplateMap<Policies>::value
+	>::Type;
 
 public:
-	using Handle = Handle_;
+	using Handle = typename CallbackList_::Handle;
 	using Callback = Callback_;
-	using Event = Event_;
-	using FilterHandle = typename FilterList::Handle;;
+	using Event = EventType;
+	using FilterHandle = typename FilterList::Handle;
 
 public:
 	EventDispatcherBase()
@@ -228,12 +192,12 @@ public:
 
 	void dispatch(Args ...args) const
 	{
-		static_assert(canIncludeEventType, "Dispatching arguments count doesn't match required (Event type should be included).");
+		static_assert(ArgumentPassingMode::canIncludeEventType, "Dispatching arguments count doesn't match required (Event type should be included).");
 
-		// can't std::forward<Args>(args) in EventGetter::getEvent because the pass by value arguments will be moved to getEvent
+		// can't std::forward<Args>(args) in GetEvent::getEvent because the pass by value arguments will be moved to getEvent
 		// then the other std::forward<Args>(args) to doDispatch will get empty values.
 		doDispatch(
-			EventGetter::getEvent(args...),
+			GetEvent::getEvent(args...),
 			std::forward<Args>(args)...
 		);
 	}
@@ -241,10 +205,10 @@ public:
 	template <typename T>
 	void dispatch(T && first, Args ...args) const
 	{
-		static_assert(canExcludeEventType, "Dispatching arguments count doesn't match required (Event type should NOT be included).");
+		static_assert(ArgumentPassingMode::canExcludeEventType, "Dispatching arguments count doesn't match required (Event type should NOT be included).");
 
 		doDispatch(
-			EventGetter::getEvent(std::forward<T>(first), args...),
+			GetEvent::getEvent(std::forward<T>(first), args...),
 			std::forward<Args>(args)...
 		);
 	}
@@ -296,7 +260,7 @@ private:
 	}
 
 private:
-	std::map<Event, CallbackList_> eventCallbackListMap;
+	Map eventCallbackListMap;
 	mutable Mutex listenerMutex;
 
 	FilterList filterList;
@@ -306,14 +270,12 @@ private:
 } //namespace internal_
 
 template <
-	typename EventGetter,
+	typename Event,
 	typename Prototype,
-	typename Callback = void,
-	typename ArgumentPassingMode = ArgumentPassingAutoDetect,
-	typename Threading = MultipleThreading
+	typename Policies = DefaultPolicies
 >
 class EventDispatcher : public internal_::EventDispatcherBase<
-	EventGetter, Callback, ArgumentPassingMode, Threading, Prototype>
+	Event, Prototype, Policies>
 {
 };
 
