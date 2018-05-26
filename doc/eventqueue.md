@@ -18,11 +18,9 @@ eventpp/eventqueue.h
 
 ```c++
 template <
-	typename EventGetter,
+	typename Key,
 	typename Prototype,
-	typename Callback = void,
-	typename ArgumentPassingMode = ArgumentPassingAutoDetect,
-	typename Threading = MultipleThreading
+	typename Policies = DefaultPolicies
 >
 class EventQueue;
 ```

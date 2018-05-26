@@ -60,19 +60,19 @@ struct CounterGuard
 };
 
 template <
-	typename KeyType,
+	typename EventType,
 	typename Prototype,
 	typename Policies
 >
 class EventDispatcherBase;
 
 template <
-	typename KeyType,
+	typename EventType,
 	typename PoliciesType,
 	typename ReturnType, typename ...Args
 >
 class EventDispatcherBase <
-	KeyType,
+	EventType,
 	ReturnType (Args...),
 	PoliciesType
 >
@@ -84,7 +84,7 @@ protected:
 
 	using ArgumentPassingMode = typename SelectArgumentPassingMode<Policies, HasTypeArgumentPassingMode<Policies>::value>::Type;
 
-	using GetEvent = typename SelectGetEvent<Policies, KeyType, HasFunctionGetEvent<Policies>::value>::Type;
+	using GetEvent = typename SelectGetEvent<Policies, EventType, HasFunctionGetEvent<Policies>::value>::Type;
 
 	using Mutex = typename Threading::Mutex;
 
@@ -103,20 +103,17 @@ protected:
 	};
 	using FilterList = CallbackList<bool (Args...), FilterCallbackListPolicies>;
 
-	using Handle_ = typename CallbackList_::Handle;
-	using Event_ = KeyType;
-
 	using Map = typename SelectMap<
-		Event_,
+		EventType,
 		CallbackList_,
 		Policies,
 		HasTemplateMap<Policies>::value
 	>::Type;
 
 public:
-	using Handle = Handle_;
+	using Handle = typename CallbackList_::Handle;
 	using Callback = Callback_;
-	using Event = Event_;
+	using Event = EventType;
 	using FilterHandle = typename FilterList::Handle;
 
 public:
@@ -273,12 +270,12 @@ private:
 } //namespace internal_
 
 template <
-	typename Key,
+	typename Event,
 	typename Prototype,
 	typename Policies = DefaultPolicies
 >
 class EventDispatcher : public internal_::EventDispatcherBase<
-	Key, Prototype, Policies>
+	Event, Prototype, Policies>
 {
 };
 

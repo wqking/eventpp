@@ -3,9 +3,7 @@
 ## Table Of Contents
 
 - [API reference](#apis)
-- [Event getter](#event-getter)
 - [Event filter](#event-filter)
-- [Argument passing mode](#argument-passing-mode)
 - [Nested listener safety](#nested-listener-safety)
 - [Time complexities](#time-complexities)
 - [Internal data structure](#internal-data-structure)
@@ -21,27 +19,21 @@ eventpp/eventdispatcher.h
 
 ```c++
 template <
-	typename EventGetter,
+	typename Event,
 	typename Prototype,
-	typename Callback = void,
-	typename ArgumentPassingMode = ArgumentPassingAutoDetect,
-	typename Threading = MultipleThreading
+	typename Policies = DefaultPolicies
 >
 class EventDispatcher;
 ```
-`EventGetter`: the *event getter*. The simplest form is an event type. For details, see [Event getter](#event-getter) for details.  
-`Prototype`:  the listener prototype. It's C++ function type such as `void(int, std::string, const MyClass *)`.  
-`Callback`: the underlying type to hold the callback. Default is `void`, which will be expanded to `std::function`.  
-`ArgumentPassingMode`: the argument passing mode. Default is `ArgumentPassingAutoDetect`. See [Argument passing mode](#argument-passing-mode) for details.  
-`Threading`: threading model. Default is 'MultipleThreading'. Possible values:  
-  * `MultipleThreading`: the core data is protected with mutex. It's the default value.  
-  * `SingleThreading`: the core data is not protected and can't be accessed from multiple threads.  
+`Event`: the *event type*. The type used to identify the event. Events with same type are the same event. The event type must be able to be used as the key in `std::map` or `std::unordered_map`, so it must be either comparable with `operator <` or has specialization of `std::hash`.  
+`Prototype`: the listener prototype. It's C++ function type such as `void(int, std::string, const MyClass *)`.  
+`Policies`: the policies to configure and extend the dispatcher. The default value is `DefaultPolicies`. See [document of policies](policies.md) for details.  
 
 **Public types**
 
 `Handle`: the handle type returned by appendListener, prependListener and insertListener. A handle can be used to insert a listener or remove a listener. To check if a `Handle` is empty, convert it to boolean, *false* is empty. `Handle` is copyable.  
 `Callback`: the callback storage type.  
-`Event`: the event type. The event type must be able to be used as the key in `std::map`, so it must be comparable with `operator <`.   
+`Event`: the event type.  
 `FilterHandle`: the handle type returned by appendFilter. A filter handle can be used to remove a filter. To check if a `FilterHandle` is empty, convert it to boolean, *false* is empty. `FilterHandle` is copyable.  
 
 **Functions**
@@ -62,6 +54,7 @@ Add the *callback* to the dispatcher to listen to *event*.
 The listener is added to the end of the listener list.  
 Return a handle which represents the listener. The handle can be used to remove this listener or insert other listener before this listener.  
 If `appendListener` is called in another listener during a dispatching, the new listener is guaranteed not triggered during the same dispatching.  
+If the same callback is added twice, it results duplicated listeners.  
 The time complexity is O(1).
 
 ```c++
@@ -130,60 +123,6 @@ bool removeFilter(const FilterHandle & filterHandle);
 Remove a filter from the dispatcher.  
 Return true if the filter is removed successfully.
 
-<a name="event-getter"></a>
-## Event getter
-
-The first template parameter of EventDispatcher is the *event getter*.  
-
-If *event getter* is not a struct or class inherits from eventpp::EventGetterBase, it's the event type.  
-For example `EventDispatcher<std::string, void()>` is a dispatcher with event type `std::string`, prototype `void()`.
-
-If *event getter* inherits from tag eventpp::EventGetterBase, it's the event type getter. See [Tutorial 3](tutorial_eventdispatcher.md#tutorial3) for example.  
-Assume we have an EventDispatcher which callback prototype is `void (const MyEvent &, bool)`, where `MyEvent` is a unified event structure.
-```c++
-struct MyEvent {
-	int type;
-	std::string message;
-	int param;
-	// blah blah
-};
-```
-
-A typical *event getter* looks like:  
-```c++
-struct MyEventTypeGetter : public eventpp::EventGetterBase
-{
-	using Event = int;
-
-	static Event getEvent(const MyEvent & e, bool b) {
-		return e.type;
-	}
-};
-```
-
-Then we can define the dispatcher as
-```c++
-eventpp::EventDispatcher<MyEventTypeGetter, void (const MyEvent &, bool)> dispatcher;
-```
-
-An *event getter* must have a type `Event` which is the event type and used in the internal 'std::map`, and it must have a static function `getEvent`, which receives the arguments of callback prototype and return the event type.
-
-To add a listener
-```c++
-dispatcher.appendListener(5, [](const MyEvent & e, bool b) {});
-```
-Note the first argument is the `Event` in the *event getter*, here is `int`, not `MyEvent`.
-
-To dispatch or enqueue an event
-```c++
-MyEvent myEvent { 5, "Hello", 38 };
-dispatcher.dispatch(myEvent, true);
-```
-Note the first argument is `MyEvent`, not `Event`.  
-`dispatch` and `enqueue` use the function `getEvent` in the *event getter* to deduct the event type.  
-`dispatch` and `enqueue` don't assume the meaning of any arguments. How to get the event type completely depends on `getEvent`.   `getEvent` can simple return a member for the first argument, or concatenate all arguments, or even hash the arguments and return the hash value as the event type.
-
-
 <a name="event-filter"></a>
 ## Event filter
 
@@ -206,87 +145,6 @@ Event filter is a powerful and useful technology, below is some sample use cases
 
 2, Setup catch-all event listener. For example, in a phone book system, the system sends events based on the actions, such as adding a phone number, remove a phone number, look up a phone number, etc. A module may be only interested in special area code of a phone number, not the actions. One approach is the module can listen to all possible events (add, remove, look up), but this is very fragile -- how about a new action event is added and the module forgets to listen on it? The better approach is the module add a filter and check the area code in the filter.
 
-
-<a name="argument-passing-mode"></a>
-## Argument passing mode
-
-We have the dispatcher  
-```c++
-eventpp::EventDispatcher<int, void(int, const std::string &)> dispatcher;
-```
-The event type is `int`.  
-The listener's first parameter is also `int`. Depending how the event is dispatched, the listener's first argument can be either the event type, or an extra argument.
-
-```c++
-dispatcher.dispatch(3, "hello");
-```
-The event *3* is dispatched with an argument *"hello"*, the listener will be invoked with the arguments `(3, "hello")`, the first argument is the event type.
-
-```c++
-dispatcher.dispatch(3, 8, "hello");
-```
-The event *3* is dispatched with two arguments *8* and *"hello"*, the listener will be invoked with the arguments `(8, "hello")`, the first argument is the extra argument, and the event type is omitted.
-
-So by default, EventDispatcher automatically detects the argument count of `dispatch` and listeners prototype, and calls the listeners either with or without the event type.
-
-The default rule is convenient, permissive, and, may be error prone. The second parameter `typename ArgumentPassingMode` in the policies can control the behavior.  
-
-```c++
-struct ArgumentPassingAutoDetect;
-struct ArgumentPassingIncludeEvent;
-struct ArgumentPassingExcludeEvent;
-```
-
-`ArgumentPassingAutoDetect`: the default policy. Auto detects whether to pass the event type.  
-`ArgumentPassingIncludeEvent`: always passes the event type. If the argument count doesn't match, compiling fails.  
-`ArgumentPassingExcludeEvent`: always omits and doesn't pass the event type. If the argument count doesn't match, compiling fails.  
-
-Assumes the number of arguments in the listener prototype is P, the number of arguments (include the event type) in `dispatch` is D, then the relationship of P and D is,  
-For `ArgumentPassingAutoDetect`: P == D or P + 1 == D  
-For `ArgumentPassingIncludeEvent`: P == D  
-For `ArgumentPassingExcludeEvent`: P + 1 == D  
-
-**Note**: the same rules also applies to `EventDispatcher<>::enqueue`, since `enqueue` has same parameters as `dispatch`.
-
-Examples to demonstrate argument passing mode  
-
-```c++
-eventpp::EventDispatcher<
-	int,
-	void(int, const std::string &),
-	ArgumentPassingAutoDetect
-> dispatcher;
-// or just
-//eventpp::EventDispatcher<int, void(int, const std::string &)> dispatcher;
-dispatcher.dispatch(3, "hello"); // Compile OK
-dispatcher.dispatch(3, 8, "hello"); // Compile OK
-dispatcher.enqueue(3, "hello"); // Compile OK
-dispatcher.enqueue(3, 8, "hello"); // Compile OK
-```
-
-```c++
-eventpp::EventDispatcher<
-	int,
-	void(int, const std::string &),
-	ArgumentPassingIncludeEvent
-> dispatcher;
-dispatcher.dispatch(3, "hello"); // Compile OK
-//dispatcher.dispatch(3, 8, "hello"); // Compile failure
-dispatcher.enqueue(3, "hello"); // Compile OK
-//dispatcher.enqueue(3, 8, "hello"); // Compile failure
-```
-
-```c++
-eventpp::EventDispatcher<
-	int,
-	void(int, const std::string &),
-	ArgumentPassingExcludeEvent
-> dispatcher;
-//dispatcher.dispatch(3, "hello"); // Compile failure
-dispatcher.dispatch(3, 8, "hello"); // Compile OK
-//dispatcher.enqueue(3, "hello"); // Compile failure
-dispatcher.enqueue(3, 8, "hello"); // Compile OK
-```
 
 <a name="nested-listener-safety"></a>
 ## Nested listener safety

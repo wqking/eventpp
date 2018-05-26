@@ -88,7 +88,7 @@ struct DefaultPolicies
 	/* default types/implements for EventDispatch and EventQueue
 	template <typename U, typename ...Args>
 	static E getEvent(U && e, const Args &...) {
-	return e;
+		return e;
 	}
 
 	using Callback = std::function<blah, blah>;

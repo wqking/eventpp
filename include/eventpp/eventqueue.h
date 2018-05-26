@@ -28,30 +28,30 @@ namespace eventpp {
 namespace internal_ {
 
 template <
-	typename KeyType,
+	typename EventType,
 	typename Prototype,
 	typename Policies
 >
 class EventQueueBase;
 
 template <
-	typename KeyType,
+	typename EventType,
 	typename PoliciesType,
 	typename ReturnType, typename ...Args
 >
 class EventQueueBase <
-		KeyType,
+		EventType,
 		ReturnType (Args...),
 		PoliciesType
 	> : public EventDispatcherBase<
-		KeyType,
+		EventType,
 		ReturnType (Args...),
 		PoliciesType
 	>
 {
 private:
 	using super = EventDispatcherBase<
-		KeyType,
+		EventType,
 		ReturnType (Args...),
 		PoliciesType
 	>;
@@ -331,12 +331,12 @@ private:
 } //namespace internal_
 
 template <
-	typename Key,
+	typename Event,
 	typename Prototype,
 	typename Policies = DefaultPolicies
 >
 class EventQueue : public internal_::EventQueueBase<
-	Key, Prototype, Policies>
+	Event, Prototype, Policies>
 {
 };
 

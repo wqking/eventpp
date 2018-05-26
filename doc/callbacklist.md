@@ -19,16 +19,12 @@ eventpp/callbacklist.h
 ```c++
 template <
 	typename Prototype,
-	typename Callback = void,
-	typename Threading = MultipleThreading
+	typename Policies = DefaultPolicies
 >
 class CallbackList;
 ```
 `Prototype`:  the callback prototype. It's C++ function type such as `void(int, std::string, const MyClass *)`.  
-`Callback`: the underlying type to hold the callback. Default is `void`, which will be expanded to `std::function`.  
-`Threading`: threading model. Default is 'MultipleThreading'. Possible values:  
-  - `MultipleThreading`: the core data is protected with mutex. It's the default value.  
-  - `SingleThreading`: the core data is not protected and can't be accessed from multiple threads.  
+`Policies`: the policies to configure and extend the callback list. The default value is `DefaultPolicies`. See [document of policies](policies.md) for details.  
 
 **Public types**
 

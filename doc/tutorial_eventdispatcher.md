@@ -119,31 +119,25 @@ struct MyEvent {
 	int param;
 };
 
-// Define an event type getter to let the dispatcher knows how to
+// Define policies to let the dispatcher knows how to
 // extract the event type.
-// The getter must derive from eventpp::EventGetterBase
-// The getter must have:
-// 1, A type named Event indicating the event type.
-// 2, A static member function named getEvent. It receives all parameters
-// same as the dispatcher prototype, and returns Event.
-struct MyEventTypeGetter : public eventpp::EventGetterBase
+struct MyEventPolicies
 {
-	using Event = int;
-
-	static Event getEvent(const MyEvent & e, bool b) {
+	static int getEvent(const MyEvent & e, bool /*b*/) {
 		return e.type;
 	}
 };
 
-// Pass MyEventTypeGetter as the first template argument of EventDispatcher
+// Pass MyEventPolicies as the third template argument of EventDispatcher.
+// Note: the first template argument is the event type type int, not MyEvent.
 eventpp::EventDispatcher<
-	MyEventTypeGetter,
-	void (const MyEvent &, bool)
+	int,
+	void (const MyEvent &, bool),
+	MyEventPolicies
 > dispatcher;
 
 // Add a listener.
-// Note: the first argument, event type, is MyEventTypeGetter::Event,
-// not Event
+// Note: the first argument is the event type of type int, not MyEvent.
 dispatcher.appendListener(3, [](const MyEvent & e, bool b) {
 	std::cout
 		<< std::boolalpha
@@ -169,7 +163,7 @@ dispatcher.dispatch(MyEvent { 3, "Hello world", 38 }, true);
 > b is true  
 
 **Remarks**
-Previous tutorials pass the event type as the first argument in `dispatch`, and all other event parameters as other arguments of `dispatch`. Another common situation is an Event class is defined as the base, all other events derive from Event, and the actual event type is a data member of Event (think QEvent in Qt).  
+A common situation is an Event class is defined as the base class, all other events derive from Event, and the actual event type is a data member of Event (think QEvent in Qt). To let EventDispatcher knows how to get the event type from class Event, policies (the third template parameter) is used.  
 
 <a name="tutorial4"></a>
 ### Tutorial 4 -- Event filter
