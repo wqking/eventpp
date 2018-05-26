@@ -89,6 +89,7 @@ queue.process();
 * [Document of CallbackList](doc/callbacklist.md)
 * [Document of EventDispatcher](doc/eventdispatcher.md)
 * [Document of EventQueue](doc/eventqueue.md)
+* [Policies -- configure and extend eventpp](doc/policies.md)
 * [Frequently Asked Questions](doc/faq.md)
 * There are compilable tutorials in the unit tests.
 
