@@ -13,6 +13,7 @@
 
 // Include the head
 #include "eventpp/eventdispatcher.h"
+#include "eventpp/interceptors/interceptorfilter.h"
 
 #include "test.h"
 
@@ -122,7 +123,10 @@ TEST_CASE("EventDispatcher tutorial 4, event filter")
 {
 	std::cout << "EventDispatcher tutorial 4, event filter" << std::endl;
 
-	eventpp::EventDispatcher<int, void (int e, int i, std::string)> dispatcher;
+	struct MyPolicies {
+		using Interceptors = eventpp::InterceptorList<eventpp::InterceptorFilter>;
+	};
+	eventpp::EventDispatcher<int, void (int e, int i, std::string), MyPolicies> dispatcher;
 
 	dispatcher.appendListener(3, [](const int /*e*/, const int i, const std::string & s) {
 		std::cout << "Got event 3, i was 1 but actural is " << i << " s was Hello but actural is " << s << std::endl;

@@ -22,16 +22,6 @@
 
 namespace eventpp {
 
-namespace internal_ {
-
-struct DummyMutex
-{
-	void lock() {}
-	void unlock() {}
-};
-
-} //namespace internal_
-
 struct MultipleThreading
 {
 	using Mutex = std::mutex;
@@ -44,7 +34,11 @@ struct MultipleThreading
 
 struct SingleThreading
 {
-	using Mutex = internal_::DummyMutex;
+	struct Mutex
+	{
+		void lock() {}
+		void unlock() {}
+	};
 
 	// May replace Atomic with dummy atomic later.
 	template <typename T>
@@ -100,6 +94,12 @@ struct DefaultPolicies
 	*/
 };
 
+template <template <typename> class ...Args>
+struct InterceptorList
+{
+};
+
+
 namespace internal_ {
 
 template <typename T>
@@ -139,12 +139,11 @@ template <typename T, typename D> struct SelectCallback<T, true, D> { using Type
 template <typename T, typename D> struct SelectCallback<T, false, D> { using Type = D; };
 
 template <typename T>
-class HasFunctionGetEvent
+struct HasFunctionGetEvent
 {
 	template <typename C> static std::true_type test(decltype(&C::getEvent) *) ;
 	template <typename C> static std::false_type test(...);    
-
-public:
+	
 	enum { value = !! decltype(test<T>(0))() };
 };
 template <typename E>
@@ -190,6 +189,74 @@ struct SelectMap<Key, Value, T, false> {
 		std::unordered_map<Key, Value>,
 		std::map<Key, Value>
 	>::type;
+};
+
+
+template <typename T>
+struct HasTypeInterceptors
+{
+	template <typename C> static std::true_type test(typename C::Interceptors *) ;
+	template <typename C> static std::false_type test(...);    
+
+	enum { value = !! decltype(test<T>(0))() };
+};
+template <typename T, bool> struct SelectInterceptors;
+template <typename T> struct SelectInterceptors <T, true> { using Type = typename T::Interceptors; };
+template <typename T> struct SelectInterceptors <T, false> { using Type = InterceptorList<>; };
+
+
+template <typename Root, typename TList>
+struct InheritInterceptors;
+
+template <typename Root, template <typename> class T, template <typename> class ...Args>
+struct InheritInterceptors <Root, InterceptorList<T, Args...> >
+{
+	using Type = T <typename InheritInterceptors<Root, InterceptorList<Args...> >::Type>;
+};
+
+template <typename Root>
+struct InheritInterceptors <Root, InterceptorList<> >
+{
+	using Type = Root;
+};
+
+template <typename Root, typename TList, typename Func>
+struct ForEachInterceptors;
+
+template <typename Func, typename Root, template <typename> class T, template <typename> class ...Args>
+struct ForEachInterceptors <Root, InterceptorList<T, Args...>, Func>
+{
+	using Type = typename InheritInterceptors<Root, InterceptorList<T, Args...> >::Type;
+
+	template <typename ...A>
+	static bool forEach(A && ...args) {
+		if(Func::template forEach<Type>(std::forward<A>(args)...)) {
+			return ForEachInterceptors<Root, InterceptorList<Args...>, Func>::forEach(std::forward<A>(args)...);
+		}
+		return false;
+	}
+};
+
+template <typename Root, typename Func>
+struct ForEachInterceptors <Root, InterceptorList<>, Func>
+{
+	using Type = Root;
+
+	template <typename ...A>
+	static bool forEach(A && ...args) {
+		return true;
+	}
+};
+
+template <typename T, typename ...Args>
+struct HasFunctionInterceptorBeforeDispatch
+{
+	template <typename C> static std::true_type test(
+		decltype(std::declval<C>().interceptorBeforeDispatch(std::declval<Args>()...)) *
+	);
+	template <typename C> static std::false_type test(...);    
+
+	enum { value = !! decltype(test<T>(0))() };
 };
 
 

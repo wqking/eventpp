@@ -13,6 +13,7 @@
 
 #include "test.h"
 #include "eventpp/eventdispatcher.h"
+#include "eventpp/interceptors/interceptorfilter.h"
 
 #include <thread>
 #include <algorithm>
@@ -275,7 +276,10 @@ TEST_CASE("dispatch many, int, void (int)")
 
 TEST_CASE("event filter")
 {
-	using ED = eventpp::EventDispatcher<int, void (int, int)>;
+	struct MyPolicies {
+		using Interceptors = eventpp::InterceptorList<eventpp::InterceptorFilter>;
+	};
+	using ED = eventpp::EventDispatcher<int, void (int, int), MyPolicies>;
 	ED dispatcher;
 
 	constexpr int itemCount = 5;

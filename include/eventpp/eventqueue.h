@@ -46,14 +46,24 @@ class EventQueueBase <
 	> : public EventDispatcherBase<
 		EventType,
 		ReturnType (Args...),
-		PoliciesType
+		PoliciesType,
+		EventQueueBase <
+			EventType,
+			ReturnType (Args...),
+			PoliciesType
+		>
 	>
 {
 private:
 	using super = EventDispatcherBase<
 		EventType,
 		ReturnType (Args...),
-		PoliciesType
+		PoliciesType,
+		EventQueueBase <
+			EventType,
+			ReturnType (Args...),
+			PoliciesType
+		>
 	>;
 
 	using Policies = typename super::Policies;
@@ -137,6 +147,7 @@ public:
 public:
 	EventQueueBase()
 		:
+			super(),
 			queueListConditionVariable(),
 			queueEmptyCounter(0),
 			queueNotifyCounter(0),
@@ -335,8 +346,10 @@ template <
 	typename Prototype,
 	typename Policies = DefaultPolicies
 >
-class EventQueue : public internal_::EventQueueBase<
-	Event, Prototype, Policies>
+class EventQueue : public internal_::InheritInterceptors<
+	internal_::EventQueueBase<Event, Prototype, Policies>,
+	typename internal_::SelectInterceptors<Policies, internal_::HasTypeInterceptors<Policies>::value >::Type
+>::Type
 {
 };
 
