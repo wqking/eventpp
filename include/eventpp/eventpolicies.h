@@ -150,13 +150,32 @@ template <typename E>
 struct DefaultGetEvent
 {
 	template <typename U, typename ...Args>
-	static E getEvent(U && e, const Args &...) {
+	static E getEvent(U && e, Args && ...) {
 		return e;
 	}
 };
 template <typename T, typename Key, bool> struct SelectGetEvent;
 template <typename T, typename Key> struct SelectGetEvent<T, Key, true> { using Type = T; };
 template <typename T, typename Key> struct SelectGetEvent<T, Key, false> { using Type = DefaultGetEvent<Key>; };
+
+template <typename T>
+struct HasFunctionCanContinueInvoking
+{
+	template <typename C> static std::true_type test(decltype(&C::canContinueInvoking) *) ;
+	template <typename C> static std::false_type test(...);    
+
+	enum { value = !! decltype(test<T>(0))() };
+};
+struct DefaultCanContinueInvoking
+{
+	template <typename ...Args>
+	static bool canContinueInvoking(Args && ...) {
+		return true;
+	}
+};
+template <typename T, bool> struct SelectCanContinueInvoking;
+template <typename T> struct SelectCanContinueInvoking<T, true> { using Type = T; };
+template <typename T> struct SelectCanContinueInvoking<T, false> { using Type = DefaultCanContinueInvoking; };
 
 template <typename T>
 struct HasTemplateMap

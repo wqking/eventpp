@@ -16,6 +16,94 @@ The same policy mechanism applies to all three classes, EventDispatcher, EventQu
 **Apply**: EventDispatcher, EventQueue.
 
 eventpp forwards all arguments of `EventDispatcher::dispatch` and `EventQueue::enqueue` (both has same arguments) to `getEvent` to get the event type.
+Sample code
+
+```c++
+// Define an Event to hold all parameters.
+struct MyEvent {
+	int type;
+	std::string message;
+	int param;
+};
+
+// Define policies to let the dispatcher knows how to
+// extract the event type.
+struct MyEventPolicies
+{
+	static int getEvent(const MyEvent & e, bool /*b*/) {
+		return e.type;
+	}
+};
+
+// Pass MyEventPolicies as the third template argument of EventDispatcher.
+// Note: the first template argument is the event type type int, not MyEvent.
+eventpp::EventDispatcher<
+	int,
+	void (const MyEvent &, bool),
+	MyEventPolicies
+> dispatcher;
+
+// Add a listener.
+// Note: the first argument is the event type of type int, not MyEvent.
+dispatcher.appendListener(3, [](const MyEvent & e, bool b) {
+	std::cout
+		<< std::boolalpha
+		<< "Got event 3" << std::endl
+		<< "Event::type is " << e.type << std::endl
+		<< "Event::message is " << e.message << std::endl
+		<< "Event::param is " << e.param << std::endl
+		<< "b is " << b << std::endl
+	;
+});
+
+// Dispatch the event.
+// The first argument is Event.
+dispatcher.dispatch(MyEvent { 3, "Hello world", 38 }, true);
+```
+
+### Function canContinueInvoking
+
+**Prototype**: `static bool canContinueInvoking(const Args &...)`. The function receives same arguments as `EventDispatcher::dispatch` and `EventQueue::enqueue`, and must return true if the event dispatching or callback list invoking can continue, false if the dispatching should stop.  
+**Default value**: the default implementation always returns true.  
+**Apply**: CallbackList, EventDispatcher, EventQueue.
+
+Sample code
+
+```c++
+struct MyEvent {
+	MyEvent() : type(0), canceled(false) {
+	}
+	explicit MyEvent(const int type)
+		: type(type), canceled(false) {
+	}
+
+	int type;
+	mutable bool canceled;
+};
+
+struct MyEventPolicies
+{
+	static int getEvent(const MyEvent & e) {
+		return e.type;
+	}
+
+	static bool canContinueInvoking(const MyEvent & e) {
+		return ! e.canceled;
+	}
+};
+
+eventpp::EventDispatcher<int, void (const MyEvent &), MyEventPolicies> dispatcher;
+
+dispatcher.appendListener(3, [](const MyEvent & e) {
+	std::cout << "Got event 3" << std::endl;
+	e.canceled = true;
+});
+dispatcher.appendListener(3, [](const MyEvent & e) {
+	std::cout << "Should not get this event 3" << std::endl;
+});
+
+dispatcher.dispatch(MyEvent(3));
+```
 
 ### Type Mixins
 

@@ -119,9 +119,48 @@ TEST_CASE("EventDispatcher tutorial 3, customized Event struct")
 	dispatcher.dispatch(MyEvent { 3, "Hello world", 38 }, true);
 }
 
-TEST_CASE("EventDispatcher tutorial 4, event filter")
+TEST_CASE("EventDispatcher tutorial 4, event canceling")
 {
-	std::cout << "EventDispatcher tutorial 4, event filter" << std::endl;
+	std::cout << "EventDispatcher tutorial 4, event canceling" << std::endl;
+
+	struct MyEvent {
+		MyEvent() : type(0), canceled(false) {
+		}
+		explicit MyEvent(const int type)
+			: type(type), canceled(false) {
+		}
+
+		int type;
+		mutable bool canceled;
+	};
+
+	struct MyEventPolicies
+	{
+		static int getEvent(const MyEvent & e) {
+			return e.type;
+		}
+
+		static bool canContinueInvoking(const MyEvent & e) {
+			return ! e.canceled;
+		}
+	};
+
+	eventpp::EventDispatcher<int, void (const MyEvent &), MyEventPolicies> dispatcher;
+
+	dispatcher.appendListener(3, [](const MyEvent & e) {
+		std::cout << "Got event 3" << std::endl;
+		e.canceled = true;
+	});
+	dispatcher.appendListener(3, [](const MyEvent & e) {
+		std::cout << "Should not get this event 3" << std::endl;
+	});
+
+	dispatcher.dispatch(MyEvent(3));
+}
+
+TEST_CASE("EventDispatcher tutorial 5, event filter")
+{
+	std::cout << "EventDispatcher tutorial 5, event filter" << std::endl;
 
 	struct MyPolicies {
 		using Mixins = eventpp::MixinList<eventpp::MixinFilter>;
