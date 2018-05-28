@@ -20,6 +20,10 @@ eventpp provides tools that allow your application components to communicate wit
 
 Apache License, Version 2.0  
 
+## Version 0.1.0
+
+eventpp is currently usable and near stable.
+
 ## Source code
 
 [https://github.com/wqking/eventpp](https://github.com/wqking/eventpp)
