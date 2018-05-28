@@ -6,18 +6,23 @@ eventpp provides tools that allow your application components to communicate wit
 
 - Support both synchronous event dispatching (EventDispatcher) and asynchronous event queue (EventQueue).  
 - Supports nested event. A listener can dispatch event, append/prepend/insert/remove other listeners during capturing an event safely.
+- Configurable and extensible with policies and mixins.
 - Support event filter.
 - Template based, less runtime overhead, unlimited possibilities. The event and callback can be almost any C++ types meeting minimum requirements.
 - Thread safe.
-- Requires C++ 11 (tested with MSVC 2017, MSVC 2015, MinGW (Msys) gcc 7.2, and Ubuntu gcc 5.4).
 - Backed by unit tests.
 - Written in portable and standard C++. (I'm not a C++ standard expert so if you find any non-standard code or undefined behavior please let me know.)
+- Requires C++ 11 (tested with MSVC 2017, MSVC 2015, MinGW (Msys) gcc 7.2, and Ubuntu gcc 5.4).
 - Doesn't depend on any other libraries.
 - Header only, no source file, no need to build.
 
 ## License
 
 Apache License, Version 2.0  
+
+## Version 0.1.0
+
+eventpp is currently usable and near stable.
 
 ## Source code
 
@@ -89,7 +94,8 @@ queue.process();
 * [Document of CallbackList](doc/callbacklist.md)
 * [Document of EventDispatcher](doc/eventdispatcher.md)
 * [Document of EventQueue](doc/eventqueue.md)
-* [Policies -- configure and extend eventpp](doc/policies.md)
+* [Policies -- configure eventpp](doc/policies.md)
+* [Mixins -- extend eventpp](doc/mixins.md)
 * [Frequently Asked Questions](doc/faq.md)
 * There are compilable tutorials in the unit tests.
 

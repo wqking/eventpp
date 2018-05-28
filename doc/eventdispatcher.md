@@ -3,7 +3,6 @@
 ## Table Of Contents
 
 - [API reference](#apis)
-- [Event filter](#event-filter)
 - [Nested listener safety](#nested-listener-safety)
 - [Time complexities](#time-complexities)
 - [Internal data structure](#internal-data-structure)
@@ -34,7 +33,6 @@ class EventDispatcher;
 `Handle`: the handle type returned by appendListener, prependListener and insertListener. A handle can be used to insert a listener or remove a listener. To check if a `Handle` is empty, convert it to boolean, *false* is empty. `Handle` is copyable.  
 `Callback`: the callback storage type.  
 `Event`: the event type.  
-`FilterHandle`: the handle type returned by appendFilter. A filter handle can be used to remove a filter. To check if a `FilterHandle` is empty, convert it to boolean, *false* is empty. `FilterHandle` is copyable.  
 
 **Functions**
 
@@ -110,41 +108,6 @@ bool forEachIf(const Event & event, Func && func);
 ```  
 Apply `func` to all listeners of `event`. `func` must return a boolean value, and if the return value is false, forEachIf stops the looping immediately.  
 Return `true` if all listeners are invoked, or `event` is not found, `false` if `func` returns `false`.
-
-```c++
-FilterHandle appendFilter(const Filter & filter);
-```
-Add the *filter* to the dispatcher.  
-Return a handle which can be used in removeFilter.
-
-```c++
-bool removeFilter(const FilterHandle & filterHandle);
-```
-Remove a filter from the dispatcher.  
-Return true if the filter is removed successfully.
-
-<a name="event-filter"></a>
-## Event filter
-
-`EventDispatcher<>::appendFilter(filter)` adds an event filter to the dispatcher. The `filter` receives the arguments which types are the callback prototype with lvalue reference, and must return a boolean value. Return `true` to allow the dispatcher continues the dispatching, `false` to prevent the dispatcher from invoking any subsequence listeners and filters.  
-
-The event filters are invoked for all events, and invoked before any listeners are invoked.  
-The event filters can modify the arguments since the arguments are passed as lvalue reference, no matter whether they are reference in the callback prototype (of course we can't modify a reference to const).  
-
-Below table shows the cases of how event filters receive the arguments.
-
-|Argument type in callback prototype |Argument type received by filter |Can filter modify the argument? | Comment |
-|-----|-----|:-----:|-----|
-|int, const int |int &, int & |Yes |The constness of the value is discarded|
-|int &, std::string & |int &, std::string & |Yes ||
-|const int &, const int *|const int &, const int * & |No |The constness of the reference/pointer must be respected|
-
-Event filter is a powerful and useful technology, below is some sample use cases, though the real world use cases are unlimited.  
-
-1, Capture and block all interested events. For example, in a GUI window system, all windows can receive mouse events. However, when a window is under mouse dragging, only the window under dragging should receive the mouse events even when the mouse is moving on other window. So when the dragging starts, the window can add a filter. The filter redirects all mouse events to the window and prevent other listeners from the mouse events, and bypass all other events.  
-
-2, Setup catch-all event listener. For example, in a phone book system, the system sends events based on the actions, such as adding a phone number, remove a phone number, look up a phone number, etc. A module may be only interested in special area code of a phone number, not the actions. One approach is the module can listen to all possible events (add, remove, look up), but this is very fragile -- how about a new action event is added and the module forgets to listen on it? The better approach is the module add a filter and check the area code in the filter.
-
 
 <a name="nested-listener-safety"></a>
 ## Nested listener safety

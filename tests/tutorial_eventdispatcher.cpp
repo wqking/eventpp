@@ -13,6 +13,7 @@
 
 // Include the head
 #include "eventpp/eventdispatcher.h"
+#include "eventpp/mixins/mixinfilter.h"
 
 #include "test.h"
 
@@ -122,10 +123,17 @@ TEST_CASE("EventDispatcher tutorial 4, event filter")
 {
 	std::cout << "EventDispatcher tutorial 4, event filter" << std::endl;
 
-	eventpp::EventDispatcher<int, void (int e, int i, std::string)> dispatcher;
+	struct MyPolicies {
+		using Mixins = eventpp::MixinList<eventpp::MixinFilter>;
+	};
+	eventpp::EventDispatcher<int, void (int e, int i, std::string), MyPolicies> dispatcher;
 
 	dispatcher.appendListener(3, [](const int /*e*/, const int i, const std::string & s) {
-		std::cout << "Got event 3, i was 1 but actural is " << i << " s was Hello but actural is " << s << std::endl;
+		std::cout
+			<< "Got event 3, i was 1 but actural is " << i
+			<< " s was Hello but actural is " << s
+			<< std::endl
+		;
 	});
 	dispatcher.appendListener(5, [](const int /*e*/, const int /*i*/, const std::string & /*s*/) {
 		std::cout << "Shout not got event 5" << std::endl;

@@ -62,27 +62,44 @@ struct CounterGuard
 template <
 	typename EventType,
 	typename Prototype,
-	typename Policies
+	typename Policies,
+	typename MixinRoot_
 >
 class EventDispatcherBase;
 
 template <
 	typename EventType,
 	typename PoliciesType,
+	typename MixinRoot_,
 	typename ReturnType, typename ...Args
 >
 class EventDispatcherBase <
 	EventType,
 	ReturnType (Args...),
-	PoliciesType
+	PoliciesType,
+	MixinRoot_
 >
 {
 protected:
+	using ThisType = EventDispatcherBase<
+		EventType,
+		ReturnType (Args...),
+		PoliciesType,
+		MixinRoot_
+	>;
+	using MixinRoot = typename std::conditional<
+		std::is_same<MixinRoot_, void>::value,
+		ThisType,
+		MixinRoot_
+	>::type;
 	using Policies = PoliciesType;
 
 	using Threading = typename SelectThreading<Policies, HasTypeThreading<Policies>::value>::Type;
 
-	using ArgumentPassingMode = typename SelectArgumentPassingMode<Policies, HasTypeArgumentPassingMode<Policies>::value>::Type;
+	using ArgumentPassingMode = typename SelectArgumentPassingMode<
+		Policies,
+		HasTypeArgumentPassingMode<Policies>::value
+	>::Type;
 
 	using GetEvent = typename SelectGetEvent<Policies, EventType, HasFunctionGetEvent<Policies>::value>::Type;
 
@@ -95,13 +112,7 @@ protected:
 	>::Type;
 	using CallbackList_ = CallbackList<ReturnType (Args...), Policies>;
 
-	using Filter = std::function<bool (typename std::add_lvalue_reference<Args>::type...)>;
-	struct FilterCallbackListPolicies
-	{
-		using Callback = Filter;
-		using Threading = EventDispatcherBase::Threading;
-	};
-	using FilterList = CallbackList<bool (Args...), FilterCallbackListPolicies>;
+	using Prototype = ReturnType (Args...);
 
 	using Map = typename SelectMap<
 		EventType,
@@ -110,18 +121,21 @@ protected:
 		HasTemplateMap<Policies>::value
 	>::Type;
 
+	using Mixins = typename internal_::SelectMixins<
+		Policies,
+		internal_::HasTypeMixins<Policies>::value
+	>::Type;
+
 public:
 	using Handle = typename CallbackList_::Handle;
 	using Callback = Callback_;
 	using Event = EventType;
-	using FilterHandle = typename FilterList::Handle;
 
 public:
 	EventDispatcherBase()
 		:
 			eventCallbackListMap(),
-			listenerMutex(),
-			filterList()
+			listenerMutex()
 	{
 	}
 
@@ -158,16 +172,6 @@ public:
 		}
 
 		return false;
-	}
-
-	FilterHandle appendFilter(const Filter & filter)
-	{
-		return filterList.append(filter);
-	}
-
-	bool removeFilter(const FilterHandle & filterHandle)
-	{
-		return filterList.remove(filterHandle);
 	}
 
 	template <typename Func>
@@ -216,20 +220,25 @@ public:
 protected:
 	void doDispatch(const Event & e, Args ...args) const
 	{
-		if(! filterList.empty()) {
-			if(
-				! filterList.forEachIf([&args...](typename FilterList::Callback & callback) {
-				return callback(typename std::add_lvalue_reference<Args>::type(args)...);
-			})
-				) {
-				return;
-			}
+		if(! internal_::ForEachMixins<MixinRoot, Mixins, DoMixinBeforeDispatch>::forEach(
+			this, typename std::add_lvalue_reference<Args>::type(args)...)) {
+			return;
 		}
 
 		const CallbackList_ * callableList = doFindCallableList(e);
 		if(callableList) {
 			(*callableList)(std::forward<Args>(args)...);
 		}
+	}
+
+	const CallbackList_ * doFindCallableList(const Event & e) const
+	{
+		return doFindCallableListHelper(this, e);
+	}
+
+	CallbackList_ * doFindCallableList(const Event & e)
+	{
+		return doFindCallableListHelper(this, e);
 	}
 
 private:
@@ -249,21 +258,26 @@ private:
 		}
 	}
 
-	const CallbackList_ * doFindCallableList(const Event & e) const
+private:
+	// Mixin related
+	struct DoMixinBeforeDispatch
 	{
-		return doFindCallableListHelper(this, e);
-	}
+		template <typename T, typename Self, typename ...A>
+		static auto forEach(const Self * self, A && ...args)
+			-> typename std::enable_if<HasFunctionMixinBeforeDispatch<T, A...>::value, bool>::type {
+			return static_cast<const T *>(self)->mixinBeforeDispatch(std::forward<A>(args)...);
+		}
 
-	CallbackList_ * doFindCallableList(const Event & e)
-	{
-		return doFindCallableListHelper(this, e);
-	}
+		template <typename T, typename Self, typename ...A>
+		static auto forEach(const Self * self, A && ...args)
+			-> typename std::enable_if<! HasFunctionMixinBeforeDispatch<T, A...>::value, bool>::type {
+			return true;
+		}
+	};
 
 private:
 	Map eventCallbackListMap;
 	mutable Mutex listenerMutex;
-
-	FilterList filterList;
 };
 
 
@@ -274,8 +288,10 @@ template <
 	typename Prototype,
 	typename Policies = DefaultPolicies
 >
-class EventDispatcher : public internal_::EventDispatcherBase<
-	Event, Prototype, Policies>
+class EventDispatcher : public internal_::InheritMixins<
+	internal_::EventDispatcherBase<Event, Prototype, Policies, void>,
+	typename internal_::SelectMixins<Policies, internal_::HasTypeMixins<Policies>::value >::Type
+>::Type
 {
 };
 

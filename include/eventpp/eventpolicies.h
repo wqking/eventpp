@@ -22,16 +22,6 @@
 
 namespace eventpp {
 
-namespace internal_ {
-
-struct DummyMutex
-{
-	void lock() {}
-	void unlock() {}
-};
-
-} //namespace internal_
-
 struct MultipleThreading
 {
 	using Mutex = std::mutex;
@@ -44,7 +34,11 @@ struct MultipleThreading
 
 struct SingleThreading
 {
-	using Mutex = internal_::DummyMutex;
+	struct Mutex
+	{
+		void lock() {}
+		void unlock() {}
+	};
 
 	// May replace Atomic with dummy atomic later.
 	template <typename T>
@@ -100,6 +94,12 @@ struct DefaultPolicies
 	*/
 };
 
+template <template <typename> class ...Args>
+struct MixinList
+{
+};
+
+
 namespace internal_ {
 
 template <typename T>
@@ -139,12 +139,11 @@ template <typename T, typename D> struct SelectCallback<T, true, D> { using Type
 template <typename T, typename D> struct SelectCallback<T, false, D> { using Type = D; };
 
 template <typename T>
-class HasFunctionGetEvent
+struct HasFunctionGetEvent
 {
 	template <typename C> static std::true_type test(decltype(&C::getEvent) *) ;
 	template <typename C> static std::false_type test(...);    
-
-public:
+	
 	enum { value = !! decltype(test<T>(0))() };
 };
 template <typename E>
@@ -190,6 +189,74 @@ struct SelectMap<Key, Value, T, false> {
 		std::unordered_map<Key, Value>,
 		std::map<Key, Value>
 	>::type;
+};
+
+
+template <typename T>
+struct HasTypeMixins
+{
+	template <typename C> static std::true_type test(typename C::Mixins *) ;
+	template <typename C> static std::false_type test(...);    
+
+	enum { value = !! decltype(test<T>(0))() };
+};
+template <typename T, bool> struct SelectMixins;
+template <typename T> struct SelectMixins <T, true> { using Type = typename T::Mixins; };
+template <typename T> struct SelectMixins <T, false> { using Type = MixinList<>; };
+
+
+template <typename Root, typename TList>
+struct InheritMixins;
+
+template <typename Root, template <typename> class T, template <typename> class ...Args>
+struct InheritMixins <Root, MixinList<T, Args...> >
+{
+	using Type = T <typename InheritMixins<Root, MixinList<Args...> >::Type>;
+};
+
+template <typename Root>
+struct InheritMixins <Root, MixinList<> >
+{
+	using Type = Root;
+};
+
+template <typename Root, typename TList, typename Func>
+struct ForEachMixins;
+
+template <typename Func, typename Root, template <typename> class T, template <typename> class ...Args>
+struct ForEachMixins <Root, MixinList<T, Args...>, Func>
+{
+	using Type = typename InheritMixins<Root, MixinList<T, Args...> >::Type;
+
+	template <typename ...A>
+	static bool forEach(A && ...args) {
+		if(Func::template forEach<Type>(std::forward<A>(args)...)) {
+			return ForEachMixins<Root, MixinList<Args...>, Func>::forEach(std::forward<A>(args)...);
+		}
+		return false;
+	}
+};
+
+template <typename Root, typename Func>
+struct ForEachMixins <Root, MixinList<>, Func>
+{
+	using Type = Root;
+
+	template <typename ...A>
+	static bool forEach(A && ...args) {
+		return true;
+	}
+};
+
+template <typename T, typename ...Args>
+struct HasFunctionMixinBeforeDispatch
+{
+	template <typename C> static std::true_type test(
+		decltype(std::declval<C>().mixinBeforeDispatch(std::declval<Args>()...)) *
+	);
+	template <typename C> static std::false_type test(...);    
+
+	enum { value = !! decltype(test<T>(0))() };
 };
 
 
