@@ -68,6 +68,10 @@ private:
 		std::function<ReturnType (Args...)>
 	>::Type;
 
+	using CanContinueInvoking = typename SelectCanContinueInvoking<
+		Policies, HasFunctionCanContinueInvoking<Policies>::value
+	>::Type;
+
 	struct Node;
 	using NodePtr = std::shared_ptr<Node>;
 
@@ -234,8 +238,9 @@ public:
 
 	void operator() (Args ...args) const
 	{
-		forEach([&args...](Callback & callback) -> void {
+		forEachIf([&args...](Callback & callback) -> bool {
 			callback(args...);
+			return CanContinueInvoking::canContinueInvoking(args...);
 		});
 	}
 
