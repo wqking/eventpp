@@ -63,21 +63,21 @@ template <
 	typename EventType,
 	typename Prototype,
 	typename Policies,
-	typename InterceptorRoot_
+	typename MixinRoot_
 >
 class EventDispatcherBase;
 
 template <
 	typename EventType,
 	typename PoliciesType,
-	typename InterceptorRoot_,
+	typename MixinRoot_,
 	typename ReturnType, typename ...Args
 >
 class EventDispatcherBase <
 	EventType,
 	ReturnType (Args...),
 	PoliciesType,
-	InterceptorRoot_
+	MixinRoot_
 >
 {
 protected:
@@ -85,12 +85,12 @@ protected:
 		EventType,
 		ReturnType (Args...),
 		PoliciesType,
-		InterceptorRoot_
+		MixinRoot_
 	>;
-	using InterceptorRoot = typename std::conditional<
-		std::is_same<InterceptorRoot_, void>::value,
+	using MixinRoot = typename std::conditional<
+		std::is_same<MixinRoot_, void>::value,
 		ThisType,
-		InterceptorRoot_
+		MixinRoot_
 	>::type;
 	using Policies = PoliciesType;
 
@@ -121,9 +121,9 @@ protected:
 		HasTemplateMap<Policies>::value
 	>::Type;
 
-	using Interceptors = typename internal_::SelectInterceptors<
+	using Mixins = typename internal_::SelectMixins<
 		Policies,
-		internal_::HasTypeInterceptors<Policies>::value
+		internal_::HasTypeMixins<Policies>::value
 	>::Type;
 
 public:
@@ -220,7 +220,7 @@ public:
 protected:
 	void doDispatch(const Event & e, Args ...args) const
 	{
-		if(! internal_::ForEachInterceptors<InterceptorRoot, Interceptors, DoInterceptorBeforeDispatch>::forEach(
+		if(! internal_::ForEachMixins<MixinRoot, Mixins, DoMixinBeforeDispatch>::forEach(
 			this, typename std::add_lvalue_reference<Args>::type(args)...)) {
 			return;
 		}
@@ -259,18 +259,18 @@ private:
 	}
 
 private:
-	// Interceptor related
-	struct DoInterceptorBeforeDispatch
+	// Mixin related
+	struct DoMixinBeforeDispatch
 	{
 		template <typename T, typename Self, typename ...A>
 		static auto forEach(const Self * self, A && ...args)
-			-> typename std::enable_if<HasFunctionInterceptorBeforeDispatch<T, A...>::value, bool>::type {
-			return static_cast<const T *>(self)->interceptorBeforeDispatch(std::forward<A>(args)...);
+			-> typename std::enable_if<HasFunctionMixinBeforeDispatch<T, A...>::value, bool>::type {
+			return static_cast<const T *>(self)->mixinBeforeDispatch(std::forward<A>(args)...);
 		}
 
 		template <typename T, typename Self, typename ...A>
 		static auto forEach(const Self * self, A && ...args)
-			-> typename std::enable_if<! HasFunctionInterceptorBeforeDispatch<T, A...>::value, bool>::type {
+			-> typename std::enable_if<! HasFunctionMixinBeforeDispatch<T, A...>::value, bool>::type {
 			return true;
 		}
 	};
@@ -288,9 +288,9 @@ template <
 	typename Prototype,
 	typename Policies = DefaultPolicies
 >
-class EventDispatcher : public internal_::InheritInterceptors<
+class EventDispatcher : public internal_::InheritMixins<
 	internal_::EventDispatcherBase<Event, Prototype, Policies, void>,
-	typename internal_::SelectInterceptors<Policies, internal_::HasTypeInterceptors<Policies>::value >::Type
+	typename internal_::SelectMixins<Policies, internal_::HasTypeMixins<Policies>::value >::Type
 >::Type
 {
 };

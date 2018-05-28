@@ -346,9 +346,9 @@ template <
 	typename Prototype,
 	typename Policies = DefaultPolicies
 >
-class EventQueue : public internal_::InheritInterceptors<
+class EventQueue : public internal_::InheritMixins<
 	internal_::EventQueueBase<Event, Prototype, Policies>,
-	typename internal_::SelectInterceptors<Policies, internal_::HasTypeInterceptors<Policies>::value >::Type
+	typename internal_::SelectMixins<Policies, internal_::HasTypeMixins<Policies>::value >::Type
 >::Type
 {
 };

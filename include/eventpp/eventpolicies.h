@@ -95,7 +95,7 @@ struct DefaultPolicies
 };
 
 template <template <typename> class ...Args>
-struct InterceptorList
+struct MixinList
 {
 };
 
@@ -193,52 +193,52 @@ struct SelectMap<Key, Value, T, false> {
 
 
 template <typename T>
-struct HasTypeInterceptors
+struct HasTypeMixins
 {
-	template <typename C> static std::true_type test(typename C::Interceptors *) ;
+	template <typename C> static std::true_type test(typename C::Mixins *) ;
 	template <typename C> static std::false_type test(...);    
 
 	enum { value = !! decltype(test<T>(0))() };
 };
-template <typename T, bool> struct SelectInterceptors;
-template <typename T> struct SelectInterceptors <T, true> { using Type = typename T::Interceptors; };
-template <typename T> struct SelectInterceptors <T, false> { using Type = InterceptorList<>; };
+template <typename T, bool> struct SelectMixins;
+template <typename T> struct SelectMixins <T, true> { using Type = typename T::Mixins; };
+template <typename T> struct SelectMixins <T, false> { using Type = MixinList<>; };
 
 
 template <typename Root, typename TList>
-struct InheritInterceptors;
+struct InheritMixins;
 
 template <typename Root, template <typename> class T, template <typename> class ...Args>
-struct InheritInterceptors <Root, InterceptorList<T, Args...> >
+struct InheritMixins <Root, MixinList<T, Args...> >
 {
-	using Type = T <typename InheritInterceptors<Root, InterceptorList<Args...> >::Type>;
+	using Type = T <typename InheritMixins<Root, MixinList<Args...> >::Type>;
 };
 
 template <typename Root>
-struct InheritInterceptors <Root, InterceptorList<> >
+struct InheritMixins <Root, MixinList<> >
 {
 	using Type = Root;
 };
 
 template <typename Root, typename TList, typename Func>
-struct ForEachInterceptors;
+struct ForEachMixins;
 
 template <typename Func, typename Root, template <typename> class T, template <typename> class ...Args>
-struct ForEachInterceptors <Root, InterceptorList<T, Args...>, Func>
+struct ForEachMixins <Root, MixinList<T, Args...>, Func>
 {
-	using Type = typename InheritInterceptors<Root, InterceptorList<T, Args...> >::Type;
+	using Type = typename InheritMixins<Root, MixinList<T, Args...> >::Type;
 
 	template <typename ...A>
 	static bool forEach(A && ...args) {
 		if(Func::template forEach<Type>(std::forward<A>(args)...)) {
-			return ForEachInterceptors<Root, InterceptorList<Args...>, Func>::forEach(std::forward<A>(args)...);
+			return ForEachMixins<Root, MixinList<Args...>, Func>::forEach(std::forward<A>(args)...);
 		}
 		return false;
 	}
 };
 
 template <typename Root, typename Func>
-struct ForEachInterceptors <Root, InterceptorList<>, Func>
+struct ForEachMixins <Root, MixinList<>, Func>
 {
 	using Type = Root;
 
@@ -249,10 +249,10 @@ struct ForEachInterceptors <Root, InterceptorList<>, Func>
 };
 
 template <typename T, typename ...Args>
-struct HasFunctionInterceptorBeforeDispatch
+struct HasFunctionMixinBeforeDispatch
 {
 	template <typename C> static std::true_type test(
-		decltype(std::declval<C>().interceptorBeforeDispatch(std::declval<Args>()...)) *
+		decltype(std::declval<C>().mixinBeforeDispatch(std::declval<Args>()...)) *
 	);
 	template <typename C> static std::false_type test(...);    
 

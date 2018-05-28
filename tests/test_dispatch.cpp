@@ -13,7 +13,7 @@
 
 #include "test.h"
 #include "eventpp/eventdispatcher.h"
-#include "eventpp/interceptors/interceptorfilter.h"
+#include "eventpp/mixins/mixinfilter.h"
 
 #include <thread>
 #include <algorithm>
@@ -277,7 +277,7 @@ TEST_CASE("dispatch many, int, void (int)")
 TEST_CASE("event filter")
 {
 	struct MyPolicies {
-		using Interceptors = eventpp::InterceptorList<eventpp::InterceptorFilter>;
+		using Mixins = eventpp::MixinList<eventpp::MixinFilter>;
 	};
 	using ED = eventpp::EventDispatcher<int, void (int, int), MyPolicies>;
 	ED dispatcher;

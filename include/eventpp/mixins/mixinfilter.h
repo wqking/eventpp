@@ -11,8 +11,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef INTERCEPTORFILTER_H_713231680355
-#define INTERCEPTORFILTER_H_713231680355
+#ifndef MIXINFILTER_H_713231680355
+#define MIXINFILTER_H_713231680355
 
 #include "../callbacklist.h"
 #include "../typeutil.h"
@@ -23,7 +23,7 @@
 namespace eventpp {
 
 template <typename Base>
-class InterceptorFilter : public Base
+class MixinFilter : public Base
 {
 private:
 	using super = Base;
@@ -54,7 +54,7 @@ public:
 	}
 
 	template <typename ...Args>
-	bool interceptorBeforeDispatch(Args && ...args) const {
+	bool mixinBeforeDispatch(Args && ...args) const {
 		if(! filterList.empty()) {
 			if(
 				! filterList.forEachIf([&args...](typename FilterList::Callback & callback) {
