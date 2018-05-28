@@ -231,6 +231,16 @@ protected:
 		}
 	}
 
+	const CallbackList_ * doFindCallableList(const Event & e) const
+	{
+		return doFindCallableListHelper(this, e);
+	}
+
+	CallbackList_ * doFindCallableList(const Event & e)
+	{
+		return doFindCallableListHelper(this, e);
+	}
+
 private:
 	// template helper to avoid code duplication in doFindCallableList
 	template <typename T>
@@ -246,16 +256,6 @@ private:
 		else {
 			return nullptr;
 		}
-	}
-
-	const CallbackList_ * doFindCallableList(const Event & e) const
-	{
-		return doFindCallableListHelper(this, e);
-	}
-
-	CallbackList_ * doFindCallableList(const Event & e)
-	{
-		return doFindCallableListHelper(this, e);
 	}
 
 private:

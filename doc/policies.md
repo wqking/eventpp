@@ -17,6 +17,13 @@ The same policy mechanism applies to all three classes, EventDispatcher, EventQu
 
 eventpp forwards all arguments of `EventDispatcher::dispatch` and `EventQueue::enqueue` (both has same arguments) to `getEvent` to get the event type.
 
+### Type Mixins
+
+**Default value**: `using Mixins = eventpp::MixinList<>`. No mixins are enabled.  
+**Apply**: EventDispatcher, EventQueue.  
+
+A mixin is used to inject code in the EventDispatcher/EventQueue inheritance hierarchy to extend the functionalities. For more details, please read the [document of mixins](mixins.md).
+
 ### Type Callback
 
 **Default value**: `using Callback = std::function<Parameters of callback>`.  

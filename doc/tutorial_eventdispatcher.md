@@ -5,7 +5,6 @@
 - [Tutorial 1 -- Basic usage](#tutorial1)
 - [Tutorial 2 -- Listener with parameters](#tutorial2)
 - [Tutorial 3 -- Customized event struct](#tutorial3)
-- [Tutorial 4 -- Event filter](#tutorial4)
 
 <a name="tutorials"></a>
 ## Tutorials
@@ -164,68 +163,4 @@ dispatcher.dispatch(MyEvent { 3, "Hello world", 38 }, true);
 
 **Remarks**
 A common situation is an Event class is defined as the base class, all other events derive from Event, and the actual event type is a data member of Event (think QEvent in Qt). To let EventDispatcher knows how to get the event type from class Event, policies (the third template parameter) is used.  
-
-<a name="tutorial4"></a>
-### Tutorial 4 -- Event filter
-
-**Code**  
-```c++
-struct MyPolicies {
-	using Mixins = eventpp::MixinList<eventpp::MixinFilter>;
-};
-eventpp::EventDispatcher<int, void (int e, int i, std::string), MyPolicies> dispatcher;
-
-dispatcher.appendListener(3, [](const int e, const int i, const std::string & s) {
-	std::cout << "Got event 3, i was 1 but actural is " << i << " s was Hello but actural is " << s << std::endl;
-});
-dispatcher.appendListener(5, [](const int e, const int i, const std::string & s) {
-	std::cout << "Shout not got event 5" << std::endl;
-});
-
-// Add three event filters.
-
-// The first filter modifies the input arguments to other values, then the subsequence filters
-// and listeners will see the modified values.
-dispatcher.appendFilter([](const int e, int & i, std::string & s) -> bool {
-	std::cout << "Filter 1, e is " << e << " passed in i is " << i << " s is " << s << std::endl;
-	i = 38;
-	s = "Hi";
-	std::cout << "Filter 1, changed i is " << i << " s is " << s << std::endl;
-	return true;
-});
-
-// The second filter filters out all event of 5. So no listeners on event 5 can be triggered.
-// The third filter is not invoked on event 5 also.
-dispatcher.appendFilter([](const int e, int & i, std::string & s) -> bool {
-	std::cout << "Filter 2, e is " << e << " passed in i is " << i << " s is " << s << std::endl;
-	if(e == 5) {
-		return false;
-	}
-	return true;
-});
-
-// The third filter just prints the input arguments.
-dispatcher.appendFilter([](const int e, int & i, std::string & s) -> bool {
-	std::cout << "Filter 3, e is " << e << " passed in i is " << i << " s is " << s << std::endl;
-	return true;
-});
-
-// Dispatch the events, the first argument is always the event type.
-dispatcher.dispatch(3, 1, "Hello");
-dispatcher.dispatch(5, 2, "World");
-```
-
-**Output**  
-> Filter 1, e is 3 passed in i is 1 s is Hello  
-> Filter 1, changed i is 38 s is Hi  
-> Filter 2, e is 3 passed in i is 38 s is Hi  
-> Filter 3, e is 3 passed in i is 38 s is Hi  
-> Got event 3, i was 1 but actural is 38 s was Hello but actural is Hi  
-> Filter 1, e is 5 passed in i is 2 s is World  
-> Filter 1, changed i is 38 s is Hi  
-> Filter 2, e is 5 passed in i is 38 s is Hi  
-
-**Remarks**  
-`EventDispatcher<>::appendFilter(filter)` adds an event filter to the dispatcher. The `filter` receives the arguments which types are the callback prototype with lvalue reference, and must return a boolean value. Return `true` to allow the dispatcher continues the dispatching, `false` to prevent the dispatcher from invoking any subsequence listeners and filters.  
-The event filters are invoked before any listeners are invoked.
 
