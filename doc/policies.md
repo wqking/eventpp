@@ -176,10 +176,14 @@ For `ArgumentPassingExcludeEvent`: P + 1 == D
 Examples to demonstrate argument passing mode  
 
 ```c++
+struct MyPolicies
+{
+	using ArgumentPassingMode = ArgumentPassingAutoDetect;
+};
 eventpp::EventDispatcher<
 	int,
 	void(int, const std::string &),
-	ArgumentPassingAutoDetect
+	MyPolicies
 > dispatcher;
 // or just
 //eventpp::EventDispatcher<int, void(int, const std::string &)> dispatcher;
@@ -190,10 +194,14 @@ dispatcher.enqueue(3, 8, "hello"); // Compile OK
 ```
 
 ```c++
+struct MyPolicies
+{
+	using ArgumentPassingMode = ArgumentPassingIncludeEvent;
+};
 eventpp::EventDispatcher<
 	int,
 	void(int, const std::string &),
-	ArgumentPassingIncludeEvent
+	MyPolicies
 > dispatcher;
 dispatcher.dispatch(3, "hello"); // Compile OK
 //dispatcher.dispatch(3, 8, "hello"); // Compile failure
@@ -202,10 +210,14 @@ dispatcher.enqueue(3, "hello"); // Compile OK
 ```
 
 ```c++
+struct MyPolicies
+{
+	using ArgumentPassingMode = ArgumentPassingExcludeEvent;
+};
 eventpp::EventDispatcher<
 	int,
 	void(int, const std::string &),
-	ArgumentPassingExcludeEvent
+	MyPolicies
 > dispatcher;
 //dispatcher.dispatch(3, "hello"); // Compile failure
 dispatcher.dispatch(3, 8, "hello"); // Compile OK
