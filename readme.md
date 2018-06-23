@@ -4,10 +4,10 @@ eventpp provides tools that allow your application components to communicate wit
 
 ## Facts and features
 
-- Support both synchronous event dispatching (EventDispatcher) and asynchronous event queue (EventQueue).  
-- Supports nested event. A listener can dispatch event, append/prepend/insert/remove other listeners during capturing an event safely.
+- Supports both synchronous event dispatching (EventDispatcher) and asynchronous event queue (EventQueue).  
+- Supports nested event. A listener can dispatch event, append/prepend/insert/remove other listeners, during capturing an event safely.
 - Configurable and extensible with policies and mixins.
-- Support event filter.
+- Supports event filter.
 - Template based, less runtime overhead, unlimited possibilities. The event and callback can be almost any C++ types meeting minimum requirements.
 - Thread safe.
 - Backed by unit tests.

@@ -43,6 +43,18 @@ CallbackList & operator = (const CallbackList &) = delete;
 CallbackList can not be copied, moved, or assigned.
 
 ```c++
+bool empty() const;
+```
+Return true if the callback list is empty.  
+Note: in multi threading, this function returning true doesn't guarantee the list is empty. The list may be come non-empty when the function returns true.
+
+```c++
+operator bool() const;
+```
+Return true if the callback list is not empty.  
+This operator allows a CallbackList instance be used in condition statement.
+
+```c++
 Handle append(const Callback & callback);
 ```  
 Add the *callback* to the callback list.  

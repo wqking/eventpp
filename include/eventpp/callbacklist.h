@@ -144,6 +144,7 @@ public:
 	bool empty() const {
 		// Don't lock the mutex for performance reason.
 		// !head still works even when the underlying raw pointer is garbled (for other thread is writting to head)
+      // And empty() doesn't guarantee the list is still empty after the function returned.
 		//std::lock_guard<Mutex> lockGuard(mutex);
 
 		return ! head;
@@ -333,9 +334,7 @@ private:
 
 	Counter getNextCounter()
 	{
-		currentCounter.fetch_add(1, std::memory_order_acq_rel);
-
-		Counter result = currentCounter.load(std::memory_order_acquire);
+		Counter result = ++currentCounter;;
 		if(result == 0) { // overflow, let's reset all nodes' counters.
 			{
 				std::lock_guard<Mutex> lockGuard(mutex);
@@ -345,8 +344,7 @@ private:
 					node = node->next;
 				}
 			}
-			++currentCounter;
-			result = currentCounter.load(std::memory_order_acquire);
+			result = ++currentCounter;
 		}
 
 		return result;

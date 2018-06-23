@@ -15,7 +15,8 @@ The same policy mechanism applies to all three classes, EventDispatcher, EventQu
 **Default value**: the default implementation returns the first argument of `getEvent`.  
 **Apply**: EventDispatcher, EventQueue.
 
-eventpp forwards all arguments of `EventDispatcher::dispatch` and `EventQueue::enqueue` (both has same arguments) to `getEvent` to get the event type.
+eventpp forwards all arguments of `EventDispatcher::dispatch` and `EventQueue::enqueue` (both has same arguments) to `getEvent` to get the event type, then invokes the callback list of the event type.  
+
 Sample code
 
 ```c++
@@ -130,7 +131,7 @@ A mixin is used to inject code in the EventDispatcher/EventQueue inheritance hie
 
 ## Type ArgumentPassingMode
 
-**Default value**: 'using ArgumentPassingMode = ArgumentPassingAutoDetect'.  
+**Default value**: `using ArgumentPassingMode = ArgumentPassingAutoDetect`.  
 **Apply**: EventDispatcher, EventQueue.
 
 `ArgumentPassingMode` is the argument passing mode. Default is `ArgumentPassingAutoDetect`.
@@ -140,7 +141,7 @@ Let's see some examples. Assume we have the dispatcher
 eventpp::EventDispatcher<int, void(int, const std::string &)> dispatcher;
 ```
 The event type is `int`.  
-The listener's first parameter is also `int`. Depending how the event is dispatched, the listener's first argument can be either the event type, or an extra argument.
+The listener's first parameter is also `int`. Depending on how the event is dispatched, the listener's first argument can be either the event type, or an extra argument.
 
 ```c++
 dispatcher.dispatch(3, "hello");
