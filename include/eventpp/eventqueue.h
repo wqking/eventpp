@@ -240,6 +240,8 @@ public:
 		});
 	}
 
+	using super::dispatch;
+
 	void dispatch(const QueuedEvent & queuedEvent)
 	{
 		doDispatchQueuedEvent(queuedEvent, typename internal_::MakeIndexSequence<sizeof...(Args) + 1>::Type());
