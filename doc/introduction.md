@@ -19,7 +19,7 @@ However, if there are lots of kinds of events, hundreds to unlimited (this is qu
 
 EventDispatcher is something like std::map<EventType, CallbackList>.
 
-EventDispatcher holds a map of `EventType, CallbackList` pairs. On dispatching, EventDispatcher finds the CallbackList at the event type, then invoke the callback list. The invocation is always synchronous. The listeners are triggered when `EventDispatcher::dispatch` is called.  
+EventDispatcher holds a map of `<EventType, CallbackList>` pairs. On dispatching, EventDispatcher finds the CallbackList of the event type, then invoke the callback list. The invocation is always synchronous. The listeners are triggered when `EventDispatcher::dispatch` is called.  
 
 EventDispatcher is ideal when there are lots of kinds of events, or the number of events can't be determined. Each event is distinguished by an event type. For example,
 ```c++
@@ -46,7 +46,7 @@ struct MyEventPolicies
 eventpp::EventDispatcher<MyEventType, void(const MyEvent &), MyEventPolicies> dispatcher;
 dispatcher.dispatch(MyEvent { MyEventType::redraw });
 ```
-(Note: if you are confused with MyEventPolicies in above sample, please read the [document of policies](policies.md), and just consider the dispatcher as `eventpp::EventDispatcher<MyEventType, void(std::shared_ptr<MyEvent>)> dispatcher` for now.)  
+(Note: if you are confused with MyEventPolicies in above sample, please read the [document of policies](policies.md), and just consider the dispatcher as `eventpp::EventDispatcher<MyEventType, void(const MyEvent &)> dispatcher` for now.)  
 The disadvantage of EventDispatcher is that all events must have the same callback prototype (`void(const MyEvent &)` in the sample code). The common solution is that the callback takes a base class of Event and all events derive their own event data from Event. In the sample code, MyEvent is the base event class, the callback takes one argument of const reference to MyEvent.  
 
 ## Class EventQueue

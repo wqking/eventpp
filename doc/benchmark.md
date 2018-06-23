@@ -4,7 +4,7 @@
 
 Hardware: Intel(R) Xeon(R) CPU E3-1225 V2 @ 3.20GHz  
 Software: Windows 10, MSVC 2017, MinGW GCC 7.2.0  
-Iterations: 100,100,100  
+Iterations: 100,000,000  
 Time unit: milliseconds
 
 <table>
