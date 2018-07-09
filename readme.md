@@ -95,7 +95,7 @@ queue.process();
 * [Class EventDispatcher](doc/eventdispatcher.md)
 * [Class EventQueue](doc/eventqueue.md)
 * [Utility class CounterRemover -- auto remove listeners after triggered certain times](doc/counterremover.md)
-* [Utility class ConditionalRemover -- auto remove listeners when certain condition is met](doc/conditionalremover.md)
+* [Utility class ConditionalRemover -- auto remove listeners when certain condition is satisfied](doc/conditionalremover.md)
 * [Utility class ScopedRemover -- auto remove listeners when out of scope](doc/scopedremover.md)
 * [Document of utilities](doc/eventutil.md)
 * [Policies -- configure eventpp](doc/policies.md)

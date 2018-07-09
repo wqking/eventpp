@@ -82,7 +82,7 @@ CounterRemover<DispatcherType> counterRemover(DispatcherType & dispatcher);
 
 Since CounterRemover takes one template parameter and it's verbose to instantiate its instance, the function `counterRemover` is used to construct an instance of CounterRemover via the deduced argument.
 
-### Same code
+### Sample code
 
 ```c++
 #include "eventpp/utilities/counterremover.h"

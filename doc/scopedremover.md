@@ -71,12 +71,12 @@ typename CallbackListType::Handle insert(
 	);
 ```
 
-The function `reset()` removes all listeners from the dispatcher or callback list, as if the ScopedRemover object has gone out of scope.  
+The function `reset()` removes all listeners which added by ScopedRemover from the dispatcher or callback list, as if the ScopedRemover object has gone out of scope.  
 The function `setDispatcher()` and `setCallbackList` sets the dispatcher or callback list, and reset the ScopedRemover object.  
 
 The other member functions that have the same names with the corresponding underlying class (CallbackList, EventDispatcher, or EventQueue). Those functions add listener to the dispatcher.  
 
-### Same code
+### Sample code
 
 ```c++
 #include "eventpp/utilities/scopedremover.h"

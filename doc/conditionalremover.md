@@ -2,7 +2,7 @@
 
 ## Description
 
-ConditionalRemover is a utility class that automatically removes listeners after the listeners are triggered and certain condition is met.  
+ConditionalRemover is a utility class that automatically removes listeners after the listeners are triggered and certain condition is satisfied.  
 ConditionalRemover is a pure functional class. After the member functions in ConditionalRemover are invoked, the ConditionalRemover object can be destroyed safely.  
 
 <a name="apis"></a>
@@ -87,7 +87,7 @@ ConditionalRemover<DispatcherType> conditionalRemover(DispatcherType & dispatche
 
 Since ConditionalRemover takes one template parameter and it's verbose to instantiate its instance, the function `conditionalRemover` is used to construct an instance of ConditionalRemover via the deduced argument.
 
-### Same code
+### Sample code
 
 ```c++
 #include "eventpp/utilities/conditionalRemover.h"
