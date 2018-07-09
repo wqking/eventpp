@@ -103,8 +103,6 @@ protected:
 
 	using GetEvent = typename SelectGetEvent<Policies, EventType, HasFunctionGetEvent<Policies>::value>::Type;
 
-	using Mutex = typename Threading::Mutex;
-
 	using Callback_ = typename SelectCallback<
 		Policies,
 		HasTypeCallback<Policies>::value,
@@ -130,6 +128,7 @@ public:
 	using Handle = typename CallbackList_::Handle;
 	using Callback = Callback_;
 	using Event = EventType;
+	using Mutex = typename Threading::Mutex;
 
 public:
 	EventDispatcherBase()
@@ -139,9 +138,39 @@ public:
 	{
 	}
 
-	EventDispatcherBase(EventDispatcherBase &&) = delete;
-	EventDispatcherBase(const EventDispatcherBase &) = delete;
-	EventDispatcherBase & operator = (const EventDispatcherBase &) = delete;
+	EventDispatcherBase(const EventDispatcherBase & other)
+		:
+			eventCallbackListMap(other.eventCallbackListMap),
+			listenerMutex()
+	{
+	}
+
+	EventDispatcherBase(EventDispatcherBase && other) noexcept
+		:
+			eventCallbackListMap(std::move(other.eventCallbackListMap)),
+			listenerMutex()
+	{
+	}
+
+	EventDispatcherBase & operator = (const EventDispatcherBase & other)
+	{
+		eventCallbackListMap = other;
+	}
+
+	EventDispatcherBase & operator = (EventDispatcherBase && other) noexcept
+	{
+		eventCallbackListMap = std::move(other);
+	}
+
+	void swap(EventDispatcherBase & other) noexcept {
+		using std::swap;
+		
+		swap(eventCallbackListMap, other.eventCallbackListMap);
+	}
+	
+	friend void swap(EventDispatcherBase & first, EventDispatcherBase & second) noexcept {
+		first.swap(second);
+	}
 
 	Handle appendListener(const Event & event, const Callback & callback)
 	{
@@ -157,7 +186,7 @@ public:
 		return eventCallbackListMap[event].prepend(callback);
 	}
 
-	Handle insertListener(const Event & event, const Callback & callback, const Handle before)
+	Handle insertListener(const Event & event, const Callback & callback, const Handle & before)
 	{
 		std::lock_guard<Mutex> lockGuard(listenerMutex);
 
@@ -289,10 +318,18 @@ template <
 	typename Policies = DefaultPolicies
 >
 class EventDispatcher : public internal_::InheritMixins<
-	internal_::EventDispatcherBase<Event, Prototype, Policies, void>,
-	typename internal_::SelectMixins<Policies, internal_::HasTypeMixins<Policies>::value >::Type
->::Type
+		internal_::EventDispatcherBase<Event, Prototype, Policies, void>,
+		typename internal_::SelectMixins<Policies, internal_::HasTypeMixins<Policies>::value >::Type
+	>::Type, public TagEventDispatcher
 {
+private:
+	using super = typename internal_::InheritMixins<
+		internal_::EventDispatcherBase<Event, Prototype, Policies, void>,
+		typename internal_::SelectMixins<Policies, internal_::HasTypeMixins<Policies>::value >::Type
+	>::Type;
+
+public:
+	using super::super;
 };
 
 

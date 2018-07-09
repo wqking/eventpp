@@ -67,14 +67,12 @@ private:
 	>;
 
 	using Policies = typename super::Policies;
-	using Event = typename super::Event;
-	using Mutex = typename super::Mutex;
 	using Threading = typename super::Threading;
 	using ConditionVariable = typename Threading::ConditionVariable;
 	using GetEvent = typename super::GetEvent;
 
 	using QueuedEvent_ = std::tuple<
-		typename std::remove_cv<typename std::remove_reference<Event>::type>::type,
+		typename std::remove_cv<typename std::remove_reference<typename super::Event>::type>::type,
 		typename std::remove_cv<typename std::remove_reference<Args>::type>::type...
 	>;
 
@@ -123,6 +121,10 @@ private:
 
 public:
 	using QueuedEvent = QueuedEvent_;
+	using super::Event;
+	using super::Handle;
+	using super::Callback;
+	using Mutex = typename super::Mutex;
 
 	struct DisableQueueNotify
 	{
@@ -158,9 +160,27 @@ public:
 	{
 	}
 
-	EventQueueBase(EventQueueBase &&) = delete;
-	EventQueueBase(const EventQueueBase &) = delete;
-	EventQueueBase & operator = (const EventQueueBase &) = delete;
+	EventQueueBase(const EventQueueBase & other)
+		: super(other)
+	{
+	}
+
+	EventQueueBase(EventQueueBase && other) noexcept
+		: super(std::move(other))
+	{
+	}
+
+	EventQueueBase & operator = (const EventQueueBase & other)
+	{
+		super::operator = (other);
+		return *this;
+	}
+	
+	EventQueueBase & operator = (EventQueueBase && other) noexcept
+	{
+		super::operator = (std::move(other));
+		return *this;
+	}
 
 	template <typename ...A>
 	auto enqueue(A ...args) -> typename std::enable_if<sizeof...(A) == sizeof...(Args), void>::type
@@ -207,8 +227,7 @@ public:
 
 			{
 				std::lock_guard<Mutex> queueListLock(queueListMutex);
-				using namespace std;
-				swap(queueList, tempList);
+				std::swap(queueList, tempList);
 			}
 
 			if(! tempList.empty()) {
@@ -242,14 +261,11 @@ public:
 
 	using super::dispatch;
 
-	void dispatch(const QueuedEvent & queuedEvent)
+	template <typename U>
+	auto dispatch(const U & queuedEvent)
+		-> typename std::enable_if<std::is_same<U, QueuedEvent>::value, void>::type
 	{
 		doDispatchQueuedEvent(queuedEvent, typename internal_::MakeIndexSequence<sizeof...(Args) + 1>::Type());
-	}
-
-	void dispatch(QueuedEvent && queuedEvent)
-	{
-		doDispatchQueuedEvent(std::move(queuedEvent), typename internal_::MakeIndexSequence<sizeof...(Args) + 1>::Type());
 	}
 
 	bool peekEvent(QueuedEvent * queuedEvent)
@@ -349,10 +365,18 @@ template <
 	typename Policies = DefaultPolicies
 >
 class EventQueue : public internal_::InheritMixins<
-	internal_::EventQueueBase<Event, Prototype, Policies>,
-	typename internal_::SelectMixins<Policies, internal_::HasTypeMixins<Policies>::value >::Type
->::Type
+		internal_::EventQueueBase<Event, Prototype, Policies>,
+		typename internal_::SelectMixins<Policies, internal_::HasTypeMixins<Policies>::value >::Type
+	>::Type, public TagEventDispatcher, public TagEventQueue
 {
+private:
+	using super = typename internal_::InheritMixins<
+		internal_::EventQueueBase<Event, Prototype, Policies>,
+		typename internal_::SelectMixins<Policies, internal_::HasTypeMixins<Policies>::value >::Type
+	>::Type;
+
+public:
+	using super::super;
 };
 
 

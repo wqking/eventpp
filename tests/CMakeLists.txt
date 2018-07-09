@@ -14,9 +14,18 @@ set(SRC_TEST
 	tutorial_callbacklist.cpp
 	tutorial_eventdispatcher.cpp
 	tutorial_eventqueue.cpp
-	test_dispatch.cpp
-	test_callbacklist.cpp
-	test_queue.cpp
+	test_callbacklist_basic.cpp
+	test_callbacklist_ctors.cpp
+	test_callbacklist_multithread.cpp
+	test_dispatcher_basic.cpp
+	test_dispatcher_ctors.cpp
+	test_dispatcher_multithread.cpp
+	test_queue_basic.cpp
+	test_queue_multithread.cpp
+	test_eventutil.cpp
+	test_conditionalremover.cpp
+	test_counterremover.cpp
+	test_scopedremover.cpp
 )
 
 include_directories(../include)

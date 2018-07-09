@@ -61,7 +61,6 @@ private:
 
 	using Threading = typename SelectThreading<Policies, HasTypeThreading<Policies>::value>::Type;
 
-	using Mutex = typename Threading::Mutex;
 	using Callback_ = typename SelectCallback<
 		Policies,
 		HasTypeCallback<Policies>::value,
@@ -111,9 +110,10 @@ private:
 public:
 	using Callback = Callback_;
 	using Handle = Handle_;
+	using Mutex = typename Threading::Mutex;
 
 public:
-	CallbackListBase()
+	CallbackListBase() noexcept
 		:
 			head(),
 			tail(),
@@ -122,12 +122,38 @@ public:
 	{
 	}
 
-	CallbackListBase(CallbackListBase &&) = delete;
-	CallbackListBase(const CallbackListBase &) = delete;
-	CallbackListBase & operator = (const CallbackListBase &) = delete;
-
-	~CallbackListBase()
+	CallbackListBase(const CallbackListBase & other)
+		: CallbackListBase()
 	{
+		cloneFrom(other.head);
+	}
+
+	CallbackListBase(CallbackListBase && other) noexcept
+		: CallbackListBase()
+	{
+		swap(other);
+	}
+
+	// If we use pass by value idiom and omit the 'this' check,
+	// when assigning to self there is a deep copy which is inefficient.
+	CallbackListBase & operator = (const CallbackListBase & other) {
+		if(this != &other) {
+			CallbackListBase copied(other);
+			swap(copied);
+		}
+		return *this;
+	}
+
+	CallbackListBase & operator = (CallbackListBase && other) noexcept {
+		if(this != &other) {
+			head = std::move(other.head);
+			tail = std::move(other.tail);
+			currentCounter = other.currentCounter.load();
+		}
+		return *this;
+	}
+
+	~CallbackListBase()	{
 		// Don't lock mutex here since it may throw exception
 
 		NodePtr node = head;
@@ -139,6 +165,21 @@ public:
 			node = next;
 		}
 		node.reset();
+	}
+	
+	void swap(CallbackListBase & other) noexcept {
+		using std::swap;
+		
+		swap(head, other.head);
+		swap(tail, other.tail);
+
+		const auto value = currentCounter.load();
+		currentCounter.exchange(other.currentCounter.load());
+		other.currentCounter.exchange(value);
+	}
+	
+	friend void swap(CallbackListBase & first, CallbackListBase & second) noexcept {
+		first.swap(second);
 	}
 
 	bool empty() const {
@@ -192,7 +233,7 @@ public:
 		return Handle(node);
 	}
 
-	Handle insert(const Callback & callback, const Handle before)
+	Handle insert(const Callback & callback, const Handle & before)
 	{
 		NodePtr beforeNode = before.lock();
 		if(beforeNode) {
@@ -349,6 +390,30 @@ private:
 
 		return result;
 	}
+	
+	void cloneFrom(const NodePtr & fromHead) {
+		NodePtr fromNode(fromHead);
+		NodePtr node;
+		const Counter counter = getNextCounter();
+		while(fromNode) {
+			const NodePtr nextNode(std::make_shared<Node>(fromNode->callback, counter));
+
+			nextNode->previous = node;
+
+			if(node) {
+				node->next = nextNode;
+			}
+			else {
+				node = nextNode;
+				head = node;
+			}
+		
+			node = nextNode;
+			fromNode = fromNode->next;
+		}
+
+		tail = node;
+	}
 
 private:
 	NodePtr head;
@@ -366,8 +431,13 @@ template <
 	typename Prototype,
 	typename Policies = DefaultPolicies
 >
-class CallbackList : public internal_::CallbackListBase<Prototype, Policies>
+class CallbackList : public internal_::CallbackListBase<Prototype, Policies>, public TagCallbackList
 {
+private:
+	using super = internal_::CallbackListBase<Prototype, Policies>;
+	
+public:
+	using super::super;
 };
 
 

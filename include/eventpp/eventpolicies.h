@@ -22,6 +22,10 @@
 
 namespace eventpp {
 
+struct TagCallbackList {};
+struct TagEventDispatcher {};
+struct TagEventQueue {};
+
 struct MultipleThreading
 {
 	using Mutex = std::mutex;
@@ -277,7 +281,6 @@ struct HasFunctionMixinBeforeDispatch
 
 	enum { value = !! decltype(test<T>(0))() };
 };
-
 
 } //namespace internal_
 

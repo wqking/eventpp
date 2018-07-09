@@ -7,10 +7,16 @@
 - [Time complexities](#time-complexities)
 - [Internal data structure](#internal-data-structure)
 
+## Description
+
+EventDispatcher is something like std::map<EventType, CallbackList>.
+
+EventDispatcher holds a map of `<EventType, CallbackList>` pairs. On dispatching, EventDispatcher finds the CallbackList of the event type, then invoke the callback list. The invocation is always synchronous. The listeners are triggered when `EventDispatcher::dispatch` is called.  
+
 <a name="apis"></a>
 ## API reference
 
-**Header**
+### Header
 
 eventpp/eventdispatcher.h
 
@@ -28,22 +34,23 @@ class EventDispatcher;
 `Prototype`: the listener prototype. It's C++ function type such as `void(int, std::string, const MyClass *)`.  
 `Policies`: the policies to configure and extend the dispatcher. The default value is `DefaultPolicies`. See [document of policies](policies.md) for details.  
 
-**Public types**
+### Public types
 
 `Handle`: the handle type returned by appendListener, prependListener and insertListener. A handle can be used to insert a listener or remove a listener. To check if a `Handle` is empty, convert it to boolean, *false* is empty. `Handle` is copyable.  
 `Callback`: the callback storage type.  
 `Event`: the event type.  
 
-**Functions**
+### Member functions
 
 ```c++
-EventDispatcher() = default;
-EventDispatcher(EventDispatcher &&) = delete;
-EventDispatcher(const EventDispatcher &) = delete;
-EventDispatcher & operator = (const EventDispatcher &) = delete;
+EventDispatcher();
+EventDispatcher(const EventDispatcher & other);
+EventDispatcher(EventDispatcher && other) noexcept;
+EventDispatcher & operator = (const EventDispatcher & other);
+EventDispatcher & operator = (EventDispatcher && other) noexcept;
 ```
 
-EventDispatcher can not be copied, moved, or assigned.
+EventDispatcher can be copied, moved,  assigned, and move assigned.
 
 ```c++
 Handle appendListener(const Event & event, const Callback & callback);

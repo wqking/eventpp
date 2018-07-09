@@ -7,10 +7,16 @@
 
 EventQueue includes all functions of [EventDispatcher](eventdispatcher.md) and adds event queue features. Note: EventQueue doesn't inherit from EventDispatcher, don't try to cast EventQueue to EventDispatcher.  
 
+## Description
+
+EventQueue includes all features of EventDispatcher and adds event queue features. Note: EventQueue doesn't inherit from EventDispatcher, don't try to cast EventQueue to EventDispatcher.  
+EventQueue is asynchronous. Event are cached in the queue when `EventQueue::enqueue` is called, and dispatched later when `EventQueue::process` is called.  
+EventQueue is equivalent to the event system (QEvent) in Qt, or the message processing in Windows.  
+
 <a name="apis"></a>
 ## API reference
 
-**Header**
+### Header
 
 eventpp/eventqueue.h
 
@@ -27,7 +33,7 @@ class EventQueue;
 
 EventQueue has the exactly same template parameters with EventDispatcher. Please reference [EventDispatcher document](eventdispatcher.md) for details.
 
-**Public types**  
+### Public types
 
 `QueuedEvent`: the data type of event stored in the queue. It's declaration is,  
 ```c++
@@ -38,16 +44,18 @@ using QueuedEvent = std::tuple<
 ```
 It's a `std::tuple`, the first member is always the event type, the other members are the arguments.
 
-**Functions**
+### Member functions
 
 ```c++
-EventQueue() = default;
-EventQueue(EventQueue &&) = delete;
-EventQueue(const EventQueue &) = delete;
-EventQueue & operator = (const EventQueue &) = delete;
+EventQueue();
+EventQueue(const EventQueue & other);
+EventQueue(EventQueue && other) noexcept;
+EventQueue & operator = (const EventQueue & other);
+EventQueue & operator = (EventQueue && other) noexcept;
 ```
 
-EventQueue can not be copied, moved, or assigned.
+EventDispatcher can be copied, moved,  assigned, and move assigned.  
+Note: the queued events are not copied, moved, assigned, or move assigned, only the listeners are performed these operations.
 
 ```c++
 template <typename ...A>

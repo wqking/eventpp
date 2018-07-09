@@ -15,12 +15,10 @@
 #include "eventpp/eventdispatcher.h"
 #include "eventpp/mixins/mixinfilter.h"
 
-#include <thread>
-#include <algorithm>
 #include <numeric>
 #include <random>
 
-TEST_CASE("dispatch, std::string, void (const std::string &)")
+TEST_CASE("EventDispatcher, std::string, void (const std::string &)")
 {
 	eventpp::EventDispatcher<std::string, void (const std::string &)> dispatcher;
 
@@ -42,7 +40,7 @@ TEST_CASE("dispatch, std::string, void (const std::string &)")
 	REQUIRE(b == 8);
 }
 
-TEST_CASE("dispatch, int, void ()")
+TEST_CASE("EventDispatcher, int, void ()")
 {
 	eventpp::EventDispatcher<int, void ()> dispatcher;
 
@@ -64,7 +62,7 @@ TEST_CASE("dispatch, int, void ()")
 	REQUIRE(b == 8);
 }
 
-TEST_CASE("add/remove, int, void ()")
+TEST_CASE("EventDispatcher, add/remove, int, void ()")
 {
 	eventpp::EventDispatcher<int, void ()> dispatcher;
 	constexpr int event = 3;
@@ -107,7 +105,7 @@ TEST_CASE("add/remove, int, void ()")
 	REQUIRE(b != 8);
 }
 
-TEST_CASE("dispatch, add another listener inside a listener, int, void ()")
+TEST_CASE("EventDispatcher, add another listener inside a listener, int, void ()")
 {
 	eventpp::EventDispatcher<int, void ()> dispatcher;
 	constexpr int event = 3;
@@ -130,7 +128,7 @@ TEST_CASE("dispatch, add another listener inside a listener, int, void ()")
 	REQUIRE(b != 8);
 }
 
-TEST_CASE("dispatch inside dispatch, int, void ()")
+TEST_CASE("EventDispatcher, inside EventDispatcher, int, void ()")
 {
 	eventpp::EventDispatcher<int, void ()> dispatcher;
 	constexpr int event1 = 3;
@@ -167,7 +165,7 @@ TEST_CASE("dispatch inside dispatch, int, void ()")
 	REQUIRE(b == 8);
 }
 
-TEST_CASE("dispatch, int, void (const std::string &, int)")
+TEST_CASE("EventDispatcher, int, void (const std::string &, int)")
 {
 	eventpp::EventDispatcher<int, void (const std::string &, int)> dispatcher;
 	constexpr int event = 3;
@@ -197,7 +195,7 @@ TEST_CASE("dispatch, int, void (const std::string &, int)")
 	REQUIRE(iList[1] == 8);
 }
 
-TEST_CASE("dispatch, Event struct, void (const std::string &, int)")
+TEST_CASE("EventDispatcher, Event struct, void (const std::string &, int)")
 {
 	struct MyEvent {
 		int type;
@@ -240,7 +238,7 @@ TEST_CASE("dispatch, Event struct, void (const std::string &, int)")
 	REQUIRE(iList[1] == 15);
 }
 
-TEST_CASE("dispatch many, int, void (int)")
+TEST_CASE("EventDispatcher, many, int, void (int)")
 {
 	eventpp::EventDispatcher<int, void (int)> dispatcher;
 
@@ -274,7 +272,7 @@ TEST_CASE("dispatch many, int, void (int)")
 	REQUIRE(eventList == dataList);
 }
 
-TEST_CASE("event filter")
+TEST_CASE("EventDispatcher, event filter")
 {
 	struct MyPolicies {
 		using Mixins = eventpp::MixinList<eventpp::MixinFilter>;
@@ -377,57 +375,7 @@ TEST_CASE("event filter")
 	}
 }
 
-TEST_CASE("dispatch multi threading, int, void (int)")
-{
-	using ED = eventpp::EventDispatcher<int, void (int)>;
-	ED dispatcher;
-
-	constexpr int threadCount = 256;
-	constexpr int eventCountPerThread = 1024 * 4;
-	constexpr int itemCount = threadCount * eventCountPerThread;
-
-	std::vector<int> eventList(itemCount);
-	std::iota(eventList.begin(), eventList.end(), 0);
-	std::shuffle(eventList.begin(), eventList.end(), std::mt19937(std::random_device()()));
-
-	std::vector<int> dataList(itemCount);
-	std::vector<ED::Handle> handleList(itemCount);
-
-	std::vector<std::thread> threadList;
-
-	for(int i = 0; i < threadCount; ++i) {
-		threadList.emplace_back([i, eventCountPerThread, &dispatcher, &eventList, &handleList, &dataList]() {
-			for(int k = i * eventCountPerThread; k < (i + 1) * eventCountPerThread; ++k) {
-				handleList[k] = dispatcher.appendListener(eventList[k], [&dispatcher, k, &dataList, &eventList, &handleList](const int e) {
-					dataList[k] += e;
-					dispatcher.removeListener(eventList[k], handleList[k]);
-				});
-			}
-		});
-	}
-	for(int i = 0; i < threadCount; ++i) {
-		threadList[i].join();
-	}
-
-	threadList.clear();
-	for(int i = 0; i < threadCount; ++i) {
-		threadList.emplace_back([i, eventCountPerThread, &dispatcher, &eventList]() {
-			for(int k = i * eventCountPerThread; k < (i + 1) * eventCountPerThread; ++k) {
-				dispatcher.dispatch(eventList[k]);
-			}
-		});
-	}
-	for(int i = 0; i < threadCount; ++i) {
-		threadList[i].join();
-	}
-
-	std::sort(eventList.begin(), eventList.end());
-	std::sort(dataList.begin(), dataList.end());
-
-	REQUIRE(eventList == dataList);
-}
-
-TEST_CASE("dispatch explicit single threading, int, void (int)")
+TEST_CASE("EventDispatcher, explicit single threading, int, void (int)")
 {
 	struct MyEventPolicies
 	{

@@ -7,10 +7,16 @@
 - [Time complexities](#time-complexities)
 - [Internal data structure](#internal-data-structure)
 
+## Description
+
+CallbackList is the fundamental class in eventpp. The other classes EventDispatcher and EventQueue are built on CallbackList.  
+
+CallbackList holds a list of callbacks. On invocation, CallbackList simply invokes each callbacks one by one. Think CallbackList as the signal/slot system in Qt, or the callback function pointer in some Windows APIs (such as lpCompletionRoutine in `ReadFileEx`).  
+
 <a name="apis"></a>
 ## API reference
 
-**Header**
+### Header
 
 eventpp/callbacklist.h
 
@@ -26,27 +32,28 @@ class CallbackList;
 `Prototype`:  the callback prototype. It's C++ function type such as `void(int, std::string, const MyClass *)`.  
 `Policies`: the policies to configure and extend the callback list. The default value is `DefaultPolicies`. See [document of policies](policies.md) for details.  
 
-**Public types**
+### Public types
 
 `Handle`: the handle type returned by appendListener, prependListener and insertListener. A handle can be used to insert a callback or remove a callback. To check if a `Handle` is empty, convert it to boolean, *false* is empty. `Handle` is copyable.  
 `Callback`: the callback storage type.
 
-**Functions**
+### Member functions
 
 ```c++
-CallbackList() = default;
-CallbackList(CallbackList &&) = delete;
-CallbackList(const CallbackList &) = delete;
-CallbackList & operator = (const CallbackList &) = delete;
+CallbackList() noexcept;
+CallbackList(const CallbackList & other);
+CallbackList(CallbackList && other) noexcept;
+CallbackList & operator = (const CallbackList & other);
+CallbackList & operator = (CallbackList && other) noexcept;
 ```
 
-CallbackList can not be copied, moved, or assigned.
+CallbackList can be copied, moved,  assigned, and move assigned.
 
 ```c++
 bool empty() const;
 ```
 Return true if the callback list is empty.  
-Note: in multi threading, this function returning true doesn't guarantee the list is empty. The list may be come non-empty when the function returns true.
+Note: in multi threading, this function returning true doesn't guarantee the list is empty. The list may become non-empty immediately after the function returns true.
 
 ```c++
 operator bool() const;
@@ -118,7 +125,7 @@ The callbacks are called in the thread same as the callee of `operator()`.
 ## Nested callback safety
 1. If a callback adds another callback to the callback list during a invoking, the new callback is guaranteed not to be triggered within the same invoking. This is guaranteed by an unsigned 64 bits integer counter. This rule will be broken is the counter is overflowed to zero in a invoking, but this rule will continue working on the subsequence invoking.  
 2. Any callbacks that are removed during a invoking are guaranteed not triggered.  
-3. All above points are not true in multiple threading. That's to say, if one thread is dispatching an event, the other thread add or remove a listener, the added or removed listener may be triggered during the dispatch.
+3. All above points are not true in multiple threading. That's to say, if one thread is invoking a callback list, the other thread add or remove a callback, the added or removed callback may be called during the invoking.
 
 
 <a name="time-complexities"></a>
