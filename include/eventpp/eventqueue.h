@@ -216,7 +216,7 @@ public:
 		return queueList.empty() && (queueEmptyCounter.load(std::memory_order_acquire) == 0);
 	}
 
-	void process()
+	bool process()
 	{
 		if(! queueList.empty()) {
 			std::list<QueuedItem> tempList;
@@ -238,8 +238,41 @@ public:
 
 				std::lock_guard<Mutex> queueListLock(freeListMutex);
 				freeList.splice(freeList.end(), tempList);
+				
+				return true;
 			}
 		}
+		
+		return false;
+	}
+
+	bool processOne()
+	{
+		if(! queueList.empty()) {
+			std::list<QueuedItem> tempList;
+
+			// Use a counter to tell the queue list is not empty during processing
+			// even though queueList is swapped to empty.
+			CounterGuard<decltype(queueEmptyCounter)> counterGuard(queueEmptyCounter);
+
+			{
+				std::lock_guard<Mutex> queueListLock(queueListMutex);
+				tempList.splice(tempList.end(), queueList, queueList.begin());
+			}
+
+			if(! tempList.empty()) {
+				auto & item = tempList.front();
+				doDispatchQueuedEvent(item.get(), typename internal_::MakeIndexSequence<sizeof...(Args) + 1>::Type());
+				item.clear();
+
+				std::lock_guard<Mutex> queueListLock(freeListMutex);
+				freeList.splice(freeList.end(), tempList);
+				
+				return true;
+			}
+		}
+		
+		return false;
 	}
 
 	void wait() const

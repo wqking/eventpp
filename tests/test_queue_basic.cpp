@@ -61,6 +61,35 @@ TEST_CASE("EventQueue, int, void ()")
 	REQUIRE(b == 8);
 }
 
+TEST_CASE("EventQueue, processOne, int, void ()")
+{
+	eventpp::EventQueue<int, void ()> queue;
+
+	int a = 1;
+	int b = 5;
+
+	queue.appendListener(3, [&a]() {
+		a += 1;
+	});
+	queue.appendListener(5, [&b]() {
+		b += 3;
+	});
+
+	REQUIRE(a == 1);
+	REQUIRE(b == 5);
+
+	queue.enqueue(3);
+	queue.enqueue(5);
+
+	queue.processOne();
+	REQUIRE(a == 2);
+	REQUIRE(b == 5);
+
+	queue.processOne();
+	REQUIRE(a == 2);
+	REQUIRE(b == 8);
+}
+
 TEST_CASE("EventQueue, int, void (const std::string &, int)")
 {
 	struct NonDefaultConstructible

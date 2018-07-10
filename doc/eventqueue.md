@@ -73,12 +73,24 @@ If an argument is a pointer, only the pointer will be stored. The object it poin
 The time complexity is O(1).  
 
 ```c++
-void process();
+bool process();
 ```  
 Process the event queue. All events in the event queue are dispatched once and then removed from the queue.  
+The function returns true if any events were processed, false if no event was processed.  
 The listeners are called in the thread same as the caller of `process`.  
-Any new events added to the queue during `process` are not dispatched during current `process`.  
+Any new events added to the queue during `process()` are not dispatched during current `process()`.  
+`process()` is efficient in single thread event processing, it processes all events in the queue in current thread. To process events from multiple threads efficiently, use `processOne()`.  
 Note: if `process()` is called from multiple threads simultaneously, the events in the event queue are guaranteed dispatched only once.  
+
+```c++
+bool processOne();
+```  
+Process one event in the event queue. The first event in the event queue is dispatched once and then removed from the queue.  
+The function returns true if one event was processed, false if no event was processed.  
+The listener is called in the thread same as the caller of `processOne`.  
+Any new events added to the queue during `processOne()` are not dispatched during current `processOne()`.  
+If there are multiple threads processing events, `processOne()` is more efficient than `process()` because it can split the events processing to different threads. However, if there is only one thread processing events, 'process()' is more efficient.  
+Note: if `processOne()` is called from multiple threads simultaneously, the events in the event queue are guaranteed dispatched only once.  
 
 ```c++
 bool empty() const;
