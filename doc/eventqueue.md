@@ -68,7 +68,7 @@ Put an event into the event queue. The event type is deducted from the arguments
 All copyable arguments are copied to internal data structure. All non-copyable but movable arguments are moved.  
 EventQueue requires the arguments either copyable or movable.  
 If an argument is a reference to a base class and a derived object is passed in, only the base object will be stored and the derived object is lost. Usually shared pointer should be used in such situation.  
-If an argument is a pointer, only the pointer will be stored. The object it points must be available until the event is processed.  
+If an argument is a pointer, only the pointer will be stored. The object it points to must be available until the event is processed.  
 `enqueue` wakes up any threads that are blocked by `wait` or `waitFor`.  
 The time complexity is O(1).  
 
@@ -95,9 +95,9 @@ Note: if `processOne()` is called from multiple threads simultaneously, the even
 ```c++
 bool empty() const;
 ```
-Return true if there is no any event in the event queue, false if there are events in the event queue.  
+Return true if there is no any event in the event queue, false if there are any events in the event queue.  
 Note: in multiple threading environment, the empty state may change immediately after the function returns.  
-Note: don't write loop as `while(! eventQueue.empty()) ;`. It's dead loop since the compiler will inline the code and the change of empty state is never seen by the loop. The safe approach is `while(eventQueue.waitFor(std::chrono::nanoseconds(0))) ;`.  
+Note: don't write loop as `while(! eventQueue.empty()) {}`. It's dead loop since the compiler will inline the code and the change of empty state is never seen by the loop. The safe approach is `while(eventQueue.waitFor(std::chrono::nanoseconds(0))) ;`.  
 
 ```c++
 void wait() const;
@@ -150,7 +150,6 @@ Note: `takeEvent` works with non-copyable event arguments.
 
 ```c++
 void dispatch(const QueuedEvent & queuedEvent);
-void dispatch(QueuedEvent && queuedEvent);
 ```
 Dispatch an event which was returned by `peekEvent` or `takeEvent`.  
 
