@@ -69,7 +69,7 @@ public:
 	void setDispatcher(DispatcherType & dispatcher)
 	{
 		if(this->dispatcher != &dispatcher) {
-			this->dispatcher = dispatcher;
+			this->dispatcher = &dispatcher;
 			
 			std::unique_lock<std::mutex> lock(itemListMutex);
 			itemList.clear();
@@ -179,7 +179,7 @@ public:
 	{
 		if(this->callbackList != &callbackList) {
 			reset();
-			this->callbackList = callbackList;
+			this->callbackList = &callbackList;
 		}
 	}
 	

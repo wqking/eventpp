@@ -428,13 +428,13 @@ private:
 
 
 template <
-	typename Prototype,
-	typename Policies = DefaultPolicies
+	typename Prototype_,
+	typename Policies_ = DefaultPolicies
 >
-class CallbackList : public internal_::CallbackListBase<Prototype, Policies>, public TagCallbackList
+class CallbackList : public internal_::CallbackListBase<Prototype_, Policies_>, public TagCallbackList
 {
 private:
-	using super = internal_::CallbackListBase<Prototype, Policies>;
+	using super = internal_::CallbackListBase<Prototype_, Policies_>;
 	
 public:
 	using super::super;

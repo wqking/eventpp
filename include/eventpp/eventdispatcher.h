@@ -313,19 +313,19 @@ private:
 } //namespace internal_
 
 template <
-	typename Event,
-	typename Prototype,
-	typename Policies = DefaultPolicies
+	typename Event_,
+	typename Prototype_,
+	typename Policies_ = DefaultPolicies
 >
 class EventDispatcher : public internal_::InheritMixins<
-		internal_::EventDispatcherBase<Event, Prototype, Policies, void>,
-		typename internal_::SelectMixins<Policies, internal_::HasTypeMixins<Policies>::value >::Type
+		internal_::EventDispatcherBase<Event_, Prototype_, Policies_, void>,
+		typename internal_::SelectMixins<Policies_, internal_::HasTypeMixins<Policies_>::value >::Type
 	>::Type, public TagEventDispatcher
 {
 private:
 	using super = typename internal_::InheritMixins<
-		internal_::EventDispatcherBase<Event, Prototype, Policies, void>,
-		typename internal_::SelectMixins<Policies, internal_::HasTypeMixins<Policies>::value >::Type
+		internal_::EventDispatcherBase<Event_, Prototype_, Policies_, void>,
+		typename internal_::SelectMixins<Policies_, internal_::HasTypeMixins<Policies_>::value >::Type
 	>::Type;
 
 public:
