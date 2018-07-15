@@ -133,7 +133,7 @@ dispatcher.dispatch(event);
 
 ScopedRemover can be used to auto disconnect listeners when the object involved in the listeners is destroyed. For example, pseudo code,  
 
-**Code with ScopedRemover**  
+**Code without ScopedRemover**  
 
 ```c++
 SomeDispatcher someDispatcher;
@@ -151,7 +151,7 @@ class MyClass
 
 In above code, when the object of MyClass is destroyed and `myListener` is not removed from `someDispatcher`, when `someDispatcher` triggers `SomeEvent`, it will invoke on dangling pointer and the program will crash on segment fault.
 
-**Code without ScopedRemover**  
+**Code with ScopedRemover**  
 
 ```c++
 SomeDispatcher someDispatcher;
