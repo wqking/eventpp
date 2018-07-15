@@ -128,3 +128,46 @@ dispatcher.dispatch(event);
 // Listeners A were triggered.
 
 ```
+
+### Automatic disconnection
+
+ScopedRemover can be used to auto disconnect listeners when the object involved in the listeners is destroyed. For example, pseudo code,  
+
+**Code with ScopedRemover**  
+
+```c++
+SomeDispatcher someDispatcher;
+
+class MyClass
+{
+	MyClass()
+	{
+		someDispatcher.appendListener(SomeEvent, callback of myListener);
+	}
+	
+	void myListener() {}
+};
+```
+
+In above code, when the object of MyClass is destroyed and `myListener` is not removed from `someDispatcher`, when `someDispatcher` triggers `SomeEvent`, it will invoke on dangling pointer and the program will crash on segment fault.
+
+**Code without ScopedRemover**  
+
+```c++
+SomeDispatcher someDispatcher;
+
+class MyClass
+{
+	MyClass() : scopedRemover(someDispatcher)
+	{
+		scopedRemover.appendListener(SomeEvent, callback of myListener);
+	}
+	
+	void myListener() {}
+
+	eventpp::ScopedRemover<SomeDispatcher> scopedRemover;
+};
+```
+
+In above code, when the object of MyClass is destroyed, `myListener` is automatically removed from `someDispatcher`, `someDispatcher` will not invoke on any dangling pointer.
+

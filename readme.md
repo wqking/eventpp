@@ -1,15 +1,15 @@
 # eventpp -- C++ library for event dispatcher and callback list
 
-eventpp provides tools that allow your application components to communicate with each other by dispatching events and listening to them. With eventpp you can implement signal/slot mechanism, or observer pattern, very easily.
+eventpp is a C++ library that provides tools that allow your application components to communicate with each other by dispatching events and listening to them. With eventpp you can implement signal/slot mechanism, or observer pattern, very easily.
 
 ## Facts and features
 
 - Supports both synchronous event dispatching (EventDispatcher) and asynchronous event queue (EventQueue).  
-- Supports nested event. A listener can dispatch event, append/prepend/insert/remove other listeners, during capturing an event safely.
+- Supports nested event. A listener can safely dispatch event, append/prepend/insert/remove other listeners, during capturing an event.
 - Configurable and extensible with policies and mixins.
-- Supports event filter.
-- Template based, less runtime overhead, unlimited possibilities. The event and callback can be almost any C++ types meeting minimum requirements.
-- Thread safe.
+- Supports event filter via mixins.
+- Supports multiple threading.
+- Template based, less runtime overhead, unlimited possibilities. The event and callback can be almost any C++ types that satisfy minimum requirements.
 - Backed by unit tests.
 - Written in portable and standard C++. (I'm not a C++ standard expert so if you find any non-standard code or undefined behavior please let me know.)
 - Requires C++ 11 (tested with MSVC 2017, MSVC 2015, MinGW (Msys) gcc 7.2, and Ubuntu gcc 5.4).
@@ -116,6 +116,6 @@ Go to folder `tests/build`, then run `make` with different target.
 
 ## Motivations
 
-I (wqking) am a big fan of observer pattern (publish/subscribe pattern), I used such pattern a lot in my code. I either used GCallbackList in my [cpgf library](https://github.com/cpgf/cpgf) which is too simple and not safe, or repeated coding event dispatching mechanism such as I did in my [Gincu game engine](https://github.com/wqking/gincu). Both approaches are neither fun nor robust.  
+I (wqking) am a big fan of observer pattern (publish/subscribe pattern), I used such pattern a lot in my code. I either used GCallbackList in my [cpgf library](https://github.com/cpgf/cpgf) which is too simple and not safe (not support multi threading nor nested event), or repeated coding event dispatching mechanism such as I did in my [Gincu game engine](https://github.com/wqking/gincu) (the latest version has be rewritten to use eventpp). Both approaches are neither fun nor robust.  
 Thanking to C++11, now it's quite easy to write a reusable event library with beautiful syntax (it's a nightmare to simulate the variadic template in C++03), so here comes `eventpp`.
 
