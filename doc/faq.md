@@ -51,5 +51,5 @@ delete myObject;
 
 ## How to automatically remove listeners when certain object is destroyed (aka auto disconnection)?  
 
-[Use utility class ScopedRemover](doc/scopedremover.md)
+[Use utility class ScopedRemover](scopedremover.md)
 
