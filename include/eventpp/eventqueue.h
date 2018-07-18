@@ -257,7 +257,9 @@ public:
 
 			{
 				std::lock_guard<Mutex> queueListLock(queueListMutex);
-				tempList.splice(tempList.end(), queueList, queueList.begin());
+				if(! queueList.empty()) {
+					tempList.splice(tempList.end(), queueList, queueList.begin());
+				}
 			}
 
 			if(! tempList.empty()) {
