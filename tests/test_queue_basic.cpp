@@ -443,3 +443,34 @@ TEST_CASE("EventQueue, peekEvent/takeEvent/dispatch")
 	}
 }
 
+TEST_CASE("EventQueue, clearEvents")
+{
+	eventpp::EventQueue<int, void ()> queue;
+
+	int a = 1;
+	int b = 5;
+
+	queue.appendListener(3, [&a]() {
+		a += 1;
+	});
+	queue.appendListener(3, [&b]() {
+		b += 3;
+	});
+
+	REQUIRE(a == 1);
+	REQUIRE(b == 5);
+
+	queue.enqueue(3);
+	queue.process();
+
+	REQUIRE(a == 2);
+	REQUIRE(b == 8);
+
+	queue.enqueue(3);
+	queue.clearEvents();
+	queue.process();
+
+	REQUIRE(a == 2);
+	REQUIRE(b == 8);
+}
+

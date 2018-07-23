@@ -212,8 +212,30 @@ public:
 		}
 	}
 
-	bool empty() const {
+	bool empty() const
+	{
 		return queueList.empty() && (queueEmptyCounter.load(std::memory_order_acquire) == 0);
+	}
+	
+	void clearEvents()
+	{
+		if(! queueList.empty()) {
+			std::list<QueuedItem> tempList;
+
+			{
+				std::lock_guard<Mutex> queueListLock(queueListMutex);
+				std::swap(queueList, tempList);
+			}
+
+			if(! tempList.empty()) {
+				for(auto & item : tempList) {
+					item.clear();
+				}
+
+				std::lock_guard<Mutex> queueListLock(freeListMutex);
+				freeList.splice(freeList.end(), tempList);
+			}
+		}
 	}
 
 	bool process()

@@ -100,6 +100,12 @@ Note: in multiple threading environment, the empty state may change immediately 
 Note: don't write loop as `while(! eventQueue.empty()) {}`. It's dead loop since the compiler will inline the code and the change of empty state is never seen by the loop. The safe approach is `while(eventQueue.waitFor(std::chrono::nanoseconds(0))) ;`.  
 
 ```c++
+void clearEvents();
+```
+Clear all queued events without dispatching them.  
+This is useful to clear any references such as shared pointer in the queued events to avoid cyclic reference.
+
+```c++
 void wait() const;
 ```
 `wait` causes the current thread to block until there is new event arrives in the queue.  
