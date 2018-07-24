@@ -101,7 +101,7 @@ queue.process();
 * [Policies -- configure eventpp](doc/policies.md)
 * [Mixins -- extend eventpp](doc/mixins.md)
 * [Performance benchmarks](doc/benchmark.md)
-* [Frequently Asked Questions](doc/faq.md)
+* [FAQs, tricks, and tips](doc/faq.md)
 * There are compilable tutorials in the unit tests.
 
 ## Build the unit tests

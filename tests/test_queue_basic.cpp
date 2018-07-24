@@ -474,3 +474,52 @@ TEST_CASE("EventQueue, clearEvents")
 	REQUIRE(b == 8);
 }
 
+TEST_CASE("EventQueue, processIf")
+{
+	eventpp::EventQueue<int, void (int)> queue;
+
+	std::vector<int> dataList(3);
+
+	queue.appendListener(5, [&dataList](int) {
+		++dataList[0];
+	});
+	queue.appendListener(6, [&dataList](int) {
+		++dataList[1];
+	});
+	queue.appendListener(7, [&dataList](int) {
+		++dataList[2];
+	});
+
+	REQUIRE(dataList == std::vector<int>{ 0, 0, 0 });
+
+	queue.enqueue(5);
+	queue.enqueue(6);
+	queue.enqueue(7);
+	queue.process();
+	REQUIRE(dataList == std::vector<int>{ 1, 1, 1 });
+
+	queue.enqueue(5);
+	queue.enqueue(6);
+	queue.enqueue(7);
+	queue.processIf([](const int event) -> bool { return event == 6; });
+	REQUIRE(dataList == std::vector<int>{ 1, 2, 1 });
+	// Now the queue contains 5, 7
+
+	queue.enqueue(5);
+	queue.enqueue(6);
+	queue.enqueue(7);
+	queue.processIf([](const int event) -> bool { return event == 5; });
+	REQUIRE(dataList == std::vector<int>{ 3, 2, 1 });
+	// Now the queue contains 6, 7, 7
+
+	queue.enqueue(5);
+	queue.enqueue(6);
+	queue.enqueue(7);
+	queue.processIf([](const int event) -> bool { return event == 7; });
+	REQUIRE(dataList == std::vector<int>{ 3, 2, 4 });
+	// Now the queue contains 5, 6, 6
+
+	queue.process();
+	REQUIRE(dataList == std::vector<int>{ 4, 4, 4 });
+}
+

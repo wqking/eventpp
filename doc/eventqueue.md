@@ -93,6 +93,17 @@ If there are multiple threads processing events, `processOne()` is more efficien
 Note: if `processOne()` is called from multiple threads simultaneously, the events in the event queue are guaranteed dispatched only once.  
 
 ```c++
+template <typename F>
+bool processIf(F && func);
+```
+Process the event queue. Before processing an event, the event is passed to `func` and the event will be processed only if `func` returns true.  
+`func` takes exactly the same arguments as `EventQueue::enqueue`, and returns a boolean value.  
+`processIf` returns true if any event was dispatched, false if no event was dispatched.  
+`processIf` has some good use scenarios:  
+1. Process certain events in certain thread. For example, in a GUI application, the UI related events may be only desired to processed in the main thread.  
+2. Process the events until certain time. For example, in a game engine, the event process may be limited to only several milliseconds, the remaining events will be process in next game loop.  
+
+```c++
 bool empty() const;
 ```
 Return true if there is no any event in the event queue, false if there are any events in the event queue.  
@@ -142,6 +153,7 @@ for(;;) {
 bool peekEvent(EventQueue::QueuedEvent * queuedEvent);
 ```
 Retrieve an event from the queue. The event is returned in `queuedEvent`.  
+`queuedEvent` is a std::tuple, which the first element is the EventQueue::Event, and the other elements are the arguments passed in `enqueue`.  
 If the queue is empty, the function returns false, otherwise true if an event is retrieved successfully.  
 After the function returns, the original even is still in the queue.  
 Note: `peekEvent` doesn't work with any non-copyable event arguments. If `peekEvent` is called when any arguments are non-copyable, compile fails.

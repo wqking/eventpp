@@ -53,3 +53,69 @@ delete myObject;
 
 [Use utility class ScopedRemover](scopedremover.md)
 
+## How to process all EventQueue instances in a single main loop?  
+
+It's common to have a single main loop in a GUI or game application, and there are various EventQueue instances in the system. How to process all the EventQueue instances? Let's see some pseudo code first,  
+
+```c++
+
+// Here mainLoopTasks is global for simplify, in real application it can be in some object and passed around
+eventpp::CallbackList<void ()> mainLoopTasks;
+
+void mainLoop()
+{
+	for(;;) {
+		// Do any stuff in the loop
+		
+		mainLoopTasks();
+	}
+}
+
+class MyEventQueue : public eventpp::EventQueue<blah blah>
+{
+public:
+	MyEventQueue()
+	{
+		mainLoopTasks.append([this]() {
+			process();
+		});
+	}
+};
+```
+
+The idea is, the main loop invoke a callback list in each loop, and each event queue registers its process to the callback list.
+
+## How to integrate EventQueue with boost::asio::io_service?  
+
+A common use case is there are multiple threads that executing boost::asio::io_service::run(). To integrate EventQueue with boost asio, we need to replace `run()` with `poll()` to avoid blocking. So a typical thread will look like,  
+
+```c++
+boost::asio::io_service ioService;
+eventpp::CallbackList<void ()> mainLoopTasks;
+
+void threadMain()
+{
+	while(! stopped) {
+		ioService.poll();
+		mainLoopTasks();
+		sleepSomeTime();
+	}
+	
+	ioService.run();
+	mainLoopTasks();
+}
+
+class MyEventQueue : public eventpp::EventQueue<blah blah>
+{
+public:
+	MyEventQueue()
+	{
+		mainLoopTasks.append([this]() {
+			process();
+		});
+	}
+};
+```
+
+Note that after the while loop is finished, the ioService is still run and mainLoopTasks is still invoked, that's to clean up any remaining tasks.
+

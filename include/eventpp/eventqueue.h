@@ -27,6 +27,36 @@ namespace eventpp {
 
 namespace internal_ {
 
+template <size_t ...Indexes>
+struct IndexSequence
+{
+};
+
+template <size_t N, size_t ...Indexes>
+struct MakeIndexSequence : MakeIndexSequence <N - 1, N - 1, Indexes...>
+{
+};
+
+template <std::size_t ...Indexes>
+struct MakeIndexSequence<0, Indexes...>
+{
+	using Type = IndexSequence<Indexes...>;
+};
+
+template <typename T>
+struct CounterGuard
+{
+	explicit CounterGuard(T & v) : value(v) {
+		++value;
+	}
+
+	~CounterGuard() {
+		--value;
+	}
+
+	T & value;
+};
+
 template <
 	typename EventType,
 	typename Prototype,
@@ -254,7 +284,10 @@ public:
 
 			if(! tempList.empty()) {
 				for(auto & item : tempList) {
-					doDispatchQueuedEvent(item.get(), typename internal_::MakeIndexSequence<sizeof...(Args) + 1>::Type());
+					doDispatchQueuedEvent(
+						item.get(),
+						typename internal_::MakeIndexSequence<sizeof...(Args) + 1>::Type()
+					);
 					item.clear();
 				}
 
@@ -286,7 +319,10 @@ public:
 
 			if(! tempList.empty()) {
 				auto & item = tempList.front();
-				doDispatchQueuedEvent(item.get(), typename internal_::MakeIndexSequence<sizeof...(Args) + 1>::Type());
+				doDispatchQueuedEvent(
+					item.get(),
+					typename internal_::MakeIndexSequence<sizeof...(Args) + 1>::Type()
+				);
 				item.clear();
 
 				std::lock_guard<Mutex> queueListLock(freeListMutex);
@@ -299,6 +335,58 @@ public:
 		return false;
 	}
 
+	template <typename F>
+	bool processIf(F && func)
+	{
+		if(! queueList.empty()) {
+			std::list<QueuedItem> tempList;
+			std::list<QueuedItem> idleList;
+
+			// Use a counter to tell the queue list is not empty during processing
+			// even though queueList is swapped to empty.
+			CounterGuard<decltype(queueEmptyCounter)> counterGuard(queueEmptyCounter);
+
+			{
+				std::lock_guard<Mutex> queueListLock(queueListMutex);
+				std::swap(queueList, tempList);
+			}
+
+			if(! tempList.empty()) {
+				for(auto it = tempList.begin(); it != tempList.end(); ++it) {
+					if(doInvokeFuncWithQueuedEvent(
+							func,
+							it->get(),
+							typename internal_::MakeIndexSequence<sizeof...(Args) + 1>::Type())
+						) {
+						doDispatchQueuedEvent(
+							it->get(),
+							typename internal_::MakeIndexSequence<sizeof...(Args) + 1>::Type()
+						);
+						it->clear();
+						
+						auto tempIt = it;
+						--it;
+						idleList.splice(idleList.end(), tempList, tempIt);
+					}
+				}
+
+				if (! tempList.empty()) {
+					std::lock_guard<Mutex> queueListLock(queueListMutex);
+					queueList.splice(queueList.begin(), tempList);
+				}
+
+				if(! idleList.empty()) {
+					std::lock_guard<Mutex> queueListLock(freeListMutex);
+					freeList.splice(freeList.end(), idleList);
+					
+					return true;
+				}
+			}
+		}
+		
+		return false;
+	}
+	
 	void wait() const
 	{
 		std::unique_lock<Mutex> queueListLock(queueListMutex);
@@ -322,7 +410,10 @@ public:
 	auto dispatch(const U & queuedEvent)
 		-> typename std::enable_if<std::is_same<U, QueuedEvent>::value, void>::type
 	{
-		doDispatchQueuedEvent(queuedEvent, typename internal_::MakeIndexSequence<sizeof...(Args) + 1>::Type());
+		doDispatchQueuedEvent(
+			queuedEvent,
+			typename internal_::MakeIndexSequence<sizeof...(Args) + 1>::Type()
+		);
 	}
 
 	bool peekEvent(QueuedEvent * queuedEvent)
@@ -366,7 +457,7 @@ public:
 		return false;
 	}
 
-private:
+protected:
 	bool doCanProcess() const {
 		return ! empty() && doCanNotifyQueueAvailable();
 	}
@@ -376,9 +467,21 @@ private:
 	}
 
 	template <typename T, size_t ...Indexes>
-	void doDispatchQueuedEvent(T && item, internal_::IndexSequence<Indexes...>)
+	void doDispatchQueuedEvent(T && item, IndexSequence<Indexes...>)
 	{
 		this->doDispatch(std::get<Indexes>(std::forward<T>(item))...);
+	}
+
+	template <typename F, typename T, size_t ...Indexes>
+	bool doInvokeFuncWithQueuedEvent(F && func, T && item, IndexSequence<Indexes...>) const
+	{
+		return doInvokeFuncWithQueuedEventHelper(std::forward<F>(func), std::get<Indexes>(std::forward<T>(item))...);
+	}
+	
+	template <typename F>
+	bool doInvokeFuncWithQueuedEventHelper(F && func, const typename super::Event & e, Args ...args) const
+	{
+		return func(std::forward<Args>(args)...);
 	}
 
 	void doEnqueue(QueuedEvent && item)
