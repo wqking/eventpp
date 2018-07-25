@@ -125,7 +125,7 @@ void doExecuteEventQueue(
 		size_t listenerCount = 0
 	)
 {
-	using EQ = eventpp::EventQueue<int, void (int), Policies>;
+	using EQ = eventpp::EventQueue<size_t, void (size_t), Policies>;
 	EQ eventQueue;
 	
 	if(listenerCount == 0) {
@@ -133,7 +133,7 @@ void doExecuteEventQueue(
 	}
 
 	for(size_t i = 0; i < listenerCount; ++i) {
-		eventQueue.appendListener(i % eventCount, [](int) {});
+		eventQueue.appendListener(i % eventCount, [](size_t) {});
 	}
 	
 	const uint64_t time = measureElapsedTime([
@@ -171,7 +171,7 @@ void doMultiThreadingExecuteEventQueue(
 		size_t listenerCount = 0
 	)
 {
-	using EQ = eventpp::EventQueue<int, void (int), Policies>;
+	using EQ = eventpp::EventQueue<size_t, void (size_t), Policies>;
 	EQ eventQueue;
 	
 	if(listenerCount == 0) {
@@ -179,7 +179,7 @@ void doMultiThreadingExecuteEventQueue(
 	}
 
 	for(size_t i = 0; i < listenerCount; ++i) {
-		eventQueue.appendListener(i % eventCount, [](int) { });
+		eventQueue.appendListener(i % eventCount, [](size_t) { });
 	}
 	
 	std::atomic<bool> start(false);
@@ -194,7 +194,7 @@ void doMultiThreadingExecuteEventQueue(
 			}
 
 			for(size_t i = begin; i < end; ++i) {
-					eventQueue.enqueue(i % eventCount);
+				eventQueue.enqueue(i % eventCount);
 			}
 		});
 	}
@@ -611,5 +611,31 @@ TEST_CASE("benchmark, EventQueue")
 	doMultiThreadingExecuteEventQueue<PoliciesMultiThreading>(2, 2, 1000 * 1000 * 100, 100);
 }
 
+TEST_CASE("benchmark, CallbackList add/remove callbacks")
+{
+	using CL = eventpp::CallbackList<void ()>;
+	constexpr size_t callbackCount = 1000;
+	constexpr size_t iterateCount = 1000 * 100;
+	CL callbackList;
+	std::vector<CL::Handle> handleList(callbackCount);
+	const uint64_t time = measureElapsedTime(
+		[callbackCount, iterateCount, &callbackList, &handleList]() {
+		for(size_t iterate = 0; iterate < iterateCount; ++iterate) {
+			for(size_t i = 0; i < callbackCount; ++i) {
+				handleList[i] = callbackList.append([]() {});
+			}
+			for(size_t i = 0; i < callbackCount; ++i) {
+				callbackList.remove(handleList[i]);
+			}
+		}
+	});
+
+	std::cout
+		<< "CallbackList add/remove callbacks,"
+		<< " callbackCount: " << callbackCount
+		<< " iterateCount: " << iterateCount
+		<< " time: " << time
+		<< std::endl;
+}
 
 #endif

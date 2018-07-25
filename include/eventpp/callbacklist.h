@@ -16,12 +16,13 @@
 
 #include "eventpolicies.h"
 
+#include <atomic>
+#include <condition_variable>
 #include <functional>
 #include <memory>
 #include <mutex>
-#include <atomic>
-#include <condition_variable>
 #include <utility>
+#include <vector>
 
 namespace eventpp {
 
@@ -197,7 +198,7 @@ public:
 
 	Handle append(const Callback & callback)
 	{
-		NodePtr node(std::make_shared<Node>(callback, getNextCounter()));
+		NodePtr node(doAllocateNode(callback));
 
 		std::lock_guard<Mutex> lockGuard(mutex);
 
@@ -216,7 +217,7 @@ public:
 
 	Handle prepend(const Callback & callback)
 	{
-		NodePtr node(std::make_shared<Node>(callback, getNextCounter()));
+		NodePtr node(doAllocateNode(callback));
 
 		std::lock_guard<Mutex> lockGuard(mutex);
 
@@ -237,7 +238,7 @@ public:
 	{
 		NodePtr beforeNode = before.lock();
 		if(beforeNode) {
-			NodePtr node(std::make_shared<Node>(callback, getNextCounter()));
+			NodePtr node(doAllocateNode(callback));
 
 			std::lock_guard<Mutex> lockGuard(mutex);
 
@@ -254,7 +255,7 @@ public:
 		std::lock_guard<Mutex> lockGuard(mutex);
 		auto node = handle.lock();
 		if(node) {
-			doRemoveNode(node);
+			doFreeNode(node);
 			return true;
 		}
 
@@ -336,7 +337,26 @@ private:
 		return func(node->callback);
 	}
 
-	void doRemoveNode(NodePtr & node)
+	void doInsert(NodePtr & node, NodePtr & beforeNode)
+	{
+		node->previous = beforeNode->previous;
+		node->next = beforeNode;
+		if(beforeNode->previous) {
+			beforeNode->previous->next = node;
+		}
+		beforeNode->previous = node;
+
+		if(beforeNode == head) {
+			head = node;
+		}
+	}
+	
+	NodePtr doAllocateNode(const Callback & callback)
+	{
+		return std::make_shared<Node>(callback, getNextCounter());
+	}
+	
+	void doFreeNode(NodePtr & node)
 	{
 		if(node->next) {
 			node->next->previous = node->previous;
@@ -357,20 +377,6 @@ private:
 
 		// don't modify node->previous or node->next
 		// because node may be still used in a loop.
-	}
-
-	void doInsert(NodePtr & node, NodePtr & beforeNode)
-	{
-		node->previous = beforeNode->previous;
-		node->next = beforeNode;
-		if(beforeNode->previous) {
-			beforeNode->previous->next = node;
-		}
-		beforeNode->previous = node;
-
-		if(beforeNode == head) {
-			head = node;
-		}
 	}
 
 	Counter getNextCounter()

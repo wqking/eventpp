@@ -16,6 +16,7 @@ eventpp is a C++ event library that provides tools that allow your application c
 - **Fast**
   - The EventQueue can process 10M events in 1 second (10K events per millisecond).
   - The CallbackList can invoke 100M callbacks in 1 second (100K callbacks per millisecond).
+  - The CallbackList can add/remove 5M callbacks in 1 second (5K callbacks per millisecond).
 - **Flexible and easy to use**
   - The listeners and events can be any type, no need to inherit from any base class.
   - Header only, no source file, no need to build. No dependencies on other libraries.

@@ -1,5 +1,9 @@
 # Benchmarks
 
+Hardware: Intel(R) Xeon(R) CPU E3-1225 V2 @ 3.20GHz  
+Software: Windows 10, MSVC 2017, MinGW GCC 7.2.0  
+Time unit: milliseconds (unless explicitly specified)
+
 ## EventQueue enqueue and process -- single threading
 
 <table>
@@ -41,7 +45,7 @@
 </tr>
 <table>
 
-Given `eventpp::EventQueue<int, void (int), Policies>`, which `Policies` is either single threading or multi threading, the benchmark adds `Listener count` listeners to the queue, each listener is an empty lambda. Then the benchmark starts timing. It loops `Iterations` times. In each loop, the benchmark puts `Queue size` events, then process the event queue.  
+Given `eventpp::EventQueue<size_t, void (size_t), Policies>`, which `Policies` is either single threading or multi threading, the benchmark adds `Listener count` listeners to the queue, each listener is an empty lambda. Then the benchmark starts timing. It loops `Iterations` times. In each loop, the benchmark puts `Queue size` events, then process the event queue.  
 There are `Event types` kinds of event type. `Event count` is `Iterations * Queue size`.  
 The EventQueue is processed in one thread. The Single/Multi threading in the table means the policies used.
 
@@ -109,12 +113,14 @@ The EventQueue is processed in one thread. The Single/Multi threading in the tab
 There are `Enqueue threads` threads enqueuing events to the queue, and `Process threads` threads processing the events. The total event count is `Event count`.  
 The multi threading version shows slower than previous single threading version, since the mutex locks cost time.
 
+## CallbackList append/remove callbacks
+
+The benchmark loops 100K times, in each loop it appends 1000 empty callbacks to a CallbackList, then remove all that 1000 callbacks. So there are totally 100M append/remove operations.  
+The total benchmarked time is about 21000 milliseconds. That's to say in 1 milliseconds there can be 5000 append/remove operations.
+
 ## CallbackList invoking VS native function invoking
 
-Hardware: Intel(R) Xeon(R) CPU E3-1225 V2 @ 3.20GHz  
-Software: Windows 10, MSVC 2017, MinGW GCC 7.2.0  
 Iterations: 100,000,000  
-Time unit: milliseconds
 
 <table>
 <tr>
