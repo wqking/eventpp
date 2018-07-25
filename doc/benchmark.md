@@ -1,5 +1,114 @@
 # Benchmarks
 
+## EventQueue enqueue and process -- single threading
+
+<table>
+<tr>
+	<th>Iterations</th>
+	<th>Queue size</th>
+	<th>Event count</th>
+	<th>Event Types</th>
+	<th>Listener count</th>
+	<th>Time of single threading</th>
+	<th>Time of multi threading</th>
+</tr>
+<tr>
+	<td>100k</td>
+	<td>100</td>
+	<td>10M</td>
+	<td>100</td>
+	<td>100</td>
+	<td>401</td>
+	<td>1146</td>
+</tr>
+<tr>
+	<td>100k</td>
+	<td>1000</td>
+	<td>100M</td>
+	<td>100</td>
+	<td>100</td>
+	<td>4012</td>
+	<td>11467</td>
+</tr>
+<tr>
+	<td>100k</td>
+	<td>1000</td>
+	<td>100M</td>
+	<td>1000</td>
+	<td>1000</td>
+	<td>4102</td>
+	<td>11600</td>
+</tr>
+<table>
+
+Given `eventpp::EventQueue<int, void (int), Policies>`, which `Policies` is either single threading or multi threading, the benchmark adds `Listener count` listeners to the queue, each listener is an empty lambda. Then the benchmark starts timing. It loops `Iterations` times. In each loop, the benchmark puts `Queue size` events, then process the event queue.  
+There are `Event types` kinds of event type. `Event count` is `Iterations * Queue size`.  
+The EventQueue is processed in one thread. The Single/Multi threading in the table means the policies used.
+
+## EventQueue enqueue and process -- multiple threading
+
+<table>
+<tr>
+	<th>Enqueue threads</th>
+	<th>Process threads</th>
+	<th>Event count</th>
+	<th>Event Types</th>
+	<th>Listener count</th>
+	<th>Time</th>
+</tr>
+<tr>
+	<td>1</td>
+	<td>1</td>
+	<td>10M</td>
+	<td>100</td>
+	<td>100</td>
+	<td>2387</td>
+</tr>
+<tr>
+	<td>1</td>
+	<td>1</td>
+	<td>100M</td>
+	<td>100</td>
+	<td>100</td>
+	<td>23656</td>
+</tr>
+<tr>
+	<td>1</td>
+	<td>3</td>
+	<td>10M</td>
+	<td>100</td>
+	<td>100</td>
+	<td>3755</td>
+</tr>
+<tr>
+	<td>1</td>
+	<td>3</td>
+	<td>100M</td>
+	<td>100</td>
+	<td>100</td>
+	<td>37983</td>
+</tr>
+<tr>
+	<td>2</td>
+	<td>2</td>
+	<td>10M</td>
+	<td>100</td>
+	<td>100</td>
+	<td>4323</td>
+</tr>
+<tr>
+	<td>2</td>
+	<td>2</td>
+	<td>100M</td>
+	<td>100</td>
+	<td>100</td>
+	<td>42263</td>
+</tr>
+</table>
+
+There are `Enqueue threads` threads enqueuing events to the queue, and `Process threads` threads processing the events. The total event count is `Event count`.  
+The multi threading version shows slower than previous single threading version, since the mutex locks cost time.
+
 ## CallbackList invoking VS native function invoking
 
 Hardware: Intel(R) Xeon(R) CPU E3-1225 V2 @ 3.20GHz  

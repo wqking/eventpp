@@ -68,7 +68,7 @@ queue.process();
 ```
 
 ## Thread safety
-All classes are thread safe. All public functions can be invoked from multiple threads simultaneously. If it failed, please report a bug.  
+All classes are thread safe. All public functions can be invoked from multiple threads simultaneously. If it fails, please report a bug.  
 The library guarantees the integration of each single function invocation, such as `EventDispatcher::appendListener`, 'CallbackList::remove`, but it doesn't guarantee the order of the operations in multiple threads. For example, if a thread is dispatching an event, the other thread removes a listener in the mean time, the removed listener may be still triggered after it's removed.  
 
 ## Exception safety

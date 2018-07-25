@@ -122,7 +122,7 @@ A mixin is used to inject code in the EventDispatcher/EventQueue inheritance hie
 
 ### Type Threading
 
-**Default value**: `using Threading = MultipleThreading`.  
+**Default value**: `using Threading = eventpp::MultipleThreading`.  
 **Apply**: CallbackList, EventDispatcher, EventQueue.
 
 `Threading` controls threading model. Default is 'MultipleThreading'. Possible values:  

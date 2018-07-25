@@ -1,20 +1,26 @@
 # eventpp -- C++ library for event dispatcher and callback list
 
-eventpp is a C++ library that provides tools that allow your application components to communicate with each other by dispatching events and listening to them. With eventpp you can implement signal/slot mechanism, or observer pattern, very easily.
+eventpp is a C++ event library that provides tools that allow your application components to communicate with each other by dispatching events and listening to them. With eventpp you can implement signal/slot mechanism, or observer pattern, very easily.
 
 ## Facts and features
 
-- Supports both synchronous event dispatching (EventDispatcher) and asynchronous event queue (EventQueue).  
-- Supports nested event. A listener can safely dispatch event, append/prepend/insert/remove other listeners, during capturing an event.
-- Configurable and extensible with policies and mixins.
-- Supports event filter via mixins.
-- Supports multiple threading.
-- Template based, less runtime overhead, unlimited possibilities. The event and callback can be almost any C++ types that satisfy minimum requirements.
-- Backed by unit tests.
-- Written in portable and standard C++. (I'm not a C++ standard expert so if you find any non-standard code or undefined behavior please let me know.)
-- Requires C++ 11 (tested with MSVC 2017, MSVC 2015, MinGW (Msys) gcc 7.2, and Ubuntu gcc 5.4).
-- Doesn't depend on any other libraries.
-- Header only, no source file, no need to build.
+- **Powerful**
+  - Supports both synchronous event dispatching and asynchronous event queue.
+  - Configurable and extensible with policies and mixins.
+  - Supports event filter via mixins.
+- **Robust**
+  - Supports nested event. During handling an event a listener can safely dispatch event, append/prepend/insert/remove other listeners.
+  - Thread safety. Supports multiple threading.
+  - Exception safety. Most operations guarantee strong exception safety.
+  - Well tested. Backed by unit tests.
+- **Fast**
+  - The EventQueue can process 10M events in 1 second (10K events per millisecond).
+  - The CallbackList can invoke 100M callbacks in 1 second (100K callbacks per millisecond).
+- **Flexible and easy to use**
+  - The listeners and events can be any type, no need to inherit from any base class.
+  - Header only, no source file, no need to build. No dependencies on other libraries.
+  - Requires C++ 11 (tested with MSVC 2017, MSVC 2015, MinGW (Msys) gcc 7.2, and Ubuntu gcc 5.4).
+  - Written in portable and standard C++, no hacks or quirks.
 
 ## License
 
@@ -87,7 +93,7 @@ queue.process();
 
 ## Documentations
 
-* [An overview introduction](doc/introduction.md)
+* [Overview, thread and exception safety](doc/introduction.md)
 * [Tutorials of CallbackList](doc/tutorial_callbacklist.md)
 * [Tutorials of EventDispatcher](doc/tutorial_eventdispatcher.md)
 * [Tutorials of EventQueue](doc/tutorial_eventqueue.md)
