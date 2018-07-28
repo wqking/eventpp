@@ -26,6 +26,37 @@ struct TagCallbackList {};
 struct TagEventDispatcher {};
 struct TagEventQueue {};
 
+struct SpinLock
+{
+public:
+	void lock() {
+		while(locked.test_and_set(std::memory_order_acquire)) {
+		}
+	}
+
+	void unlock() {
+		locked.clear(std::memory_order_release);
+	}
+	
+private:
+    std::atomic_flag locked = ATOMIC_FLAG_INIT;
+};
+
+template <
+	typename Mutex_,
+	template <typename > class Atomic_ = std::atomic,
+	typename ConditionVariable_ = std::condition_variable
+>
+struct GeneralThreading
+{
+	using Mutex = Mutex_;
+
+	template <typename T>
+	using Atomic = Atomic_<T>;
+
+	using ConditionVariable = ConditionVariable_;
+};
+
 struct MultipleThreading
 {
 	using Mutex = std::mutex;
@@ -43,13 +74,59 @@ struct SingleThreading
 		void lock() {}
 		void unlock() {}
 	};
-
-	// May replace Atomic with dummy atomic later.
+	
 	template <typename T>
-	using Atomic = std::atomic<T>;
+	struct Atomic
+	{
+		Atomic() noexcept = default;
+		constexpr Atomic(T desired) noexcept
+			: value(desired)
+		{
+		}
 
-	// May replace ConditionVariable with dummy condition variable later.
-	using ConditionVariable = std::condition_variable;
+		void store(T desired, std::memory_order order = std::memory_order_seq_cst) noexcept
+		{
+			value = desired;
+		}
+		
+		T load(std::memory_order order = std::memory_order_seq_cst) const noexcept
+		{
+			return value;
+		}
+		
+		T operator ++ () noexcept
+		{
+			return ++value;
+		}
+
+		T operator -- () noexcept
+		{
+			return --value;
+		}
+
+		T value;
+	};
+
+	struct ConditionVariable
+	{
+		void notify_one() noexcept
+		{
+		}
+		
+		template <class Predicate>
+		void wait(std::unique_lock<std::mutex>& lock, Predicate pred)
+		{
+		}
+		
+		template <class Rep, class Period, class Predicate>
+		bool wait_for(std::unique_lock<std::mutex> & lock,
+				const std::chrono::duration<Rep, Period> & rel_time,
+				Predicate pred
+			)
+		{
+			return true;
+		}
+	};
 };
 
 struct ArgumentPassingAutoDetect

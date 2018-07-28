@@ -152,8 +152,8 @@ void doExecuteEventQueue(
 	});
 	
 	std::cout
-		<< message << " "
-		<< "queueSize: " << queueSize
+		<< message
+		<< " queueSize: " << queueSize
 		<< " iterateCount: " << iterateCount
 		<< " eventCount: " << eventCount
 		<< " listenerCount: " << listenerCount
@@ -164,6 +164,7 @@ void doExecuteEventQueue(
 
 template <typename Policies>
 void doMultiThreadingExecuteEventQueue(
+		const std::string & message,
 		const size_t enqueueThreadCount,
 		const size_t processThreadCount,
 		const size_t totalEventCount,
@@ -236,7 +237,8 @@ void doMultiThreadingExecuteEventQueue(
 	});
 	
 	std::cout
-		<< "enqueueThreadCount: " << enqueueThreadCount
+		<< message
+		<< " enqueueThreadCount: " << enqueueThreadCount
 		<< " processThreadCount: " << processThreadCount
 		<< " totalEventCount: " << totalEventCount
 		<< " eventCount: " << eventCount
@@ -586,7 +588,7 @@ TEST_CASE("benchmark, std::map vs std::unordered_map")
 	std::cout << unorderedMapInsertTime << " " << unorderedMapLookupTime << std::endl;
 }
 
-TEST_CASE("benchmark, EventQueue")
+TEST_CASE("benchmark, EventQueue, one thread")
 {
 	struct PoliciesMultiThreading {
 		using Threading = eventpp::MultipleThreading;
@@ -602,13 +604,32 @@ TEST_CASE("benchmark, EventQueue")
 	doExecuteEventQueue<PoliciesSingleThreading>("Single threading", 100, 1000 * 100, 100);
 	doExecuteEventQueue<PoliciesSingleThreading>("Single threading", 1000, 1000 * 100, 100);
 	doExecuteEventQueue<PoliciesSingleThreading>("Single threading", 1000, 1000 * 100, 1000);
+}
 
-	doMultiThreadingExecuteEventQueue<PoliciesMultiThreading>(1, 1, 1000 * 1000 * 10, 100);
-	doMultiThreadingExecuteEventQueue<PoliciesMultiThreading>(1, 1, 1000 * 1000 * 100, 100);
-	doMultiThreadingExecuteEventQueue<PoliciesMultiThreading>(1, 3, 1000 * 1000 * 10, 100);
-	doMultiThreadingExecuteEventQueue<PoliciesMultiThreading>(1, 3, 1000 * 1000 * 100, 100);
-	doMultiThreadingExecuteEventQueue<PoliciesMultiThreading>(2, 2, 1000 * 1000 * 10, 100);
-	doMultiThreadingExecuteEventQueue<PoliciesMultiThreading>(2, 2, 1000 * 1000 * 100, 100);
+TEST_CASE("benchmark, EventQueue, multi threads, mutex")
+{
+	struct PoliciesMultiThreading {
+		using Threading = eventpp::GeneralThreading<std::mutex>;
+	};
+
+	doMultiThreadingExecuteEventQueue<PoliciesMultiThreading>("Mutex", 1, 1, 1000 * 1000 * 10, 100);
+	doMultiThreadingExecuteEventQueue<PoliciesMultiThreading>("Mutex", 1, 3, 1000 * 1000 * 10, 100);
+	doMultiThreadingExecuteEventQueue<PoliciesMultiThreading>("Mutex", 2, 2, 1000 * 1000 * 10, 100);
+	doMultiThreadingExecuteEventQueue<PoliciesMultiThreading>("Mutex", 4, 4, 1000 * 1000 * 10, 100);
+	doMultiThreadingExecuteEventQueue<PoliciesMultiThreading>("Mutex", 16, 16, 1000 * 1000 * 10, 100);
+}
+
+TEST_CASE("benchmark, EventQueue, multi threads, spinlock")
+{
+	struct PoliciesMultiThreading {
+		using Threading = eventpp::GeneralThreading<eventpp::SpinLock>;
+	};
+
+	doMultiThreadingExecuteEventQueue<PoliciesMultiThreading>("Spinlock", 1, 1, 1000 * 1000 * 10, 100);
+	doMultiThreadingExecuteEventQueue<PoliciesMultiThreading>("Spinlock", 1, 3, 1000 * 1000 * 10, 100);
+	doMultiThreadingExecuteEventQueue<PoliciesMultiThreading>("Spinlock", 2, 2, 1000 * 1000 * 10, 100);
+	doMultiThreadingExecuteEventQueue<PoliciesMultiThreading>("Spinlock", 4, 4, 1000 * 1000 * 10, 100);
+	doMultiThreadingExecuteEventQueue<PoliciesMultiThreading>("Spinlock", 16, 16, 1000 * 1000 * 10, 100);
 }
 
 TEST_CASE("benchmark, CallbackList add/remove callbacks")

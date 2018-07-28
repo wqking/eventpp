@@ -53,6 +53,7 @@ The EventQueue is processed in one thread. The Single/Multi threading in the tab
 
 <table>
 <tr>
+	<th>Mutex</th>
 	<th>Enqueue threads</th>
 	<th>Process threads</th>
 	<th>Event count</th>
@@ -61,57 +62,104 @@ The EventQueue is processed in one thread. The Single/Multi threading in the tab
 	<th>Time</th>
 </tr>
 <tr>
+	<td>std::mutex</td>
 	<td>1</td>
 	<td>1</td>
 	<td>10M</td>
 	<td>100</td>
 	<td>100</td>
-	<td>2387</td>
+	<td>2283</td>
 </tr>
 <tr>
+	<td>SpinLock</td>
 	<td>1</td>
 	<td>1</td>
-	<td>100M</td>
+	<td>10M</td>
 	<td>100</td>
 	<td>100</td>
-	<td>23656</td>
+	<td>1692</td>
 </tr>
+
 <tr>
+	<td>std::mutex</td>
 	<td>1</td>
 	<td>3</td>
 	<td>10M</td>
 	<td>100</td>
 	<td>100</td>
-	<td>3755</td>
+	<td>3446</td>
 </tr>
 <tr>
+	<td>SpinLock</td>
 	<td>1</td>
 	<td>3</td>
-	<td>100M</td>
+	<td>10M</td>
 	<td>100</td>
 	<td>100</td>
-	<td>37983</td>
+	<td>3025</td>
 </tr>
+
 <tr>
+	<td>std::mutex</td>
 	<td>2</td>
 	<td>2</td>
 	<td>10M</td>
 	<td>100</td>
 	<td>100</td>
-	<td>4323</td>
+	<td>4000</td>
 </tr>
 <tr>
+	<td>SpinLock</td>
 	<td>2</td>
 	<td>2</td>
-	<td>100M</td>
+	<td>10M</td>
 	<td>100</td>
 	<td>100</td>
-	<td>42263</td>
+	<td>3076</td>
+</tr>
+
+<tr>
+	<td>std::mutex</td>
+	<td>4</td>
+	<td>4</td>
+	<td>10M</td>
+	<td>100</td>
+	<td>100</td>
+	<td>1971</td>
+</tr>
+<tr>
+	<td>SpinLock</td>
+	<td>4</td>
+	<td>4</td>
+	<td>10M</td>
+	<td>100</td>
+	<td>100</td>
+	<td>1755</td>
+</tr>
+
+<tr>
+	<td>std::mutex</td>
+	<td>16</td>
+	<td>16</td>
+	<td>10M</td>
+	<td>100</td>
+	<td>100</td>
+	<td>928</td>
+</tr>
+<tr>
+	<td>SpinLock</td>
+	<td>16</td>
+	<td>16</td>
+	<td>10M</td>
+	<td>100</td>
+	<td>100</td>
+	<td>2082</td>
 </tr>
 </table>
 
-There are `Enqueue threads` threads enqueuing events to the queue, and `Process threads` threads processing the events. The total event count is `Event count`.  
-The multi threading version shows slower than previous single threading version, since the mutex locks cost time.
+There are `Enqueue threads` threads enqueuing events to the queue, and `Process threads` threads processing the events. The total event count is `Event count`. `Mutex` is the mutex type used to protect the data.  
+The multi threading version shows slower than previous single threading version, since the mutex locks cost time.  
+When there are fewer threads (about around the number of CPU cores which is 4 here), `eventpp::SpinLock` has better performance than `std::mutex`. But there are much more threads than CPU cores (here is 16 enqueue threads and 16 process threads), `eventpp::SpinLock` has worse performance than `std::mutex`.  
 
 ## CallbackList append/remove callbacks
 

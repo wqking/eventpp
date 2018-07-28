@@ -129,6 +129,72 @@ A mixin is used to inject code in the EventDispatcher/EventQueue inheritance hie
   * `MultipleThreading`: the core data is protected with mutex. It's the default value.  
   * `SingleThreading`: the core data is not protected and can't be accessed from multiple threads.  
 
+A typical `Threading` type looks like
+
+```c++
+struct MultipleThreading
+{
+	using Mutex = std::mutex;
+
+	template <typename T>
+	using Atomic = std::atomic<T>;
+
+	using ConditionVariable = std::condition_variable;
+};
+```
+For `SingleThreading`, all the types `Mutex`, `Atomic`, and `ConditionVariable` are dummy types that don't do anything.  
+
+For multiple threading, the default `Mutex` is `std::mutex`. `eventpp` also provides a `SpinLock` class which uses spinlock as the mutex.  
+When there are fewer threads (about around the number of CPU cores which is 4 here), `eventpp::SpinLock` has better performance than `std::mutex`. When there are much more threads than CPU cores (here is 16 enqueue threads and 16 process threads, totally 32), `eventpp::SpinLock` has worse performance than `std::mutex`.  
+Please [read the benchmark](benchmark.md) for benchmark data.  
+
+Below is the sample code for how to use `SpinLock`
+
+```c++
+struct MultipleThreadingSpinLock
+{
+	using Mutex = eventpp::SpinLock;
+
+	template <typename T>
+	using Atomic = std::atomic<T>;
+
+	using ConditionVariable = std::condition_variable;
+};
+struct MyEventPolicies {
+	using Threading = MultipleThreadingSpinLock;
+};
+eventpp::EventDispatcher<int, void (), MyEventPolicies> dispatcher;
+eventpp::CallbackList<void (), MyEventPolicies> callbackList;
+```
+
+`eventpp` provides a shortcut template class to customize the threading.  
+```c++
+template <
+	typename Mutex_,
+	template <typename > class Atomic_ = std::atomic,
+	typename ConditionVariable_ = std::condition_variable
+>
+struct GeneralThreading
+{
+	using Mutex = Mutex_;
+
+	template <typename T>
+	using Atomic = Atomic_<T>;
+
+	using ConditionVariable = ConditionVariable_;
+};
+```
+
+So the previous sample code for spinlock can be rewritten as
+
+```c++
+struct MyEventPolicies {
+	using Threading = eventpp::GeneralThreading<eventpp::SpinLock>;
+};
+eventpp::EventDispatcher<int, void (), MyEventPolicies> dispatcher;
+eventpp::CallbackList<void (), MyEventPolicies> callbackList;
+```
+
 ## Type ArgumentPassingMode
 
 **Default value**: `using ArgumentPassingMode = ArgumentPassingAutoDetect`.  
