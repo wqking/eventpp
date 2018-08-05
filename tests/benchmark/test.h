@@ -14,41 +14,17 @@
 #ifndef TEST_H
 #define TEST_H
 
-#include "catch.hpp"
+#include "../catch.hpp"
 
-template <typename Callable, typename ReturnType = void>
-struct EraseArgs1
+#include <chrono>
+#include <iostream>
+
+template <typename F>
+uint64_t measureElapsedTime(F f)
 {
-	template <typename C>
-	explicit EraseArgs1(const C & callable) : callable(callable)
-	{
-	}
-
-	template <typename First, typename ...Args>
-	ReturnType operator() (First &&, Args && ...args)
-	{
-		callable(std::forward(args)...);
-	}
-
-	Callable callable;
-};
-
-template <typename Callable>
-EraseArgs1<Callable> eraseArgs1(const Callable & callable)
-{
-	return EraseArgs1<Callable>(callable);
-}
-
-template <typename T>
-bool checkAllWeakPtrAreFreed(const T & nodeList)
-{
-	for(const auto & node : nodeList) {
-		if(node.lock()) {
-			return false;
-		}
-	}
-
-	return true;
+	std::chrono::steady_clock::time_point t = std::chrono::steady_clock::now();
+	f();
+	return std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - t).count();
 }
 
 
