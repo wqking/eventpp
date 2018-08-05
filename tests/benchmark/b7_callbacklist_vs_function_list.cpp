@@ -25,7 +25,7 @@ namespace {
 template <typename Policies>
 void doCallbackListVsFunctionList(const std::string & message)
 {
-	eventpp::CallbackList<void (size_t)> callbackList;
+	eventpp::CallbackList<void (size_t), Policies> callbackList;
 	std::vector<std::function<void (size_t)> > functionList;
 	constexpr size_t callbackCount = 100;
 	constexpr size_t iterateCount = 1000 * 1000;
@@ -63,7 +63,7 @@ void doCallbackListVsFunctionList(const std::string & message)
 
 } //unnamed namespace
 
-TEST_CASE("benchmark, CallbackList vs vector of functions")
+TEST_CASE("b7, CallbackList vs vector of functions")
 {
 	struct PoliciesMultiThreading {
 		using Threading = eventpp::MultipleThreading;
