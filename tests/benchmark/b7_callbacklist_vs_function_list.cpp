@@ -17,45 +17,88 @@
 #include <functional>
 #include <vector>
 
-// To enable benchmark, change below line to #if 1
-#if 1
-
 namespace {
 
-template <typename Policies>
-void doCallbackListVsFunctionList(const std::string & message)
+#if defined(_MSC_VER)
+#define NON_INLINE __declspec(noinline)
+#else
+// gcc
+#define NON_INLINE __attribute__((noinline))
+#endif
+
+volatile int globalValue = 0;
+
+void globalFunction(int a, const int b)
 {
-	eventpp::CallbackList<void (size_t), Policies> callbackList;
-	std::vector<std::function<void (size_t)> > functionList;
-	constexpr size_t callbackCount = 100;
-	constexpr size_t iterateCount = 1000 * 1000;
-	volatile size_t data = 0;
+	globalValue += a + b;
+}
+
+NON_INLINE void nonInlineGlobalFunction(int a, const int b)
+{
+	globalValue += a + b;
+}
+
+struct FunctionObject
+{
+	void operator() (int a, const int b)
+	{
+		globalValue += a + b;
+	}
+
+	virtual void virFunc(int a, const int b)
+	{
+		globalValue += a + b;
+	}
+
+	void nonVirFunc(int a, const int b)
+	{
+		globalValue += a + b;
+	}
+
+	NON_INLINE virtual void nonInlineVirFunc(int a, const int b)
+	{
+		globalValue += a + b;
+	}
+
+	NON_INLINE void nonInlineNonVirFunc(int a, const int b)
+	{
+		globalValue += a + b;
+	}
+};
+#undef NON_INLINE
+
+template <typename Policies>
+using CLT = eventpp::CallbackList<void (int, int), Policies>;
+using FLT = std::vector<std::function<void (int, int)> >;
+
+template <typename Policies, typename AddCL, typename AddFL>
+void doCallbackListVsFunctionList(const std::string & message, AddCL && addCl, AddFL && addFL)
+{
+	CLT<Policies> callbackList;
+	FLT functionList;
+	constexpr int callbackCount = 100;
+	constexpr int iterateCount = 1000 * 1000;
 	
-	for(size_t i = 0; i < callbackCount; ++i) {
-		callbackList.append([&data, i](size_t index) {
-			data += i + index;
-		});
-		functionList.push_back([&data, i](size_t index) {
-			data += i + index;
-		});
+	for(int i = 0; i < callbackCount; ++i) {
+		addCl(callbackList);
+		addFL(functionList);
 	}
 	const uint64_t timeCallbackList = measureElapsedTime(
 		[iterateCount, &callbackList]() {
-			for(size_t iterate = 0; iterate < iterateCount; ++iterate) {
-				callbackList(iterate);
+			for(int iterate = 0; iterate < iterateCount; ++iterate) {
+				callbackList(iterate, iterate);
 			}
 		}
 	);
 	const uint64_t timeFunctionList = measureElapsedTime(
 		[iterateCount, &functionList]() {
-			for(size_t iterate = 0; iterate < iterateCount; ++iterate) {
+			for(int iterate = 0; iterate < iterateCount; ++iterate) {
 				for(auto & func : functionList) {
-					func(iterate);
+					func(iterate, iterate);
 				}
 			}
 		}
 	);
-	REQUIRE(data >= 0);
 
 	std::cout << message << " timeCallbackList " << timeCallbackList << std::endl;
 	std::cout << message << " timeFunctionList " << timeFunctionList << std::endl;
@@ -68,13 +111,60 @@ TEST_CASE("b7, CallbackList vs vector of functions")
 	struct PoliciesMultiThreading {
 		using Threading = eventpp::MultipleThreading;
 	};
-	doCallbackListVsFunctionList<PoliciesMultiThreading>("Multi thread");
-
 	struct PoliciesSingleThreading {
 		using Threading = eventpp::SingleThreading;
 	};
-	doCallbackListVsFunctionList<PoliciesSingleThreading>("Single thread");
+	
+	struct BenchmarkItem {
+		std::string message;
+		std::function<void (CLT<PoliciesMultiThreading> &)> addClMulti;
+		std::function<void (CLT<PoliciesSingleThreading> &)> addClSingle;
+		std::function<void (FLT &)> addFl;
+	};
+	std::vector<BenchmarkItem> itemList {
+		{
+			"global",
+			[](CLT<PoliciesMultiThreading> & cl) {
+				cl.append(&globalFunction);
+			},
+			[](CLT<PoliciesSingleThreading> & cl) {
+				cl.append(&globalFunction);
+			},
+			[](FLT & fl) {
+				fl.push_back(&globalFunction);
+			}
+		},
+
+		{
+			"nonInlineGlobalFunction",
+			[](CLT<PoliciesMultiThreading> & cl) {
+				cl.append(&nonInlineGlobalFunction);
+			},
+			[](CLT<PoliciesSingleThreading> & cl) {
+				cl.append(&nonInlineGlobalFunction);
+			},
+			[](FLT & fl) {
+				fl.push_back(&nonInlineGlobalFunction);
+			}
+		},
+
+		{
+			"FunctionObject",
+			[](CLT<PoliciesMultiThreading> & cl) {
+				cl.append(FunctionObject());
+			},
+			[](CLT<PoliciesSingleThreading> & cl) {
+				cl.append(FunctionObject());
+			},
+			[](FLT & fl) {
+				fl.push_back(FunctionObject());
+			}
+		},
+
+	};
+	
+	for(BenchmarkItem & item : itemList) {
+		doCallbackListVsFunctionList<PoliciesMultiThreading>("Multi thread, " + item.message, item.addClMulti, item.addFl);
+	}
+	
 }
-
-
-#endif
