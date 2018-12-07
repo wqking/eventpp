@@ -145,7 +145,7 @@ struct MultipleThreading
 For `SingleThreading`, all the types `Mutex`, `Atomic`, and `ConditionVariable` are dummy types that don't do anything.  
 
 For multiple threading, the default `Mutex` is `std::mutex`. `eventpp` also provides a `SpinLock` class which uses spinlock as the mutex.  
-When there are fewer threads (about around the number of CPU cores which is 4 here), `eventpp::SpinLock` has better performance than `std::mutex`. When there are much more threads than CPU cores (here is 16 enqueue threads and 16 process threads, totally 32), `eventpp::SpinLock` has worse performance than `std::mutex`.  
+When there are fewer threads (about around the number of CPU cores), `eventpp::SpinLock` has better performance than `std::mutex`. When there are much more threads than CPU cores, `eventpp::SpinLock` has worse performance than `std::mutex`.  
 Please [read the benchmark](benchmark.md) for benchmark data.  
 
 Below is the sample code for how to use `SpinLock`
@@ -256,8 +256,6 @@ eventpp::EventDispatcher<
 //eventpp::EventDispatcher<int, void(int, const std::string &)> dispatcher;
 dispatcher.dispatch(3, "hello"); // Compile OK
 dispatcher.dispatch(3, 8, "hello"); // Compile OK
-dispatcher.enqueue(3, "hello"); // Compile OK
-dispatcher.enqueue(3, 8, "hello"); // Compile OK
 ```
 
 ```c++
@@ -272,8 +270,6 @@ eventpp::EventDispatcher<
 > dispatcher;
 dispatcher.dispatch(3, "hello"); // Compile OK
 //dispatcher.dispatch(3, 8, "hello"); // Compile failure
-dispatcher.enqueue(3, "hello"); // Compile OK
-//dispatcher.enqueue(3, 8, "hello"); // Compile failure
 ```
 
 ```c++
@@ -288,8 +284,6 @@ eventpp::EventDispatcher<
 > dispatcher;
 //dispatcher.dispatch(3, "hello"); // Compile failure
 dispatcher.dispatch(3, 8, "hello"); // Compile OK
-//dispatcher.enqueue(3, "hello"); // Compile failure
-dispatcher.enqueue(3, 8, "hello"); // Compile OK
 ```
 
 ### Template Map

@@ -7,6 +7,7 @@ eventpp includes three major classes, CallbackList, EventDispatcher, and EventQu
 CallbackList is the fundamental class in eventpp. The other classes EventDispatcher and EventQueue are built on CallbackList.  
 
 CallbackList holds a list of callbacks. On invocation, CallbackList simply invokes each callbacks one by one. Think CallbackList as the signal/slot system in Qt, or the callback function pointer in some Windows APIs (such as lpCompletionRoutine in `ReadFileEx`).  
+The *callback* can be any callback target -- functions, pointers to functions, , pointers to member functions, lambda expressions, and function objects.  
 
 CallbackList is ideal when there are very few kinds of events. Each event can have its own CallbackList, and each CallbackList can have different prototype. For example,
 ```c++
