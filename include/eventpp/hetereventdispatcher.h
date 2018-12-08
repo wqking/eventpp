@@ -31,6 +31,8 @@
 
 namespace eventpp {
 
+namespace internal_ {
+
 template <typename ...Args>
 struct CanConvert
 {
@@ -76,6 +78,7 @@ struct FindCallablePrototype : public FindCallablePrototypeHelper <0, PrototypeL
 {
 };
 
+} //namespace internal_
 
 
 namespace internal_ {

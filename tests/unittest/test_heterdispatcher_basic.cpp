@@ -16,17 +16,16 @@
 
 #include <iostream>
 
-using namespace eventpp;
 struct xxx{};
+static_assert(eventpp::internal_::CanConvert<std::tuple<int, int>, std::tuple<int ,int> >::value, "");
+static_assert(eventpp::internal_::FindCallablePrototype<std::tuple<void (), void (int, int)> >::index == 0, "");
+static_assert(eventpp::internal_::FindCallablePrototype<std::tuple<void (int), void (int, int)>, char>::index == 0, "");
+static_assert(eventpp::internal_::FindCallablePrototype<std::tuple<void (int), void (int, int)>, char, int>::index == 1, "");
+static_assert(eventpp::internal_::FindCallablePrototype<std::tuple<void (int), void (int, int), void (int, const xxx &)>, int, xxx>::index == 2, "");
+
 TEST_CASE("HeterEventDispatcher, xxx")
 {
-	static_assert(CanConvert<std::tuple<int, int>, std::tuple<int ,int> >::value, "");
-	static_assert(FindCallablePrototype<std::tuple<void (), void (int, int)> >::index == 0, "");
-	static_assert(FindCallablePrototype<std::tuple<void (int), void (int, int)>, char>::index == 0, "");
-	static_assert(FindCallablePrototype<std::tuple<void (int), void (int, int)>, char, int>::index == 1, "");
-	static_assert(FindCallablePrototype<std::tuple<void (int), void (int, int), void (int, const xxx &)>, int, xxx>::index == 2, "");
-
-	HeterEventDispatcher<int, std::tuple<void (), void (int)> > a;
+	eventpp::HeterEventDispatcher<int, std::tuple<void (), void (int)> > a;
 	auto handle = a.appendListener(3, std::function<void ()>([]() {
 		std::cout << "empty" << std::endl;
 	}));
