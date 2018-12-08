@@ -27,6 +27,8 @@
 #include <memory>
 #include <tuple>
 
+// source code for heterogeneous dispatcher
+
 namespace eventpp {
 
 template <typename ...Types>
@@ -93,16 +95,36 @@ template <
 class HeterEventDispatcherBase
 {
 private:
-	template <typename T>
-	class CallableInvoker
+	struct Handle_
 	{
+		int index;
+		std::weak_ptr<void> homoHandle;
+
+		operator bool () const noexcept {
+			return (bool)homoHandle;
+		}
 	};
 
-	template <typename RT, typename ...Args>
-	class CallableInvoker <RT (Args...)> : public EventDispatcher<EventType, RT (Args...), PoliciesType>
+	class HomoDispatcherTypeBase
 	{
 	public:
+		virtual bool doRemoveListener(const EventType & event, const Handle_ & handle) = 0;
+	};
+
+	template <typename T>
+	class HomoDispatcherType : public EventDispatcher<EventType, T, PoliciesType>, public HomoDispatcherTypeBase
+	{
 	private:
+		using super = EventDispatcher<EventType, T, PoliciesType>;
+
+	public:
+		virtual bool doRemoveListener(const EventType & event, const Handle_ & handle) override {
+			auto sp = handle.homoHandle.lock();
+			if(! sp) {
+				return false;
+			}
+			return this->removeListener(event, typename super::Handle(std::static_pointer_cast<typename super::Handle::element_type>(sp)));
+		}
 	};
 
 protected:
@@ -116,9 +138,13 @@ protected:
 	using Policies = PoliciesType;
 	using Threading = typename SelectThreading<Policies, HasTypeThreading<Policies>::value>::Type;
 
+	// Disable ArgumentPassingMode explicitly
+	static_assert(! HasTypeArgumentPassingMode<Policies>::value, "Policies can't have ArgumentPassingMode in heterogeneous dispatcher.");
+
 	enum { prototypeCount = PrototypeList_::size };
 
 public:
+	using Handle = Handle_;
 	using Event = EventType;
 	using Mutex = typename Threading::Mutex;
 
@@ -154,39 +180,64 @@ public:
 	}
 
 	template <template <typename> class F, typename RT, typename ...Args>
-	void appendListener(const Event & event, const F<RT(Args...)> & callback)
+	Handle appendListener(const Event & event, const F<RT(Args...)> & callback)
 	{
-		auto invoker = doFindCallableInvoker<Args...>();
-		invoker->appendListener(event, callback);
+		using FindResult = FindCallablePrototype<PrototypeList_, Args...>;
+		auto dispatcher = doFindDispatcher<FindResult>();
+		return Handle {
+			FindResult::index,
+			dispatcher->appendListener(event, callback)
+		};
 	}
 
-	template <typename ...Args>
-	void dispatch(Args ...args) const
+	template <template <typename> class F, typename RT, typename ...Args>
+	Handle prependListener(const Event & event, const F<RT(Args...)> & callback)
 	{
-		auto invoker = doFindCallableInvoker<Args...>();
-		invoker->dispatch(std::forward<Args>(args)...);
+		using FindResult = FindCallablePrototype<PrototypeList_, Args...>;
+		auto dispatcher = doFindDispatcher<FindResult>();
+		return Handle {
+			FindResult::index,
+			dispatcher->prependListener(event, callback)
+		};
+	}
+
+	bool removeListener(const Event & event, const Handle & handle)
+	{
+		auto dispatcher = dispatcherList[handle.index];
+		if(dispatcher) {
+			return dispatcher->doRemoveListener(event, handle);
+		}
+
+		return false;
+	}
+
+	template <typename T, typename ...Args>
+	void dispatch(T && first, Args ...args) const
+	{
+		using FindResult = FindCallablePrototype<PrototypeList_, Args...>;
+		auto dispatcher = doFindDispatcher<FindResult>();
+		dispatcher->dispatch(std::forward<T>(first), std::forward<Args>(args)...);
 	}
 
 private:
-	template <typename ...Args>
-	auto doFindCallableInvoker() const
-		-> std::shared_ptr<CallableInvoker<typename FindCallablePrototype<PrototypeList_, Args...>::Prototype> >
+	template <typename FindResult>
+	auto doFindDispatcher() const
+		-> HomoDispatcherType<typename FindResult::Prototype> *
 	{
-		using FindResult = FindCallablePrototype<PrototypeList_, Args...>;
 		static_assert(FindResult::index >= 0, "Can't find invoker for the given argument types.");
 
-		if(! callableInvokerList[FindResult::index]) {
-			if(! callableInvokerList[FindResult::index]) {
+		if(! dispatcherList[FindResult::index]) {
+			if(! dispatcherList[FindResult::index]) {
 				std::lock_guard<Mutex> lockGuard(callableInvokerListMutex);
-				callableInvokerList[FindResult::index] = std::make_shared<CallableInvoker<typename FindResult::Prototype> >();
+				dispatcherList[FindResult::index] = std::make_shared<HomoDispatcherType<typename FindResult::Prototype> >();
 			}
 		}
 
-		return std::static_pointer_cast<CallableInvoker<typename FindResult::Prototype> >(callableInvokerList[FindResult::index]);
+		return static_cast<HomoDispatcherType<typename FindResult::Prototype> *>(dispatcherList[FindResult::index].get());
 	}
 
 private:
-	mutable std::array<std::shared_ptr<void>, prototypeCount> callableInvokerList;
+	mutable std::array<std::shared_ptr<HomoDispatcherTypeBase>, prototypeCount> dispatcherList;
 	mutable Mutex callableInvokerListMutex;
 };
 

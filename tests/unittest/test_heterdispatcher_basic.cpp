@@ -27,9 +27,10 @@ TEST_CASE("HeterEventDispatcher, xxx")
 	static_assert(FindCallablePrototype<PrototypeList<void (int), void (int, int), void (int, const xxx &)>, int, xxx>::index == 2, "");
 
 	HeterEventDispatcher<int, PrototypeList<void (), void (int)> > a;
-	a.appendListener(3, std::function<void ()>([]() {
+	auto handle = a.appendListener(3, std::function<void ()>([]() {
 		std::cout << "empty" << std::endl;
 	}));
+	a.removeListener(3, handle);
 	a.appendListener(3, std::function<void (int)>([](int a) {
 		std::cout << "3 a = " << a << std::endl;
 	}));
@@ -38,6 +39,6 @@ TEST_CASE("HeterEventDispatcher, xxx")
 	}));
 	a.dispatch(3);
 	a.dispatch(8);
-	//a.dispatch(8, 5);
+	a.dispatch(8, 5);
 }
 
