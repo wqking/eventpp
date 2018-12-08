@@ -31,12 +31,6 @@
 
 namespace eventpp {
 
-template <typename ...Types>
-struct PrototypeList
-{
-	enum { size = sizeof...(Types) };
-};
-
 template <typename ...Args>
 struct CanConvert
 {
@@ -63,17 +57,17 @@ struct FindCallablePrototypeHelper
 };
 
 template <int N, typename RT, typename ...Args, typename ...Others, typename ...InArgs>
-struct FindCallablePrototypeHelper <N, PrototypeList<RT (Args...), Others...>, InArgs...>
+struct FindCallablePrototypeHelper <N, std::tuple<RT (Args...), Others...>, InArgs...>
 {
 	using Prototype = typename std::conditional<
 		CanConvert<std::tuple<InArgs...>, std::tuple<Args...> >::value,
 		RT (Args...),
-		typename FindCallablePrototypeHelper<N + 1, PrototypeList<Others...>, InArgs...>::Prototype
+		typename FindCallablePrototypeHelper<N + 1, std::tuple<Others...>, InArgs...>::Prototype
 	>::type;
 	enum {
 		index = CanConvert<std::tuple<InArgs...>, std::tuple<Args...> >::value
 			? N
-			: FindCallablePrototypeHelper<N + 1, PrototypeList<Others...>, InArgs...>::index
+			: FindCallablePrototypeHelper<N + 1, std::tuple<Others...>, InArgs...>::index
 	};
 };
 
@@ -141,7 +135,7 @@ protected:
 	// Disable ArgumentPassingMode explicitly
 	static_assert(! HasTypeArgumentPassingMode<Policies>::value, "Policies can't have ArgumentPassingMode in heterogeneous dispatcher.");
 
-	enum { prototypeCount = PrototypeList_::size };
+	enum { prototypeCount = std::tuple_size<PrototypeList_>::value };
 
 public:
 	using Handle = Handle_;

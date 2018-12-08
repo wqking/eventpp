@@ -21,12 +21,12 @@ struct xxx{};
 TEST_CASE("HeterEventDispatcher, xxx")
 {
 	static_assert(CanConvert<std::tuple<int, int>, std::tuple<int ,int> >::value, "");
-	static_assert(FindCallablePrototype<PrototypeList<void (), void (int, int)> >::index == 0, "");
-	static_assert(FindCallablePrototype<PrototypeList<void (int), void (int, int)>, char>::index == 0, "");
-	static_assert(FindCallablePrototype<PrototypeList<void (int), void (int, int)>, char, int>::index == 1, "");
-	static_assert(FindCallablePrototype<PrototypeList<void (int), void (int, int), void (int, const xxx &)>, int, xxx>::index == 2, "");
+	static_assert(FindCallablePrototype<std::tuple<void (), void (int, int)> >::index == 0, "");
+	static_assert(FindCallablePrototype<std::tuple<void (int), void (int, int)>, char>::index == 0, "");
+	static_assert(FindCallablePrototype<std::tuple<void (int), void (int, int)>, char, int>::index == 1, "");
+	static_assert(FindCallablePrototype<std::tuple<void (int), void (int, int), void (int, const xxx &)>, int, xxx>::index == 2, "");
 
-	HeterEventDispatcher<int, PrototypeList<void (), void (int)> > a;
+	HeterEventDispatcher<int, std::tuple<void (), void (int)> > a;
 	auto handle = a.appendListener(3, std::function<void ()>([]() {
 		std::cout << "empty" << std::endl;
 	}));
