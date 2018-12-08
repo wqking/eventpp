@@ -16,6 +16,7 @@ The same policy mechanism applies to all three classes, EventDispatcher, EventQu
 **Apply**: EventDispatcher, EventQueue.
 
 eventpp forwards all arguments of `EventDispatcher::dispatch` and `EventQueue::enqueue` (both has same arguments) to `getEvent` to get the event type, then invokes the callback list of the event type.  
+`getEvent` can be non-template or template function. It works as long as `getEvent` can be invoked using the same arguments as `EventDispatcher::dispatch` and `EventQueue::enqueue`.  
 
 Sample code
 
