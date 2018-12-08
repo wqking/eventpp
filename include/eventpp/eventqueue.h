@@ -99,7 +99,6 @@ private:
 	using Policies = typename super::Policies;
 	using Threading = typename super::Threading;
 	using ConditionVariable = typename Threading::ConditionVariable;
-	using GetEvent = typename super::GetEvent;
 
 	using QueuedEvent_ = std::tuple<
 		typename std::remove_cv<typename std::remove_reference<typename super::Event>::type>::type,
@@ -217,6 +216,8 @@ public:
 	{
 		static_assert(super::ArgumentPassingMode::canIncludeEventType, "Enqueuing arguments count doesn't match required (Event type should be included).");
 
+		using GetEvent = typename SelectGetEvent<Policies, EventType, HasFunctionGetEvent<Policies, Args...>::value>::Type;
+
 		doEnqueue(QueuedEvent(
 			GetEvent::getEvent(args...),
 			std::forward<A>(args)...
@@ -231,6 +232,8 @@ public:
 	auto enqueue(T && first, A ...args) -> typename std::enable_if<sizeof...(A) == sizeof...(Args), void>::type
 	{
 		static_assert(super::ArgumentPassingMode::canExcludeEventType, "Enqueuing arguments count doesn't match required (Event type should NOT be included).");
+
+		using GetEvent = typename SelectGetEvent<Policies, EventType, HasFunctionGetEvent<Policies, Args...>::value>::Type;
 
 		doEnqueue(QueuedEvent(
 			GetEvent::getEvent(std::forward<T>(first), args...),

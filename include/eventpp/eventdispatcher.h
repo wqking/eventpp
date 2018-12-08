@@ -71,8 +71,6 @@ protected:
 		HasTypeArgumentPassingMode<Policies>::value
 	>::Type;
 
-	using GetEvent = typename SelectGetEvent<Policies, EventType, HasFunctionGetEvent<Policies>::value>::Type;
-
 	using Callback_ = typename SelectCallback<
 		Policies,
 		HasTypeCallback<Policies>::value,
@@ -197,6 +195,8 @@ public:
 	{
 		static_assert(ArgumentPassingMode::canIncludeEventType, "Dispatching arguments count doesn't match required (Event type should be included).");
 
+		using GetEvent = typename SelectGetEvent<Policies, EventType, HasFunctionGetEvent<Policies, Args...>::value>::Type;
+
 		// can't std::forward<Args>(args) in GetEvent::getEvent because the pass by value arguments will be moved to getEvent
 		// then the other std::forward<Args>(args) to doDispatch will get empty values.
 		doDispatch(
@@ -209,6 +209,8 @@ public:
 	void dispatch(T && first, Args ...args) const
 	{
 		static_assert(ArgumentPassingMode::canExcludeEventType, "Dispatching arguments count doesn't match required (Event type should NOT be included).");
+
+		using GetEvent = typename SelectGetEvent<Policies, EventType, HasFunctionGetEvent<Policies, Args...>::value>::Type;
 
 		doDispatch(
 			GetEvent::getEvent(std::forward<T>(first), args...),

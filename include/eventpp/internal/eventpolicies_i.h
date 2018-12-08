@@ -36,11 +36,11 @@ template <typename T, bool, typename D> struct SelectCallback;
 template <typename T, typename D> struct SelectCallback<T, true, D> { using Type = typename T::Callback; };
 template <typename T, typename D> struct SelectCallback<T, false, D> { using Type = D; };
 
-template <typename T>
+template <typename T, typename ...Args>
 struct HasFunctionGetEvent
 {
-	template <typename C> static std::true_type test(decltype(&C::getEvent) *) ;
-	template <typename C> static std::false_type test(...);    
+	template <typename C> static std::true_type test(decltype(C::getEvent(std::declval<Args>()...)) *);
+	template <typename C> static std::false_type test(...);
 	
 	enum { value = !! decltype(test<T>(0))() };
 };
