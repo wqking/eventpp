@@ -106,6 +106,7 @@ private:
 	{
 	public:
 		virtual bool doRemoveListener(const EventType & event, const Handle_ & handle) = 0;
+		virtual std::shared_ptr<HomoDispatcherTypeBase> doClone() = 0;
 	};
 
 	template <typename T>
@@ -121,6 +122,10 @@ private:
 				return false;
 			}
 			return this->removeListener(event, typename super::Handle(std::static_pointer_cast<typename super::Handle::element_type>(sp)));
+		}
+
+		virtual std::shared_ptr<HomoDispatcherTypeBase> doClone() override {
+			return std::make_shared<HomoDispatcherType<T> >(*this);
 		}
 	};
 
@@ -147,29 +152,44 @@ public:
 
 public:
 	HeterEventDispatcherBase()
+		:
+			dispatcherList(),
+			dispatcherListMutex()
 	{
 	}
 
 	HeterEventDispatcherBase(const HeterEventDispatcherBase & other)
 	{
+		for(size_t i = 0; i < dispatcherList.size(); ++i) {
+			dispatcherList[i] = other.dispatcherList[i]->doClone();
+		}
 	}
 
 	HeterEventDispatcherBase(HeterEventDispatcherBase && other) noexcept
+		:
+			dispatcherList(std::move(other.dispatcherList)),
+			dispatcherListMutex()
 	{
 	}
 
-	HeterEventDispatcherBase & operator = (const HeterEventDispatcherBase & other)
+	HeterEventDispatcherBase & operator = (HeterEventDispatcherBase other)
 	{
+		swap(*this, other);
+
+		return *this;
 	}
 
 	HeterEventDispatcherBase & operator = (HeterEventDispatcherBase && other) noexcept
 	{
+		dispatcherList = std::move(other.dispatcherList);
+
+		return *this;
 	}
 
 	void swap(HeterEventDispatcherBase & other) noexcept {
 		using std::swap;
 		
-		//swap(eventCallbackListMap, other.eventCallbackListMap);
+		swap(dispatcherList, other.dispatcherList);
 	}
 	
 	friend void swap(HeterEventDispatcherBase & first, HeterEventDispatcherBase & second) noexcept {
@@ -225,7 +245,7 @@ private:
 
 		if(! dispatcherList[FindResult::index]) {
 			if(! dispatcherList[FindResult::index]) {
-				std::lock_guard<Mutex> lockGuard(callableInvokerListMutex);
+				std::lock_guard<Mutex> lockGuard(dispatcherListMutex);
 				dispatcherList[FindResult::index] = std::make_shared<HomoDispatcherType<typename FindResult::Prototype> >();
 			}
 		}
@@ -235,7 +255,7 @@ private:
 
 private:
 	mutable std::array<std::shared_ptr<HomoDispatcherTypeBase>, prototypeCount> dispatcherList;
-	mutable Mutex callableInvokerListMutex;
+	mutable Mutex dispatcherListMutex;
 };
 
 

@@ -14,8 +14,6 @@
 #include "test.h"
 #include "eventpp/hetereventdispatcher.h"
 
-#include <iostream>
-
 struct xxx{};
 static_assert(eventpp::internal_::CanConvert<std::tuple<int, int>, std::tuple<int ,int> >::value, "");
 static_assert(eventpp::internal_::FindCallablePrototype<std::tuple<void (), void (int, int)> >::index == 0, "");
@@ -23,21 +21,39 @@ static_assert(eventpp::internal_::FindCallablePrototype<std::tuple<void (int), v
 static_assert(eventpp::internal_::FindCallablePrototype<std::tuple<void (int), void (int, int)>, char, int>::index == 1, "");
 static_assert(eventpp::internal_::FindCallablePrototype<std::tuple<void (int), void (int, int), void (int, const xxx &)>, int, xxx>::index == 2, "");
 
-TEST_CASE("HeterEventDispatcher, xxx")
+TEST_CASE("xxx HeterEventDispatcher, 1")
 {
-	eventpp::HeterEventDispatcher<int, std::tuple<void (), void (int)> > a;
-	auto handle = a.appendListener(3, std::function<void ()>([]() {
-		std::cout << "empty" << std::endl;
+	eventpp::HeterEventDispatcher<int, std::tuple<void (), void (int, int, int)> > dispatcher;
+
+	std::array<int, 2> dataList{};
+
+	dispatcher.appendListener(3, std::function<void ()>([&dataList]() {
+		++dataList[0];
 	}));
-	a.removeListener(3, handle);
-	a.appendListener(3, std::function<void (int)>([](int a) {
-		std::cout << "3 a = " << a << std::endl;
+	dispatcher.appendListener(3, std::function<void (int, int, int)>([&dataList](int a, int b, int c) {
+		dataList[1] += a + b + c;
 	}));
-	a.appendListener(8, std::function<void (int)>([](int a) {
-		std::cout << "8 a = " << a << std::endl;
+	dispatcher.appendListener(8, std::function<void (int, int, int)>([&dataList](int a, int b, int c) {
+		dataList[1] += a + b + c;
 	}));
-	a.dispatch(3);
-	a.dispatch(8);
-	a.dispatch(8, 5);
+	
+	REQUIRE(dataList[0] == 0);
+	REQUIRE(dataList[1] == 0);
+
+	dispatcher.dispatch(3);
+	REQUIRE(dataList[0] == 1);
+	REQUIRE(dataList[1] == 0);
+
+	dispatcher.dispatch(8);
+	REQUIRE(dataList[0] == 1);
+	REQUIRE(dataList[1] == 0);
+
+	dispatcher.dispatch(8, 5, 1, 3);
+	REQUIRE(dataList[0] == 1);
+	REQUIRE(dataList[1] == 9);
+
+	dispatcher.dispatch(3, 2, 6, 7);
+	REQUIRE(dataList[0] == 1);
+	REQUIRE(dataList[1] == 24);
 }
 
