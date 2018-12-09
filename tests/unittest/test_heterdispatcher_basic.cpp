@@ -30,8 +30,8 @@ TEST_CASE("xxx HeterEventDispatcher, 1")
 	dispatcher.appendListener(3, [&dataList]() {
 		++dataList[0];
 	});
-	dispatcher.appendListener(3, [&dataList](int a, int b, int c) -> int {
-		dataList[1] += a + b + c;
+	dispatcher.appendListener(3, [&dataList](const FromInt & a, int b, int c) -> int {
+		dataList[1] += a.value + b + c;
 		return 0;
 	});
 	dispatcher.appendListener(8, [&dataList](int a, int b, int c) {

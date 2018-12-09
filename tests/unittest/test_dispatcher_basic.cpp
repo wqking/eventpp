@@ -173,9 +173,9 @@ TEST_CASE("EventDispatcher, int, void (const std::string &, int)")
 	std::vector<std::string> sList(2);
 	std::vector<int> iList(sList.size());
 
-	dispatcher.appendListener(event, [event, &dispatcher, &sList, &iList](const std::string & s, int i) {
+	dispatcher.appendListener(event, [event, &dispatcher, &sList, &iList](const std::string & s, const FromInt & i) {
 		sList[0] = s;
-		iList[0] = i;
+		iList[0] = i.value;
 	});
 	dispatcher.appendListener(event, [event, &dispatcher, &sList, &iList](std::string s, const int i) {
 		sList[1] = s + "2";
