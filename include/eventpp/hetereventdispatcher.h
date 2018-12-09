@@ -51,30 +51,30 @@ struct CanConvert <std::tuple<>, std::tuple<> >
 	enum { value = true };
 };
 
-template <int N, typename PrototypeList_, typename ...InArgs>
+template <int N, typename PrototypeList_, typename Callable>
 struct FindCallablePrototypeHelper
 {
 	using Prototype = void;
 	enum {index = -1 };
 };
 
-template <int N, typename RT, typename ...Args, typename ...Others, typename ...InArgs>
-struct FindCallablePrototypeHelper <N, std::tuple<RT (Args...), Others...>, InArgs...>
+template <int N, typename RT, typename ...Args, typename ...Others, typename Callable>
+struct FindCallablePrototypeHelper <N, std::tuple<RT (Args...), Others...>, Callable>
 {
 	using Prototype = typename std::conditional<
-		CanConvert<std::tuple<InArgs...>, std::tuple<Args...> >::value,
+		CanInvoke<Callable, Args...>::value,
 		RT (Args...),
-		typename FindCallablePrototypeHelper<N + 1, std::tuple<Others...>, InArgs...>::Prototype
+		typename FindCallablePrototypeHelper<N + 1, std::tuple<Others...>, Callable>::Prototype
 	>::type;
 	enum {
-		index = CanConvert<std::tuple<InArgs...>, std::tuple<Args...> >::value
+		index = CanInvoke<Callable, Args...>::value
 			? N
-			: FindCallablePrototypeHelper<N + 1, std::tuple<Others...>, InArgs...>::index
+			: FindCallablePrototypeHelper<N + 1, std::tuple<Others...>, Callable>::index
 	};
 };
 
-template <typename PrototypeList_, typename ...InArgs>
-struct FindCallablePrototype : public FindCallablePrototypeHelper <0, PrototypeList_, InArgs...>
+template <typename PrototypeList_, typename Callable>
+struct FindCallablePrototype : public FindCallablePrototypeHelper <0, PrototypeList_, Callable>
 {
 };
 
@@ -196,10 +196,10 @@ public:
 		first.swap(second);
 	}
 
-	template <template <typename> class F, typename RT, typename ...Args>
-	Handle appendListener(const Event & event, const F<RT(Args...)> & callback)
+	template <typename C>
+	Handle appendListener(const Event & event, const C & callback)
 	{
-		using FindResult = FindCallablePrototype<PrototypeList_, Args...>;
+		using FindResult = FindCallablePrototype<PrototypeList_, C>;
 		auto dispatcher = doFindDispatcher<FindResult>();
 		return Handle {
 			FindResult::index,
@@ -207,10 +207,10 @@ public:
 		};
 	}
 
-	template <template <typename> class F, typename RT, typename ...Args>
-	Handle prependListener(const Event & event, const F<RT(Args...)> & callback)
+	template <typename C>
+	Handle prependListener(const Event & event, const C & callback)
 	{
-		using FindResult = FindCallablePrototype<PrototypeList_, Args...>;
+		using FindResult = FindCallablePrototype<PrototypeList_, C>;
 		auto dispatcher = doFindDispatcher<FindResult>();
 		return Handle {
 			FindResult::index,
@@ -231,7 +231,7 @@ public:
 	template <typename T, typename ...Args>
 	void dispatch(T && first, Args ...args) const
 	{
-		using FindResult = FindCallablePrototype<PrototypeList_, Args...>;
+		using FindResult = FindCallablePrototype<PrototypeList_, void(Args...)>;
 		auto dispatcher = doFindDispatcher<FindResult>();
 		dispatcher->dispatch(std::forward<T>(first), std::forward<Args>(args)...);
 	}

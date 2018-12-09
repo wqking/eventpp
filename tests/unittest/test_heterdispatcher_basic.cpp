@@ -16,10 +16,10 @@
 
 struct xxx{};
 static_assert(eventpp::internal_::CanConvert<std::tuple<int, int>, std::tuple<int ,int> >::value, "");
-static_assert(eventpp::internal_::FindCallablePrototype<std::tuple<void (), void (int, int)> >::index == 0, "");
-static_assert(eventpp::internal_::FindCallablePrototype<std::tuple<void (int), void (int, int)>, char>::index == 0, "");
-static_assert(eventpp::internal_::FindCallablePrototype<std::tuple<void (int), void (int, int)>, char, int>::index == 1, "");
-static_assert(eventpp::internal_::FindCallablePrototype<std::tuple<void (int), void (int, int), void (int, const xxx &)>, int, xxx>::index == 2, "");
+static_assert(eventpp::internal_::FindCallablePrototype<std::tuple<void (), void (int, int)>, void() >::index == 0, "");
+static_assert(eventpp::internal_::FindCallablePrototype<std::tuple<void (int), void (int, int)>, void(char)>::index == 0, "");
+static_assert(eventpp::internal_::FindCallablePrototype<std::tuple<void (int), void (int, int)>, void(char, int)>::index == 1, "");
+static_assert(eventpp::internal_::FindCallablePrototype<std::tuple<void (int), void (int, int), void (int, const xxx &)>, void(int, xxx)>::index == 2, "");
 
 TEST_CASE("xxx HeterEventDispatcher, 1")
 {
@@ -27,15 +27,16 @@ TEST_CASE("xxx HeterEventDispatcher, 1")
 
 	std::array<int, 2> dataList{};
 
-	dispatcher.appendListener(3, std::function<void ()>([&dataList]() {
+	dispatcher.appendListener(3, [&dataList]() {
 		++dataList[0];
-	}));
-	dispatcher.appendListener(3, std::function<void (int, int, int)>([&dataList](int a, int b, int c) {
+	});
+	dispatcher.appendListener(3, [&dataList](int a, int b, int c) -> int {
 		dataList[1] += a + b + c;
-	}));
-	dispatcher.appendListener(8, std::function<void (int, int, int)>([&dataList](int a, int b, int c) {
+		return 0;
+	});
+	dispatcher.appendListener(8, [&dataList](int a, int b, int c) {
 		dataList[1] += a + b + c;
-	}));
+	});
 	
 	REQUIRE(dataList[0] == 0);
 	REQUIRE(dataList[1] == 0);
