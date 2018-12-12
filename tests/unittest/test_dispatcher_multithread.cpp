@@ -17,6 +17,7 @@
 #include <thread>
 #include <numeric>
 #include <random>
+#include <algorithm>
 
 TEST_CASE("EventDispatcher, multi threading, int, void (int)")
 {

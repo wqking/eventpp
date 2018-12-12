@@ -17,6 +17,7 @@
 
 #include <numeric>
 #include <random>
+#include <algorithm>
 
 TEST_CASE("EventDispatcher, std::string, void (const std::string &)")
 {

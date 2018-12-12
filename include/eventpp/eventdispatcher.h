@@ -19,10 +19,7 @@
 #include <string>
 #include <functional>
 #include <type_traits>
-#include <map>
-#include <unordered_map>
 #include <mutex>
-#include <algorithm>
 #include <memory>
 
 namespace eventpp {
