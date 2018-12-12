@@ -29,41 +29,41 @@ namespace eventpp {
 namespace internal_ {
 
 template <
-	typename EventType,
-	typename Prototype,
-	typename Policies
+	typename EventType_,
+	typename Prototype_,
+	typename Policies_
 >
 class EventQueueBase;
 
 template <
-	typename EventType,
-	typename PoliciesType,
+	typename EventType_,
+	typename Policies_,
 	typename ReturnType, typename ...Args
 >
 class EventQueueBase <
-		EventType,
+		EventType_,
 		ReturnType (Args...),
-		PoliciesType
+		Policies_
 	> : public EventDispatcherBase<
-		EventType,
+		EventType_,
 		ReturnType (Args...),
-		PoliciesType,
+		Policies_,
 		EventQueueBase <
-			EventType,
+			EventType_,
 			ReturnType (Args...),
-			PoliciesType
+			Policies_
 		>
 	>
 {
 private:
 	using super = EventDispatcherBase<
-		EventType,
+		EventType_,
 		ReturnType (Args...),
-		PoliciesType,
+		Policies_,
 		EventQueueBase <
-			EventType,
+			EventType_,
 			ReturnType (Args...),
-			PoliciesType
+			Policies_
 		>
 	>;
 
@@ -187,7 +187,7 @@ public:
 	{
 		static_assert(super::ArgumentPassingMode::canIncludeEventType, "Enqueuing arguments count doesn't match required (Event type should be included).");
 
-		using GetEvent = typename SelectGetEvent<Policies, EventType, HasFunctionGetEvent<Policies, Args...>::value>::Type;
+		using GetEvent = typename SelectGetEvent<Policies_, EventType_, HasFunctionGetEvent<Policies_, Args...>::value>::Type;
 
 		doEnqueue(QueuedEvent(
 			GetEvent::getEvent(args...),
@@ -204,7 +204,7 @@ public:
 	{
 		static_assert(super::ArgumentPassingMode::canExcludeEventType, "Enqueuing arguments count doesn't match required (Event type should NOT be included).");
 
-		using GetEvent = typename SelectGetEvent<Policies, EventType, HasFunctionGetEvent<Policies, T &&, Args...>::value>::Type;
+		using GetEvent = typename SelectGetEvent<Policies_, EventType_, HasFunctionGetEvent<Policies_, T &&, Args...>::value>::Type;
 
 		doEnqueue(QueuedEvent(
 			GetEvent::getEvent(std::forward<T>(first), args...),

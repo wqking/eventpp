@@ -27,31 +27,31 @@ namespace eventpp {
 namespace internal_ {
 
 template <
-	typename EventType,
-	typename Prototype,
-	typename Policies,
+	typename EventType_,
+	typename Prototype_,
+	typename Policies_,
 	typename MixinRoot_
 >
 class EventDispatcherBase;
 
 template <
-	typename EventType,
-	typename PoliciesType,
+	typename EventType_,
+	typename Policies_,
 	typename MixinRoot_,
 	typename ReturnType, typename ...Args
 >
 class EventDispatcherBase <
-	EventType,
+	EventType_,
 	ReturnType (Args...),
-	PoliciesType,
+	Policies_,
 	MixinRoot_
 >
 {
 protected:
 	using ThisType = EventDispatcherBase<
-		EventType,
+		EventType_,
 		ReturnType (Args...),
-		PoliciesType,
+		Policies_,
 		MixinRoot_
 	>;
 	using MixinRoot = typename std::conditional<
@@ -59,40 +59,40 @@ protected:
 		ThisType,
 		MixinRoot_
 	>::type;
-	using Policies = PoliciesType;
+	using Policies = Policies_;
 
-	using Threading = typename SelectThreading<Policies, HasTypeThreading<Policies>::value>::Type;
+	using Threading = typename SelectThreading<Policies_, HasTypeThreading<Policies_>::value>::Type;
 
 	using ArgumentPassingMode = typename SelectArgumentPassingMode<
-		Policies,
-		HasTypeArgumentPassingMode<Policies>::value
+		Policies_,
+		HasTypeArgumentPassingMode<Policies_>::value
 	>::Type;
 
 	using Callback_ = typename SelectCallback<
-		Policies,
-		HasTypeCallback<Policies>::value,
+		Policies_,
+		HasTypeCallback<Policies_>::value,
 		std::function<ReturnType (Args...)>
 	>::Type;
-	using CallbackList_ = CallbackList<ReturnType (Args...), Policies>;
+	using CallbackList_ = CallbackList<ReturnType (Args...), Policies_>;
 
 	using Prototype = ReturnType (Args...);
 
 	using Map = typename SelectMap<
-		EventType,
+		EventType_,
 		CallbackList_,
-		Policies,
-		HasTemplateMap<Policies>::value
+		Policies_,
+		HasTemplateMap<Policies_>::value
 	>::Type;
 
 	using Mixins = typename internal_::SelectMixins<
-		Policies,
-		internal_::HasTypeMixins<Policies>::value
+		Policies_,
+		internal_::HasTypeMixins<Policies_>::value
 	>::Type;
 
 public:
 	using Handle = typename CallbackList_::Handle;
 	using Callback = Callback_;
-	using Event = EventType;
+	using Event = EventType_;
 	using Mutex = typename Threading::Mutex;
 
 public:
@@ -192,7 +192,7 @@ public:
 	{
 		static_assert(ArgumentPassingMode::canIncludeEventType, "Dispatching arguments count doesn't match required (Event type should be included).");
 
-		using GetEvent = typename SelectGetEvent<Policies, EventType, HasFunctionGetEvent<Policies, Args...>::value>::Type;
+		using GetEvent = typename SelectGetEvent<Policies_, EventType_, HasFunctionGetEvent<Policies_, Args...>::value>::Type;
 
 		// can't std::forward<Args>(args) in GetEvent::getEvent because the pass by value arguments will be moved to getEvent
 		// then the other std::forward<Args>(args) to doDispatch will get empty values.
@@ -207,7 +207,7 @@ public:
 	{
 		static_assert(ArgumentPassingMode::canExcludeEventType, "Dispatching arguments count doesn't match required (Event type should NOT be included).");
 
-		using GetEvent = typename SelectGetEvent<Policies, EventType, HasFunctionGetEvent<Policies, T &&, Args...>::value>::Type;
+		using GetEvent = typename SelectGetEvent<Policies_, EventType_, HasFunctionGetEvent<Policies_, T &&, Args...>::value>::Type;
 
 		doDispatch(
 			GetEvent::getEvent(std::forward<T>(first), args...),
