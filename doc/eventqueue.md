@@ -5,13 +5,11 @@
 - [API reference](#apis)
 - [Internal data structure](#internal-data-structure)
 
-EventQueue includes all functions of [EventDispatcher](eventdispatcher.md) and adds event queue features. Note: EventQueue doesn't inherit from EventDispatcher, don't try to cast EventQueue to EventDispatcher.  
-
 ## Description
 
 EventQueue includes all features of EventDispatcher and adds event queue features. Note: EventQueue doesn't inherit from EventDispatcher, don't try to cast EventQueue to EventDispatcher.  
-EventQueue is asynchronous. Event are cached in the queue when `EventQueue::enqueue` is called, and dispatched later when `EventQueue::process` is called.  
-EventQueue is equivalent to the event system (QEvent) in Qt, or the message processing in Windows.  
+EventQueue is asynchronous. Events are cached in the queue when `EventQueue::enqueue` is called, and dispatched later when `EventQueue::process` is called.  
+EventQueue is equivalent to the event system (QEvent) in Qt, or the message processing in Windows API.  
 
 <a name="apis"></a>
 ## API reference
@@ -24,7 +22,7 @@ eventpp/eventqueue.h
 
 ```c++
 template <
-	typename Key,
+	typename Event,
 	typename Prototype,
 	typename Policies = DefaultPolicies
 >
@@ -35,14 +33,15 @@ EventQueue has the exactly same template parameters with EventDispatcher. Please
 
 ### Public types
 
-`QueuedEvent`: the data type of event stored in the queue. It's declaration is,  
+`QueuedEvent`: the data type of event stored in the queue. It's declaration in pseudo code is,  
 ```c++
-using QueuedEvent = std::tuple<
-	typename std::remove_cv<typename std::remove_reference<Event>::type>::type,
-	typename std::remove_cv<typename std::remove_reference<Args>::type>::type...
->;
+struct EventQueue::QueuedEvent
+{
+	TheEventType event;
+	std::tuple<ArgumentTypes...> arguments;
+};
 ```
-It's a `std::tuple`, the first member is always the event type, the other members are the arguments.
+`event` is the EventQueue::Event, `arguments` are the arguments passed in `enqueue`.  
 
 ### Member functions
 
@@ -153,7 +152,14 @@ for(;;) {
 bool peekEvent(EventQueue::QueuedEvent * queuedEvent);
 ```
 Retrieve an event from the queue. The event is returned in `queuedEvent`.  
-`queuedEvent` is a std::tuple, which the first element is the EventQueue::Event, and the other elements are the arguments passed in `enqueue`.  
+```c++
+struct EventQueue::QueuedEvent
+{
+	TheEventType event;
+	std::tuple<ArgumentTypes...> arguments;
+};
+```
+`queuedEvent` is a EventQueue::QueuedEvent struct. `event` is the EventQueue::Event, `arguments` are the arguments passed in `enqueue`.  
 If the queue is empty, the function returns false, otherwise true if an event is retrieved successfully.  
 After the function returns, the original even is still in the queue.  
 Note: `peekEvent` doesn't work with any non-copyable event arguments. If `peekEvent` is called when any arguments are non-copyable, compile fails.
@@ -174,10 +180,11 @@ Dispatch an event which was returned by `peekEvent` or `takeEvent`.
 **Inner class EventQueue::DisableQueueNotify**  
 
 `EventQueue::DisableQueueNotify` is a RAII class that temporarily prevents the event queue from waking up any waiting threads. When any `DisableQueueNotify` object exist, calling `enqueue` doesn't wake up any threads that are blocked by `wait`. When the `DisableQueueNotify` object is out of scope, the waking up is resumed. If there are more than one `DisableQueueNotify` objects, the waking up is only resumed after all `DisableQueueNotify` objects are destroyed.  
+`DisableQueueNotify` is useful to improve performance when batching adding events to the queue. For example, in a main loop of a game engine, `DisableQueueNotify` can be created on the start in a frame, then the game adding events to the queue, and the `DisableQueueNotify` is destroyed at the end of a frame and the events are processed.
 
 To use `DisableQueueNotify`, construct it with a pointer to event queue.
 
-Sampe code
+Sample code
 ```c++
 using EQ = eventpp::EventQueue<int, void ()>;
 EQ queue;
@@ -197,7 +204,7 @@ queue.enqueue(3);
 ## Internal data structure
 
 EventQueue uses three `std::list` to manage the event queue.  
-The first busy list holds all nodes with queued events.  
+The first busy list holds all nodes of queued events.  
 The second idle list holds all idle nodes. After an event is dispatched and removed from the queue, instead of freeing the memory, EventQueue moves the unused node to the idle list. This can improve performance and avoid memory fragment.  
 The third list is a local temporary list used in function `process()`. During processing, the busy list is swapped to the temporary list, all events are dispatched from the temporary list, then the temporary list is returned and appended to the idle list.
 

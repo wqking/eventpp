@@ -71,10 +71,11 @@ private:
 	using Threading = typename super::Threading;
 	using ConditionVariable = typename Threading::ConditionVariable;
 
-	using QueuedEvent_ = std::tuple<
-		typename std::remove_cv<typename std::remove_reference<typename super::Event>::type>::type,
-		typename std::remove_cv<typename std::remove_reference<Args>::type>::type...
-	>;
+	struct QueuedEvent_
+	{
+		typename std::remove_cv<typename std::remove_reference<typename super::Event>::type>::type event;
+		std::tuple<typename std::remove_cv<typename std::remove_reference<Args>::type>::type...> arguments;
+	};
 
 	class QueuedItem
 	{
@@ -189,10 +190,10 @@ public:
 
 		using GetEvent = typename SelectGetEvent<Policies_, EventType_, HasFunctionGetEvent<Policies_, Args...>::value>::Type;
 
-		doEnqueue(QueuedEvent(
+		doEnqueue(QueuedEvent{
 			GetEvent::getEvent(args...),
-			std::forward<A>(args)...
-		));
+			std::make_tuple(std::forward<A>(args)...)
+		});
 
 		if(doCanProcess()) {
 			queueListConditionVariable.notify_one();
@@ -206,10 +207,10 @@ public:
 
 		using GetEvent = typename SelectGetEvent<Policies_, EventType_, HasFunctionGetEvent<Policies_, T &&, Args...>::value>::Type;
 
-		doEnqueue(QueuedEvent(
+		doEnqueue(QueuedEvent{
 			GetEvent::getEvent(std::forward<T>(first), args...),
-			std::forward<A>(args)...
-		));
+			std::make_tuple(std::forward<A>(args)...)
+		});
 
 		if(doCanProcess()) {
 			queueListConditionVariable.notify_one();
@@ -260,7 +261,7 @@ public:
 				for(auto & item : tempList) {
 					doDispatchQueuedEvent(
 						item.get(),
-						typename internal_::MakeIndexSequence<sizeof...(Args) + 1>::Type()
+						typename internal_::MakeIndexSequence<sizeof...(Args)>::Type()
 					);
 					item.clear();
 				}
@@ -295,7 +296,7 @@ public:
 				auto & item = tempList.front();
 				doDispatchQueuedEvent(
 					item.get(),
-					typename internal_::MakeIndexSequence<sizeof...(Args) + 1>::Type()
+					typename internal_::MakeIndexSequence<sizeof...(Args)>::Type()
 				);
 				item.clear();
 
@@ -330,11 +331,11 @@ public:
 					if(doInvokeFuncWithQueuedEvent(
 							func,
 							it->get(),
-							typename internal_::MakeIndexSequence<sizeof...(Args) + 1>::Type())
+							typename internal_::MakeIndexSequence<sizeof...(Args)>::Type())
 						) {
 						doDispatchQueuedEvent(
 							it->get(),
-							typename internal_::MakeIndexSequence<sizeof...(Args) + 1>::Type()
+							typename internal_::MakeIndexSequence<sizeof...(Args)>::Type()
 						);
 						it->clear();
 						
@@ -386,7 +387,7 @@ public:
 	{
 		doDispatchQueuedEvent(
 			queuedEvent,
-			typename internal_::MakeIndexSequence<sizeof...(Args) + 1>::Type()
+			typename internal_::MakeIndexSequence<sizeof...(Args)>::Type()
 		);
 	}
 
@@ -443,13 +444,13 @@ protected:
 	template <typename T, size_t ...Indexes>
 	void doDispatchQueuedEvent(T && item, IndexSequence<Indexes...>)
 	{
-		this->doDispatch(std::get<Indexes>(std::forward<T>(item))...);
+		this->doDispatch(item.event, std::get<Indexes>(item.arguments)...);
 	}
 
 	template <typename F, typename T, size_t ...Indexes>
 	bool doInvokeFuncWithQueuedEvent(F && func, T && item, IndexSequence<Indexes...>) const
 	{
-		return doInvokeFuncWithQueuedEventHelper(std::forward<F>(func), std::get<Indexes>(std::forward<T>(item))...);
+		return doInvokeFuncWithQueuedEventHelper(std::forward<F>(func), item.event, std::get<Indexes>(item.arguments)...);
 	}
 	
 	template <typename F>
