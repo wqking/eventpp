@@ -11,7 +11,8 @@
 
 CallbackList is the fundamental class in eventpp. The other classes EventDispatcher and EventQueue are built on CallbackList.  
 
-CallbackList holds a list of callbacks. On invocation, CallbackList simply invokes each callbacks one by one. Think CallbackList as the signal/slot system in Qt, or the callback function pointer in some Windows APIs (such as lpCompletionRoutine in `ReadFileEx`).  
+CallbackList holds a list of callbacks. At the time of the call, CallbackList simply invokes each callback one by one. Consider CallbackList as the signal/slot system in Qt, or the callback function pointer in some Windows APIs (such as lpCompletionRoutine in `ReadFileEx`).  
+The *callback* can be any callback target -- functions, pointers to functions, , pointers to member functions, lambda expressions, and function objects.  
 
 <a name="apis"></a>
 ## API reference
@@ -53,7 +54,7 @@ CallbackList can be copied, moved,  assigned, and move assigned.
 bool empty() const;
 ```
 Return true if the callback list is empty.  
-Note: in multi threading, this function returning true doesn't guarantee the list is empty. The list may become non-empty immediately after the function returns true.
+Note: in multi threading, this function returning true doesn't guarantee that the list is empty. The list may immediately become non-empty after the function returns true.
 
 ```c++
 operator bool() const;
@@ -66,8 +67,8 @@ Handle append(const Callback & callback);
 ```  
 Add the *callback* to the callback list.  
 The callback is added to the end of the callback list.  
-Return a handle which represents the callback. The handle can be used to remove this callback or insert other callback before this callback.  
-If `append` is called in another callback during the invoking of the callback list, the new callback is guaranteed not triggered during the same callback list invoking.  
+Return a handle that represents the callback. The handle can be used to remove this callback or to insert additional callbacks before this callback.  
+If `append` is called in another callback during the invoking of the callback list, the new callback is guaranteed not to be triggered during the same callback list invoking.  
 The time complexity is O(1).
 
 ```c++
@@ -75,16 +76,16 @@ Handle prepend(const Callback & callback);
 ```  
 Add the *callback* to the callback list.  
 The callback is added to the beginning of the callback list.  
-Return a handle which represents the callback. The handle can be used to remove this callback or insert other callback before this callback.  
-If `prepend` is called in another callback during the invoking of the callback list, the new callback is guaranteed not triggered during the same callback list invoking.  
+Return a handle that represents the callback. The handle can be used to remove this callback or to insert additional callbacks before this callback.  
+If `prepend` is called in another callback during the invoking of the callback list, the new callback is guaranteed not to be triggered during the same callback list invoking.  
 The time complexity is O(1).
 
 ```c++
 Handle insert(const Callback & callback, const Handle before);
 ```  
 Insert the *callback* to the callback list before the callback handle *before*. If *before* is not found, *callback* is added at the end of the callback list.  
-Return a handle which represents the callback. The handle can be used to remove this callback or insert other callback before this callback.  
-If `insert` is called in another callback during the invoking of the callback list, the new callback is guaranteed not triggered during the same callback list invoking.  
+Return a handle that represents the callback. The handle can be used to remove this callback or to insert additional callbacks before this callback.  
+If `insert` is called in another callback during the invoking of the callback list, the new callback is guaranteed not to be triggered during the same callback list invoking.  
 The time complexity is O(1).  
 
 ```c++
@@ -139,4 +140,4 @@ The callbacks are called in the thread same as the callee of `operator()`.
 ## Internal data structure
 
 CallbackList uses doubly linked list to manage the callbacks.  
-Each node is linked by shared pointer. Using shared pointer allows the node be removed while iterating.  
+Each node is linked by a shared pointer. Using shared pointer allows nodes to be removed during iterating.  
