@@ -11,31 +11,34 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef TYPEUTIL_H_879959971810
-#define TYPEUTIL_H_879959971810
+#include "test.h"
+#include "eventpp/hetereventqueue.h"
 
-namespace eventpp {
-
-template <typename F, template <typename> class T>
-struct TransformArguments;
-
-template <template <typename> class T, typename RT, typename ...Args>
-struct TransformArguments <RT (Args...), T>
+TEST_CASE("xxx HeterEventQueue 1")
 {
-	using Type = RT (typename T<Args>::type...);
-};
+	eventpp::HeterEventQueue<std::string, std::tuple<void (), void (const std::string &)> > queue;
 
-template <typename F, typename Replacement>
-struct ReplaceReturnType;
+	int a = 1;
+	int b = 5;
 
-template <typename Replacement, typename RT, typename ...Args>
-struct ReplaceReturnType <RT (Args...), Replacement>
-{
-	using Type = Replacement (Args...);
-};
+	queue.appendListener("event1", [&a](const std::string &) {
+		a = 2;
+	});
+	queue.appendListener("event1", [&b]() {
+		b = 8;
+	});
 
+	REQUIRE(a != 2);
+	REQUIRE(b != 8);
 
-} //namespace eventpp
+	queue.enqueue("event1");
+	queue.process();
+	REQUIRE(a == 1);
+	REQUIRE(b == 8);
 
-#endif
+	queue.enqueue("event1", "a");
+	queue.process();
+	REQUIRE(a == 2);
+	REQUIRE(b == 8);
+}
 

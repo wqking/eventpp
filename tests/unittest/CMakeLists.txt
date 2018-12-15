@@ -14,6 +14,7 @@ set(SRC_TEST
 	test_queue_basic.cpp
 	test_queue_multithread.cpp
 	test_heterdispatcher_basic.cpp
+	test_heterqueue_basic.cpp
 	test_eventutil.cpp
 	test_conditionalremover.cpp
 	test_counterremover.cpp

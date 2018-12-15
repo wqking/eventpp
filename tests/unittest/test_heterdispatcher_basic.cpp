@@ -15,13 +15,74 @@
 #include "eventpp/hetereventdispatcher.h"
 
 struct xxx{};
-static_assert(eventpp::internal_::CanConvert<std::tuple<int, int>, std::tuple<int ,int> >::value, "");
-static_assert(eventpp::internal_::FindCallablePrototype<std::tuple<void (), void (int, int)>, void() >::index == 0, "");
-static_assert(eventpp::internal_::FindCallablePrototype<std::tuple<void (int), void (int, int)>, void(char)>::index == 0, "");
-static_assert(eventpp::internal_::FindCallablePrototype<std::tuple<void (int), void (int, int)>, void(char, int)>::index == 1, "");
-static_assert(eventpp::internal_::FindCallablePrototype<std::tuple<void (int), void (int, int), void (int, const xxx &)>, void(int, xxx)>::index == 2, "");
+static_assert(eventpp::internal_::FindPrototypeByCallable<std::tuple<void (), void (int, int)>, void() >::index == 0, "");
+static_assert(eventpp::internal_::FindPrototypeByCallable<std::tuple<void (int), void (int, int)>, void(char)>::index == 0, "");
+static_assert(eventpp::internal_::FindPrototypeByCallable<std::tuple<void (int), void (int, int)>, void(char, int)>::index == 1, "");
+static_assert(eventpp::internal_::FindPrototypeByCallable<std::tuple<void (int), void (int, int), void (int, const xxx &)>, void(int, xxx)>::index == 2, "");
+static_assert(eventpp::internal_::FindPrototypeByCallable<std::tuple<void (), void (const std::string &)>, void(const std::string &) >::index == 1, "");
 
-TEST_CASE("xxx HeterEventDispatcher, 1")
+template <bool condition>
+struct FindTypeByIndexHelper;
+
+template <>
+struct FindTypeByIndexHelper <true>
+{
+	template <int N, int M, typename C, typename ...Args>
+	static constexpr void find(const int index, const C & c, Args && ...args)
+	{
+		if(index == N) {
+			c.template operator()<N>(std::forward<Args>(args)...);
+		}
+
+		FindTypeByIndexHelper<(N + 1 < M)>::template find<N + 1, M>(index, c, std::forward<Args>(args)...);
+	}
+
+};
+
+template <>
+struct FindTypeByIndexHelper <false>
+{
+	template <int N, int M, typename C, typename ...Args>
+	static constexpr void find(const int index, const C & c, Args && ...args)
+	{
+	}
+
+};
+
+template <int N, int M, typename C, typename ...Args>
+constexpr void findTypeByIndex(const int index, const C & c, Args && ...args)
+{
+	FindTypeByIndexHelper<(N < M)>::template find<N, M>(index, c, std::forward<Args>(args)...);
+}
+
+struct Back
+{
+	template <int N, typename T>
+	void operator()(T *, int * p) const {
+		*p = (int)sizeof(typename std::tuple_element<N, T>::type);
+	}
+};
+
+using FreeFunc = void (*)(void *);
+template <typename T>
+void freeIt(void * p)
+{
+	*(int *)p = sizeof(T);
+}
+
+template <typename ...Args>
+struct YYY
+{
+	static const FreeFunc * get() {
+		static std::array<FreeFunc, sizeof...(Args)> data {
+			&freeIt<Args>...
+		};
+
+		return data.data();
+	}
+};
+
+TEST_CASE("HeterEventDispatcher, 1")
 {
 	eventpp::HeterEventDispatcher<int, std::tuple<void (), void (int, int, int)> > dispatcher;
 

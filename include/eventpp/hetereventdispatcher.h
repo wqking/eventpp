@@ -15,6 +15,7 @@
 #define HETEREVENTDISPATCHER_H_127766658555
 
 #include "eventdispatcher.h"
+#include "internal/hetereventdispatcher_i.h"
 
 #include <array>
 #include <string>
@@ -30,60 +31,10 @@ namespace eventpp {
 
 namespace internal_ {
 
-template <typename ...Args>
-struct CanConvert
-{
-	enum { value = false };
-};
-
-template <typename From, typename ...FromArgs, typename To, typename ...ToArgs>
-struct CanConvert <std::tuple<From, FromArgs...>, std::tuple<To, ToArgs...> >
-{
-	enum { value = std::is_convertible<From, To>::value && CanConvert<std::tuple<FromArgs...>, std::tuple<ToArgs...> >::value };
-};
-
-template <>
-struct CanConvert <std::tuple<>, std::tuple<> >
-{
-	enum { value = true };
-};
-
-template <int N, typename PrototypeList_, typename Callable>
-struct FindCallablePrototypeHelper
-{
-	using Prototype = void;
-	enum {index = -1 };
-};
-
-template <int N, typename RT, typename ...Args, typename ...Others, typename Callable>
-struct FindCallablePrototypeHelper <N, std::tuple<RT (Args...), Others...>, Callable>
-{
-	using Prototype = typename std::conditional<
-		CanInvoke<Callable, Args...>::value,
-		RT (Args...),
-		typename FindCallablePrototypeHelper<N + 1, std::tuple<Others...>, Callable>::Prototype
-	>::type;
-	enum {
-		index = CanInvoke<Callable, Args...>::value
-			? N
-			: FindCallablePrototypeHelper<N + 1, std::tuple<Others...>, Callable>::index
-	};
-};
-
-template <typename PrototypeList_, typename Callable>
-struct FindCallablePrototype : public FindCallablePrototypeHelper <0, PrototypeList_, Callable>
-{
-};
-
-} //namespace internal_
-
-
-namespace internal_ {
-
 template <
-	typename EventType,
+	typename EventType_,
 	typename PrototypeList_,
-	typename PoliciesType,
+	typename Policies_,
 	typename MixinRoot_
 >
 class HeterEventDispatcherBase
@@ -102,18 +53,18 @@ private:
 	class HomoDispatcherTypeBase
 	{
 	public:
-		virtual bool doRemoveListener(const EventType & event, const Handle_ & handle) = 0;
+		virtual bool doRemoveListener(const EventType_ & event, const Handle_ & handle) = 0;
 		virtual std::shared_ptr<HomoDispatcherTypeBase> doClone() = 0;
 	};
 
 	template <typename T>
-	class HomoDispatcherType : public EventDispatcher<EventType, T, PoliciesType>, public HomoDispatcherTypeBase
+	class HomoDispatcherType : public EventDispatcher<EventType_, T, Policies_>, public HomoDispatcherTypeBase
 	{
 	private:
-		using super = EventDispatcher<EventType, T, PoliciesType>;
+		using super = EventDispatcher<EventType_, T, Policies_>;
 
 	public:
-		virtual bool doRemoveListener(const EventType & event, const Handle_ & handle) override {
+		virtual bool doRemoveListener(const EventType_ & event, const Handle_ & handle) override {
 			auto sp = handle.homoHandle.lock();
 			if(! sp) {
 				return false;
@@ -128,13 +79,13 @@ private:
 
 protected:
 	using ThisType = HeterEventDispatcherBase<
-		EventType,
+		EventType_,
 		PrototypeList_,
-		PoliciesType,
+		Policies_,
 		MixinRoot_
 	>;
 
-	using Policies = PoliciesType;
+	using Policies = Policies_;
 	using Threading = typename SelectThreading<Policies, HasTypeThreading<Policies>::value>::Type;
 
 	// Disable ArgumentPassingMode explicitly
@@ -144,7 +95,7 @@ protected:
 
 public:
 	using Handle = Handle_;
-	using Event = EventType;
+	using Event = EventType_;
 	using Mutex = typename Threading::Mutex;
 
 public:
@@ -196,10 +147,12 @@ public:
 	template <typename C>
 	Handle appendListener(const Event & event, const C & callback)
 	{
-		using FindResult = FindCallablePrototype<PrototypeList_, C>;
-		auto dispatcher = doFindDispatcher<FindResult>();
+		using PrototypeInfo = FindPrototypeByCallable<PrototypeList_, C>;
+		static_assert(PrototypeInfo::index >= 0, "Can't find invoker for the given argument types.");
+
+		auto dispatcher = doFindDispatcher<PrototypeInfo>();
 		return Handle {
-			FindResult::index,
+			PrototypeInfo::index,
 			dispatcher->appendListener(event, callback)
 		};
 	}
@@ -207,10 +160,12 @@ public:
 	template <typename C>
 	Handle prependListener(const Event & event, const C & callback)
 	{
-		using FindResult = FindCallablePrototype<PrototypeList_, C>;
-		auto dispatcher = doFindDispatcher<FindResult>();
+		using PrototypeInfo = FindPrototypeByCallable<PrototypeList_, C>;
+		static_assert(PrototypeInfo::index >= 0, "Can't find invoker for the given argument types.");
+
+		auto dispatcher = doFindDispatcher<PrototypeInfo>();
 		return Handle {
-			FindResult::index,
+			PrototypeInfo::index,
 			dispatcher->prependListener(event, callback)
 		};
 	}
@@ -228,26 +183,28 @@ public:
 	template <typename T, typename ...Args>
 	void dispatch(T && first, Args ...args) const
 	{
-		using FindResult = FindCallablePrototype<PrototypeList_, void(Args...)>;
-		auto dispatcher = doFindDispatcher<FindResult>();
+		using PrototypeInfo = FindPrototypeByArgs<PrototypeList_, Args...>;
+		static_assert(PrototypeInfo::index >= 0, "Can't find invoker for the given argument types.");
+
+		auto dispatcher = doFindDispatcher<PrototypeInfo>();
 		dispatcher->dispatch(std::forward<T>(first), std::forward<Args>(args)...);
 	}
 
-private:
-	template <typename FindResult>
+protected:
+	template <typename PrototypeInfo>
 	auto doFindDispatcher() const
-		-> HomoDispatcherType<typename FindResult::Prototype> *
+		-> HomoDispatcherType<typename PrototypeInfo::Prototype> *
 	{
-		static_assert(FindResult::index >= 0, "Can't find invoker for the given argument types.");
+		static_assert(PrototypeInfo::index >= 0, "Can't find invoker for the given argument types.");
 
-		if(! dispatcherList[FindResult::index]) {
-			if(! dispatcherList[FindResult::index]) {
+		if(! dispatcherList[PrototypeInfo::index]) {
+			if(! dispatcherList[PrototypeInfo::index]) {
 				std::lock_guard<Mutex> lockGuard(dispatcherListMutex);
-				dispatcherList[FindResult::index] = std::make_shared<HomoDispatcherType<typename FindResult::Prototype> >();
+				dispatcherList[PrototypeInfo::index] = std::make_shared<HomoDispatcherType<typename PrototypeInfo::Prototype> >();
 			}
 		}
 
-		return static_cast<HomoDispatcherType<typename FindResult::Prototype> *>(dispatcherList[FindResult::index].get());
+		return static_cast<HomoDispatcherType<typename PrototypeInfo::Prototype> *>(dispatcherList[PrototypeInfo::index].get());
 	}
 
 private:

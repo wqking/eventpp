@@ -15,7 +15,7 @@
 #define MIXINFILTER_H_713231680355
 
 #include "../callbacklist.h"
-#include "../typeutil.h"
+#include "../internal/typeutil_i.h"
 
 #include <functional>
 #include <type_traits>
@@ -28,8 +28,8 @@ class MixinFilter : public Base
 private:
 	using super = Base;
 
-	using BoolReferencePrototype = typename ReplaceReturnType<
-		typename TransformArguments<
+	using BoolReferencePrototype = typename internal_::ReplaceReturnType<
+		typename internal_::TransformArguments<
 			typename super::Prototype,
 			std::add_lvalue_reference
 		>::Type,
@@ -56,11 +56,10 @@ public:
 	template <typename ...Args>
 	bool mixinBeforeDispatch(Args && ...args) const {
 		if(! filterList.empty()) {
-			if(
-				! filterList.forEachIf([&args...](typename FilterList::Callback & callback) {
-				return callback(args...);
-			})
-				) {
+			if(! filterList.forEachIf([&args...](typename FilterList::Callback & callback) {
+					return callback(args...);
+				})
+			) {
 				return false;
 			}
 		}

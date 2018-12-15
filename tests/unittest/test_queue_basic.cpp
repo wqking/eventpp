@@ -211,6 +211,33 @@ TEST_CASE("EventQueue, no memory leak in queued arguments")
 	}
 }
 
+TEST_CASE("EventQueue, no memory leak in queued arguments after queue is destroyed")
+{
+	using SP = std::shared_ptr<int>;
+	using WP = std::weak_ptr<int>;
+	using EQ = eventpp::EventQueue<int, void (SP)>;
+
+	std::vector<WP> wpList;
+
+	{
+		std::unique_ptr<EQ> queue(new EQ());
+
+		auto add = [&wpList, &queue](int n) {
+			SP sp(std::make_shared<int>(n));
+			queue->enqueue(n, sp);
+			wpList.push_back(WP(sp));
+		};
+
+		add(1);
+		add(2);
+		add(3);
+
+		REQUIRE(! checkAllWeakPtrAreFreed(wpList));
+	}
+
+	REQUIRE(checkAllWeakPtrAreFreed(wpList));
+}
+
 TEST_CASE("EventQueue, no memory leak or double free in queued arguments")
 {
 	struct Item {

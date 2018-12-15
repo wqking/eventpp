@@ -176,7 +176,7 @@ struct HasFunctionMixinBeforeDispatch
 	enum { value = !! decltype(test<T>(0))() };
 };
 
-template <typename F, typename ...A>
+template <typename F, typename ...Args>
 struct CanInvoke
 {
 	template <typename U, typename ...X>
@@ -186,7 +186,7 @@ struct CanInvoke
 	static auto invoke(...) -> std::false_type;
 
 	enum {
-		value = !! decltype(invoke<F, A...>(0))()
+		value = !! decltype(invoke<F, Args...>(0))()
 	};
 };
 

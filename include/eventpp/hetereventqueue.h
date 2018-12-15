@@ -11,18 +11,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef EVENTQUEUE_H_705786053037
-#define EVENTQUEUE_H_705786053037
+#ifndef HETEREVENTQUEUE_H_210892536510
+#define HETEREVENTQUEUE_H_210892536510
 
-#include "eventdispatcher.h"
-#include "internal/eventqueue_i.h"
+#include "hetereventdispatcher.h"
 
-#include <list>
-#include <tuple>
-#include <chrono>
-#include <mutex>
-#include <array>
-#include <cassert>
+// temp, should move the internal code in eventqueue to separated file
+#include "eventqueue.h"
 
 namespace eventpp {
 
@@ -30,39 +25,28 @@ namespace internal_ {
 
 template <
 	typename EventType_,
-	typename Prototype_,
+	typename PrototypeList_,
 	typename Policies_
 >
-class EventQueueBase;
-
-template <
-	typename EventType_,
-	typename Policies_,
-	typename ReturnType, typename ...Args
->
-class EventQueueBase <
+class HeterEventQueueBase : public HeterEventDispatcherBase<
 		EventType_,
-		ReturnType (Args...),
-		Policies_
-	> : public EventDispatcherBase<
-		EventType_,
-		ReturnType (Args...),
+		PrototypeList_,
 		Policies_,
-		EventQueueBase <
+		HeterEventQueueBase <
 			EventType_,
-			ReturnType (Args...),
+			PrototypeList_,
 			Policies_
 		>
 	>
 {
 private:
-	using super = EventDispatcherBase<
+	using super = HeterEventDispatcherBase<
 		EventType_,
-		ReturnType (Args...),
+		PrototypeList_,
 		Policies_,
-		EventQueueBase <
+		HeterEventQueueBase <
 			EventType_,
-			ReturnType (Args...),
+			PrototypeList_,
 			Policies_
 		>
 	>;
@@ -71,105 +55,59 @@ private:
 	using Threading = typename super::Threading;
 	using ConditionVariable = typename Threading::ConditionVariable;
 
-	struct QueuedEvent_
+	struct QueuedItemBase;
+	using ItemDispatcher = void (*)(const HeterEventQueueBase *, const QueuedItemBase &);
+
+	struct QueuedItemBase
 	{
-		typename std::remove_cv<typename std::remove_reference<typename super::Event>::type>::type event;
-		std::tuple<typename std::remove_cv<typename std::remove_reference<Args>::type>::type...> arguments;
+		QueuedItemBase(const EventType_ & event, const ItemDispatcher dispatcher)
+			: event(event), dispatcher(dispatcher)
+		{
+		}
+
+		EventType_ event;
+		ItemDispatcher dispatcher;
 	};
 
-	using BufferedItemList = std::list<BufferedItem<sizeof(QueuedEvent_)> >;
+	template <typename T>
+	struct QueuedItem : public QueuedItemBase
+	{
+		QueuedItem(const EventType_ & event, const ItemDispatcher dispatcher, T && arguments)
+			: QueuedItemBase(event, dispatcher), arguments(std::move(arguments))
+		{
+		}
+
+		T arguments;
+	};
+
+	template <typename ...Args>
+	using QueuedItemSizer = QueuedItem<std::tuple<typename std::remove_cv<typename std::remove_reference<Args>::type>::type...> >;
+
+	using BufferedQueuedItem = BufferedItem<GetCallablePrototypeMaxSize<PrototypeList_, QueuedItemSizer>::value>;
+
+	using BufferedItemList = std::list<BufferedQueuedItem>;
 
 public:
-	using QueuedEvent = QueuedEvent_;
 	using super::Event;
 	using super::Handle;
-	using super::Callback;
 	using Mutex = typename super::Mutex;
 
-	struct DisableQueueNotify
-	{
-		DisableQueueNotify(EventQueueBase * queue)
-			: queue(queue)
-		{
-			++queue->queueNotifyCounter;
-		}
-
-		~DisableQueueNotify()
-		{
-			--queue->queueNotifyCounter;
-
-			if(queue->doCanNotifyQueueAvailable() && ! queue->empty()) {
-				queue->queueListConditionVariable.notify_one();
-			}
-		}
-
-		EventQueueBase * queue;
-	};
-
 public:
-	EventQueueBase()
-		:
-			super(),
-			queueListConditionVariable(),
-			queueEmptyCounter(0),
-			queueNotifyCounter(0),
-			queueListMutex(),
-			queueList(),
-			freeListMutex(),
-			freeList()
+	template <typename T, typename ...Args>
+	void enqueue(T && first, Args ...args)
 	{
-	}
+		using GetEvent = typename SelectGetEvent<Policies_, EventType_, HasFunctionGetEvent<Policies_, T &&, Args...>::value>::Type;
+		using PrototypeInfo = FindPrototypeByArgs<PrototypeList_, Args...>;
+		using QueuedItemType = QueuedItem<typename PrototypeInfo::ArgsTuple>;
 
-	EventQueueBase(const EventQueueBase & other)
-		: super(other)
-	{
-	}
+		static_assert(PrototypeInfo::index >= 0, "Can't find invoker for the given argument types.");
+		static_assert(std::tuple_size<typename PrototypeInfo::ArgsTuple>::value == sizeof...(Args), "Arguments count mismatch.");
 
-	EventQueueBase(EventQueueBase && other) noexcept
-		: super(std::move(other))
-	{
-	}
-
-	EventQueueBase & operator = (const EventQueueBase & other)
-	{
-		super::operator = (other);
-		return *this;
-	}
-	
-	EventQueueBase & operator = (EventQueueBase && other) noexcept
-	{
-		super::operator = (std::move(other));
-		return *this;
-	}
-
-	template <typename ...A>
-	auto enqueue(A ...args) -> typename std::enable_if<sizeof...(A) == sizeof...(Args), void>::type
-	{
-		static_assert(super::ArgumentPassingMode::canIncludeEventType, "Enqueuing arguments count doesn't match required (Event type should be included).");
-
-		using GetEvent = typename SelectGetEvent<Policies_, EventType_, HasFunctionGetEvent<Policies_, A...>::value>::Type;
-
-		doEnqueue(QueuedEvent{
-			GetEvent::getEvent(args...),
-			std::make_tuple(std::forward<A>(args)...)
-		});
-
-		if(doCanProcess()) {
-			queueListConditionVariable.notify_one();
-		}
-	}
-
-	template <typename T, typename ...A>
-	auto enqueue(T && first, A ...args) -> typename std::enable_if<sizeof...(A) == sizeof...(Args), void>::type
-	{
-		static_assert(super::ArgumentPassingMode::canExcludeEventType, "Enqueuing arguments count doesn't match required (Event type should NOT be included).");
-
-		using GetEvent = typename SelectGetEvent<Policies_, EventType_, HasFunctionGetEvent<Policies_, T &&, A...>::value>::Type;
-
-		doEnqueue(QueuedEvent{
+		doEnqueue(QueuedItemType(
 			GetEvent::getEvent(std::forward<T>(first), args...),
-			std::make_tuple(std::forward<A>(args)...)
-		});
+			&HeterEventQueueBase::doDispatchItem<typename PrototypeInfo::ArgsTuple>,
+			typename PrototypeInfo::ArgsTuple(std::forward<Args>(args)...)
+		));
 
 		if(doCanProcess()) {
 			queueListConditionVariable.notify_one();
@@ -179,27 +117,6 @@ public:
 	bool empty() const
 	{
 		return queueList.empty() && (queueEmptyCounter.load(std::memory_order_acquire) == 0);
-	}
-	
-	void clearEvents()
-	{
-		if(! queueList.empty()) {
-			BufferedItemList tempList;
-
-			{
-				std::lock_guard<Mutex> queueListLock(queueListMutex);
-				std::swap(queueList, tempList);
-			}
-
-			if(! tempList.empty()) {
-				for(auto & item : tempList) {
-					item.clear();
-				}
-
-				std::lock_guard<Mutex> queueListLock(freeListMutex);
-				freeList.splice(freeList.end(), tempList);
-			}
-		}
 	}
 
 	bool process()
@@ -218,20 +135,17 @@ public:
 
 			if(! tempList.empty()) {
 				for(auto & item : tempList) {
-					doDispatchQueuedEvent(
-						item.template get<QueuedEvent_>(),
-						typename MakeIndexSequence<sizeof...(Args)>::Type()
-					);
+					doDispatchQueuedEvent(item.template get<QueuedItemBase>());
 					item.clear();
 				}
 
 				std::lock_guard<Mutex> queueListLock(freeListMutex);
 				freeList.splice(freeList.end(), tempList);
-				
+
 				return true;
 			}
 		}
-		
+
 		return false;
 	}
 
@@ -253,22 +167,19 @@ public:
 
 			if(! tempList.empty()) {
 				auto & item = tempList.front();
-				doDispatchQueuedEvent(
-					item.template get<QueuedEvent_>(),
-					typename MakeIndexSequence<sizeof...(Args)>::Type()
-				);
+				doDispatchQueuedEvent(item.template get<QueuedItemBase>());
 				item.clear();
 
 				std::lock_guard<Mutex> queueListLock(freeListMutex);
 				freeList.splice(freeList.end(), tempList);
-				
+
 				return true;
 			}
 		}
-		
+
 		return false;
 	}
-
+/*
 	template <typename F>
 	bool processIf(F && func)
 	{
@@ -288,16 +199,13 @@ public:
 			if(! tempList.empty()) {
 				for(auto it = tempList.begin(); it != tempList.end(); ++it) {
 					if(doInvokeFuncWithQueuedEvent(
-							func,
-							it->template get<QueuedEvent_>(),
-							typename MakeIndexSequence<sizeof...(Args)>::Type())
+						func,
+						it->template get<QueuedItemBase>(),
+						typename MakeIndexSequence<sizeof...(Args)>::Type())
 						) {
-						doDispatchQueuedEvent(
-							it->template get<QueuedEvent_>(),
-							typename MakeIndexSequence<sizeof...(Args)>::Type()
-						);
+						doDispatchQueuedEvent(item.template get<QueuedItemBase>());
 						it->clear();
-						
+
 						auto tempIt = it;
 						--it;
 						idleList.splice(idleList.end(), tempList, tempIt);
@@ -312,15 +220,16 @@ public:
 				if(! idleList.empty()) {
 					std::lock_guard<Mutex> queueListLock(freeListMutex);
 					freeList.splice(freeList.end(), idleList);
-					
+
 					return true;
 				}
 			}
 		}
-		
+
 		return false;
 	}
-	
+*/
+
 	void wait() const
 	{
 		std::unique_lock<Mutex> queueListLock(queueListMutex);
@@ -340,58 +249,7 @@ public:
 
 	using super::dispatch;
 
-	template <typename U>
-	auto dispatch(const U & queuedEvent)
-		-> typename std::enable_if<std::is_same<U, QueuedEvent>::value, void>::type
-	{
-		doDispatchQueuedEvent(
-			queuedEvent,
-			typename MakeIndexSequence<sizeof...(Args)>::Type()
-		);
-	}
-
-	bool peekEvent(QueuedEvent * queuedEvent)
-	{
-		if(! queueList.empty()) {
-			std::lock_guard<Mutex> queueListLock(queueListMutex);
-			
-			if(! queueList.empty()) {
-				*queuedEvent = queueList.front().template get<QueuedEvent_>();
-				return true;
-			}
-		}
-
-		return false;
-	}
-
-	bool takeEvent(QueuedEvent * queuedEvent)
-	{
-		if(! queueList.empty()) {
-			BufferedItemList tempList;
-
-			{
-				std::lock_guard<Mutex> queueListLock(queueListMutex);
-
-				if(! queueList.empty()) {
-					tempList.splice(tempList.end(), queueList, queueList.begin());
-				}
-			}
-
-			if(! tempList.empty()) {
-				*queuedEvent = std::move(tempList.front().template get<QueuedEvent_>());
-				tempList.front().clear();
-
-				std::lock_guard<Mutex> queueListLock(freeListMutex);
-				freeList.splice(freeList.end(), tempList);
-
-				return true;
-			}
-		}
-
-		return false;
-	}
-
-protected:
+private:
 	bool doCanProcess() const
 	{
 		return ! empty() && doCanNotifyQueueAvailable();
@@ -402,25 +260,43 @@ protected:
 		return queueNotifyCounter.load(std::memory_order_acquire) == 0;
 	}
 
-	template <typename T, size_t ...Indexes>
-	void doDispatchQueuedEvent(T && item, IndexSequence<Indexes...>)
+	void doDispatchQueuedEvent(const QueuedItemBase & item)
 	{
-		this->doDispatch(item.event, std::get<Indexes>(item.arguments)...);
+		item.dispatcher(this, item);
 	}
 
+	template <typename ArgsTuple>
+	static void doDispatchItem(const HeterEventQueueBase * self, const QueuedItemBase & baseItem)
+	{
+		const QueuedItem<ArgsTuple> & item = static_cast<const QueuedItem<ArgsTuple> &>(baseItem);
+		self->doDispatchQueuedItem(
+			item,
+			typename MakeIndexSequence<std::tuple_size<ArgsTuple>::value>::Type()
+		);
+	}
+
+	template <typename T, size_t ...Indexes>
+	void doDispatchQueuedItem(T && item, IndexSequence<Indexes...>) const
+	{
+		this->dispatch(item.event, std::get<Indexes>(item.arguments)...);
+	}
+
+	/*
 	template <typename F, typename T, size_t ...Indexes>
 	bool doInvokeFuncWithQueuedEvent(F && func, T && item, IndexSequence<Indexes...>) const
 	{
 		return doInvokeFuncWithQueuedEventHelper(std::forward<F>(func), item.event, std::get<Indexes>(item.arguments)...);
 	}
-	
-	template <typename F>
+
+	template <typename F, typename ...Args>
 	bool doInvokeFuncWithQueuedEventHelper(F && func, const typename super::Event & e, Args ...args) const
 	{
 		return func(std::forward<Args>(args)...);
 	}
+	*/
 
-	void doEnqueue(QueuedEvent && item)
+	template <typename T>
+	void doEnqueue(T && item)
 	{
 		BufferedItemList tempList;
 		if(! freeList.empty()) {
@@ -453,21 +329,23 @@ private:
 	BufferedItemList freeList;
 };
 
+
+
 } //namespace internal_
 
 template <
 	typename Event_,
-	typename Prototype_,
+	typename PrototypeList_,
 	typename Policies_ = DefaultPolicies
 >
-class EventQueue : public internal_::InheritMixins<
-		internal_::EventQueueBase<Event_, Prototype_, Policies_>,
+class HeterEventQueue : public internal_::InheritMixins<
+		internal_::HeterEventQueueBase<Event_, PrototypeList_, Policies_>,
 		typename internal_::SelectMixins<Policies_, internal_::HasTypeMixins<Policies_>::value >::Type
-	>::Type, public TagEventDispatcher, public TagEventQueue
+	>::Type, public TagEventDispatcher
 {
 private:
 	using super = typename internal_::InheritMixins<
-		internal_::EventQueueBase<Event_, Prototype_, Policies_>,
+		internal_::HeterEventQueueBase<Event_, PrototypeList_, Policies_>,
 		typename internal_::SelectMixins<Policies_, internal_::HasTypeMixins<Policies_>::value >::Type
 	>::Type;
 
