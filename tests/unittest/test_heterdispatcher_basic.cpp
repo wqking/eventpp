@@ -13,76 +13,10 @@
 
 #include "test.h"
 #include "eventpp/hetereventdispatcher.h"
+#include "eventpp/mixins/mixinfilter.h"
+#include "eventpp/mixins/mixinheterfilter.h"
 
-struct xxx{};
-static_assert(eventpp::internal_::FindPrototypeByCallable<std::tuple<void (), void (int, int)>, void() >::index == 0, "");
-static_assert(eventpp::internal_::FindPrototypeByCallable<std::tuple<void (int), void (int, int)>, void(char)>::index == 0, "");
-static_assert(eventpp::internal_::FindPrototypeByCallable<std::tuple<void (int), void (int, int)>, void(char, int)>::index == 1, "");
-static_assert(eventpp::internal_::FindPrototypeByCallable<std::tuple<void (int), void (int, int), void (int, const xxx &)>, void(int, xxx)>::index == 2, "");
-static_assert(eventpp::internal_::FindPrototypeByCallable<std::tuple<void (), void (const std::string &)>, void(const std::string &) >::index == 1, "");
-
-template <bool condition>
-struct FindTypeByIndexHelper;
-
-template <>
-struct FindTypeByIndexHelper <true>
-{
-	template <int N, int M, typename C, typename ...Args>
-	static constexpr void find(const int index, const C & c, Args && ...args)
-	{
-		if(index == N) {
-			c.template operator()<N>(std::forward<Args>(args)...);
-		}
-
-		FindTypeByIndexHelper<(N + 1 < M)>::template find<N + 1, M>(index, c, std::forward<Args>(args)...);
-	}
-
-};
-
-template <>
-struct FindTypeByIndexHelper <false>
-{
-	template <int N, int M, typename C, typename ...Args>
-	static constexpr void find(const int index, const C & c, Args && ...args)
-	{
-	}
-
-};
-
-template <int N, int M, typename C, typename ...Args>
-constexpr void findTypeByIndex(const int index, const C & c, Args && ...args)
-{
-	FindTypeByIndexHelper<(N < M)>::template find<N, M>(index, c, std::forward<Args>(args)...);
-}
-
-struct Back
-{
-	template <int N, typename T>
-	void operator()(T *, int * p) const {
-		*p = (int)sizeof(typename std::tuple_element<N, T>::type);
-	}
-};
-
-using FreeFunc = void (*)(void *);
-template <typename T>
-void freeIt(void * p)
-{
-	*(int *)p = sizeof(T);
-}
-
-template <typename ...Args>
-struct YYY
-{
-	static const FreeFunc * get() {
-		static std::array<FreeFunc, sizeof...(Args)> data {
-			&freeIt<Args>...
-		};
-
-		return data.data();
-	}
-};
-
-TEST_CASE("HeterEventDispatcher, 1")
+TEST_CASE("xxx HeterEventDispatcher, 1")
 {
 	eventpp::HeterEventDispatcher<int, std::tuple<void (), void (int, int, int)> > dispatcher;
 
@@ -117,5 +51,129 @@ TEST_CASE("HeterEventDispatcher, 1")
 	dispatcher.dispatch(3, 2, 6, 7);
 	REQUIRE(dataList[0] == 1);
 	REQUIRE(dataList[1] == 24);
+}
+
+TEST_CASE("xxx HeterEventDispatcher, event filter")
+{
+	struct MyPolicies {
+		using Mixins = eventpp::MixinList<eventpp::MixinFilter>;
+		using HeterMixins = eventpp::MixinList<eventpp::MixinHeterFilter>;
+	};
+	using ED = eventpp::HeterEventDispatcher<int, std::tuple<void (int, int), void ()>, MyPolicies>;
+	ED dispatcher;
+
+	constexpr int itemCount = 5;
+	std::vector<int> dataList(itemCount);
+
+	for(int i = 0; i < itemCount; ++i) {
+		dispatcher.appendListener(i, [&dataList, i](int e, int index) {
+			dataList[e] = index;
+		});
+	}
+
+	constexpr int filterCount = 2;
+	std::vector<int> filterData(filterCount);
+
+	SECTION("Filter invoked count") {
+		auto handle1 = dispatcher.appendFilter([&filterData](int, int) -> bool {
+			++filterData[0];
+			return true;
+		});
+		auto handle2 = dispatcher.appendFilter([&filterData]() -> bool {
+			++filterData[1];
+			return true;
+		});
+
+		for(int i = 0; i < itemCount; ++i) {
+			dispatcher.dispatch(i, i, 58);
+			dispatcher.dispatch(i);
+		}
+
+		REQUIRE(filterData == std::vector<int>{ itemCount, itemCount });
+		REQUIRE(dataList == std::vector<int>{ 58, 58, 58, 58, 58 });
+
+		dispatcher.removeFilter(handle1);
+
+		for(int i = 0; i < itemCount; ++i) {
+			dispatcher.dispatch(i, i, 38);
+			dispatcher.dispatch(i);
+		}
+
+		REQUIRE(filterData == std::vector<int>{ itemCount, itemCount * 2 });
+
+		dispatcher.removeFilter(handle2);
+		dispatcher.removeFilter(handle2);
+
+		for(int i = 0; i < itemCount; ++i) {
+			dispatcher.dispatch(i, i, 38);
+			dispatcher.dispatch(i);
+		}
+
+		REQUIRE(filterData == std::vector<int>{ itemCount, itemCount * 2 });
+	}
+#if 0
+	SECTION("First filter blocks all other filters and listeners") {
+		dispatcher.appendFilter([&filterData](int e, int /*index*/) -> bool {
+			++filterData[0];
+			if(e >= 2) {
+				return false;
+			}
+			return true;
+		});
+		dispatcher.appendFilter([&filterData](int /*e*/, int /*index*/) -> bool {
+			++filterData[1];
+			return true;
+		});
+
+		for(int i = 0; i < itemCount; ++i) {
+			dispatcher.dispatch(i, 58);
+		}
+
+		REQUIRE(filterData == std::vector<int>{ itemCount, 2 });
+		REQUIRE(dataList == std::vector<int>{ 58, 58, 0, 0, 0 });
+	}
+
+	SECTION("Second filter doesn't block first filter but all listeners") {
+		dispatcher.appendFilter([&filterData](int /*e*/, int /*index*/) -> bool {
+			++filterData[0];
+			return true;
+		});
+		dispatcher.appendFilter([&filterData](int e, int /*index*/) -> bool {
+			++filterData[1];
+			if(e >= 2) {
+				return false;
+			}
+			return true;
+		});
+
+		for(int i = 0; i < itemCount; ++i) {
+			dispatcher.dispatch(i, 58);
+		}
+
+		REQUIRE(filterData == std::vector<int>{ itemCount, itemCount });
+		REQUIRE(dataList == std::vector<int>{ 58, 58, 0, 0, 0 });
+	}
+
+	SECTION("Filter manipulates the parameters") {
+		dispatcher.appendFilter([&filterData](int e, int & index) -> bool {
+			++filterData[0];
+			if(e >= 2) {
+				++index;
+			}
+			return true;
+		});
+		dispatcher.appendFilter([&filterData](int /*e*/, int /*index*/) -> bool {
+			++filterData[1];
+			return true;
+		});
+
+		for(int i = 0; i < itemCount; ++i) {
+			dispatcher.dispatch(i, 58);
+		}
+
+		REQUIRE(filterData == std::vector<int>{ itemCount, itemCount });
+		REQUIRE(dataList == std::vector<int>{ 58, 58, 59, 59, 59 });
+	}
+#endif
 }
 

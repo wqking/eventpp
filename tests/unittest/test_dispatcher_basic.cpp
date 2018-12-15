@@ -290,7 +290,6 @@ TEST_CASE("EventDispatcher, event filter")
 		});
 	}
 
-
 	constexpr int filterCount = 2;
 	std::vector<int> filterData(filterCount);
 

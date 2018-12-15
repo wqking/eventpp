@@ -39,7 +39,7 @@ template <
 >
 class HeterEventDispatcherBase
 {
-private:
+protected:
 	struct Handle_
 	{
 		int index;
@@ -77,7 +77,6 @@ private:
 		}
 	};
 
-protected:
 	using ThisType = HeterEventDispatcherBase<
 		EventType_,
 		PrototypeList_,
@@ -91,13 +90,12 @@ protected:
 	// Disable ArgumentPassingMode explicitly
 	static_assert(! HasTypeArgumentPassingMode<Policies>::value, "Policies can't have ArgumentPassingMode in heterogeneous dispatcher.");
 
-	enum { prototypeCount = std::tuple_size<PrototypeList_>::value };
+	using PrototypeList = PrototypeList_;
 
 public:
 	using Handle = Handle_;
 	using Event = EventType_;
 	using Mutex = typename Threading::Mutex;
-
 public:
 	HeterEventDispatcherBase()
 		:
@@ -193,22 +191,29 @@ public:
 protected:
 	template <typename PrototypeInfo>
 	auto doFindDispatcher() const
-		-> HomoDispatcherType<typename PrototypeInfo::Prototype> *
+		-> std::shared_ptr<HomoDispatcherType<typename PrototypeInfo::Prototype> >
 	{
 		static_assert(PrototypeInfo::index >= 0, "Can't find invoker for the given argument types.");
 
 		if(! dispatcherList[PrototypeInfo::index]) {
+			std::lock_guard<Mutex> lockGuard(dispatcherListMutex);
+
 			if(! dispatcherList[PrototypeInfo::index]) {
-				std::lock_guard<Mutex> lockGuard(dispatcherListMutex);
 				dispatcherList[PrototypeInfo::index] = std::make_shared<HomoDispatcherType<typename PrototypeInfo::Prototype> >();
 			}
 		}
 
-		return static_cast<HomoDispatcherType<typename PrototypeInfo::Prototype> *>(dispatcherList[PrototypeInfo::index].get());
+		return std::static_pointer_cast<HomoDispatcherType<typename PrototypeInfo::Prototype> >(dispatcherList[PrototypeInfo::index]);
+	}
+
+	// Used by mixins
+	std::shared_ptr<HomoDispatcherTypeBase> doGetDispatcherAt(const int index) const
+	{
+		return dispatcherList[index];
 	}
 
 private:
-	mutable std::array<std::shared_ptr<HomoDispatcherTypeBase>, prototypeCount> dispatcherList;
+	mutable std::array<std::shared_ptr<HomoDispatcherTypeBase>, std::tuple_size<PrototypeList_>::value> dispatcherList;
 	mutable Mutex dispatcherListMutex;
 };
 
@@ -222,13 +227,13 @@ template <
 >
 class HeterEventDispatcher : public internal_::InheritMixins<
 		internal_::HeterEventDispatcherBase<Event_, PrototypeList_, Policies_, void>,
-		typename internal_::SelectMixins<Policies_, internal_::HasTypeMixins<Policies_>::value >::Type
+		typename internal_::SelectHeterMixins<Policies_, internal_::HasTypeHeterMixins<Policies_>::value >::Type
 	>::Type, public TagEventDispatcher
 {
 private:
 	using super = typename internal_::InheritMixins<
 		internal_::HeterEventDispatcherBase<Event_, PrototypeList_, Policies_, void>,
-		typename internal_::SelectMixins<Policies_, internal_::HasTypeMixins<Policies_>::value >::Type
+		typename internal_::SelectHeterMixins<Policies_, internal_::HasTypeHeterMixins<Policies_>::value >::Type
 	>::Type;
 
 public:

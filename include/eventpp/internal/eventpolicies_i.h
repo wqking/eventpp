@@ -122,6 +122,19 @@ template <typename T> struct SelectMixins <T, true> { using Type = typename T::M
 template <typename T> struct SelectMixins <T, false> { using Type = MixinList<>; };
 
 
+template <typename T>
+struct HasTypeHeterMixins
+{
+	template <typename C> static std::true_type test(typename C::HeterMixins *) ;
+	template <typename C> static std::false_type test(...);    
+
+	enum { value = !! decltype(test<T>(0))() };
+};
+template <typename T, bool> struct SelectHeterMixins;
+template <typename T> struct SelectHeterMixins <T, true> { using Type = typename T::HeterMixins; };
+template <typename T> struct SelectHeterMixins <T, false> { using Type = MixinList<>; };
+
+
 template <typename Root, typename TList>
 struct InheritMixins;
 

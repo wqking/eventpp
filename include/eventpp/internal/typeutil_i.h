@@ -36,6 +36,41 @@ struct ReplaceReturnType <RT (Args...), Replacement>
 	using Type = Replacement (Args...);
 };
 
+template <int N, int M>
+struct IntToConstantHelper
+{
+	template <typename C, typename ...Args>
+	static auto find(const int index, C && c, Args && ...args)
+		-> decltype(std::declval<C>().template operator()<0>(std::declval<Args>()...))
+	{
+		if(N == index) {
+			return c.template operator()<N>(std::forward<Args>(args)...);
+		}
+		else {
+			return IntToConstantHelper<N + 1, M>::find(index, std::forward<C>(c), std::forward<Args>(args)...);
+		}
+	}
+};
+
+template <int M>
+struct IntToConstantHelper <M, M>
+{
+	template <typename C, typename ...Args>
+	static auto find(const int index, C && c, Args && ...args)
+		-> decltype(std::declval<C>().template operator()<0>(std::declval<Args>()...))
+	{
+		return decltype(c.template operator()<0>(std::forward<Args>(args)...))();
+	}
+};
+
+template <int M, typename C, typename ...Args>
+auto intToConstant(const int index, C && c, Args && ...args)
+	-> decltype(std::declval<C>().template operator()<0>(std::declval<Args>()...))
+{
+	return IntToConstantHelper<0, M>::find(index, std::forward<C>(c), std::forward<Args>(args)...);
+}
+
+
 } //namespace internal_
 
 } //namespace eventpp

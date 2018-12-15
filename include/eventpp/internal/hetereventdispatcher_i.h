@@ -18,10 +18,10 @@ namespace eventpp {
 
 namespace internal_ {
 
-template <size_t N, typename PrototypeList_, typename Callable>
+template <int N, typename PrototypeList_, typename Callable>
 struct FindPrototypeByCallableHelper;
 
-template <size_t N, typename RT, typename ...Args, typename ...Others, typename Callable>
+template <int N, typename RT, typename ...Args, typename ...Others, typename Callable>
 struct FindPrototypeByCallableHelper <N, std::tuple<RT (Args...), Others...>, Callable>
 {
 	enum { canInvoke = CanInvoke<Callable, Args...>::value };
@@ -45,7 +45,7 @@ struct FindPrototypeByCallableHelper <N, std::tuple<RT (Args...), Others...>, Ca
 	};
 };
 
-template <size_t N, typename Callable>
+template <int N, typename Callable>
 struct FindPrototypeByCallableHelper <N, std::tuple<>, Callable>
 {
 	using Prototype = void;
@@ -62,10 +62,10 @@ struct FindPrototypeByCallable : public FindPrototypeByCallableHelper <0, Protot
 {
 };
 
-template <size_t N, typename PrototypeList_, typename ...InArgs>
+template <int N, typename PrototypeList_, typename ...InArgs>
 struct FindPrototypeByArgsHelper;
 
-template <size_t N, typename RT, typename ...Args, typename ...Others, typename ...InArgs>
+template <int N, typename RT, typename ...Args, typename ...Others, typename ...InArgs>
 struct FindPrototypeByArgsHelper <N, std::tuple<RT (Args...), Others...>, InArgs...>
 {
 	enum { canInvoke = CanInvoke<RT (Args...), InArgs...>::value };
@@ -89,20 +89,57 @@ struct FindPrototypeByArgsHelper <N, std::tuple<RT (Args...), Others...>, InArgs
 	};
 };
 
-template <size_t N, typename ...InArgs>
+template <int N, typename ...InArgs>
 struct FindPrototypeByArgsHelper <N, std::tuple<>, InArgs...>
 {
 	using Prototype = void;
 
 	using ArgsTuple = std::tuple<>;
 
-	enum {
-		index = -1
-	};
+	enum { index = -1 };
 };
 
 template <typename PrototypeList_, typename ...InArgs>
 struct FindPrototypeByArgs : public FindPrototypeByArgsHelper <0, PrototypeList_, InArgs...>
+{
+};
+
+template <int I, int N, typename PrototypeList_>
+struct FindPrototypeByIndexHelper;
+
+template <int I, int N, typename RT, typename ...Args, typename ...Others>
+struct FindPrototypeByIndexHelper <I, N, std::tuple<RT (Args...), Others...> >
+{
+	using NextType = FindPrototypeByIndexHelper<I + 1, N, std::tuple<Others...> >;
+	using Prototype = typename NextType::Prototype;
+
+	using ArgsTuple = typename NextType::ArgsTuple;
+
+	enum { index = NextType::index };
+};
+
+template <int N, typename RT, typename ...Args, typename ...Others>
+struct FindPrototypeByIndexHelper <N, N, std::tuple<RT (Args...), Others...> >
+{
+	using Prototype = RT (Args...);
+
+	using ArgsTuple = std::tuple<typename std::remove_cv<typename std::remove_reference<Args>::type>::type...>;
+
+	enum { index = N };
+};
+
+template <int I, int N>
+struct FindPrototypeByIndexHelper <I, N, std::tuple<>>
+{
+	using Prototype = void;
+
+	using ArgsTuple = std::tuple<>;
+
+	enum { index = -1 };
+};
+
+template <typename PrototypeList_, int N>
+struct FindPrototypeByIndex : public FindPrototypeByIndexHelper <0, N, PrototypeList_>
 {
 };
 
@@ -116,7 +153,7 @@ struct GetCallablePrototypeMaxSize <std::tuple<RT (Args...), Others...>, Record>
 		my = sizeof(Record<Args...>),
 		other = GetCallablePrototypeMaxSize<std::tuple<Others...>, Record>::value
 	};
-	enum { value = (my > other ? (size_t)my : (size_t)other) };
+	enum { value = (my > other ? (int)my : (int)other) };
 };
 
 template <template <typename ...> class Record>
