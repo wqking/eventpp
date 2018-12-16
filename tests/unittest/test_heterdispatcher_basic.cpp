@@ -56,8 +56,7 @@ TEST_CASE("xxx HeterEventDispatcher, 1")
 TEST_CASE("xxx HeterEventDispatcher, event filter")
 {
 	struct MyPolicies {
-		using Mixins = eventpp::MixinList<eventpp::MixinFilter>;
-		using HeterMixins = eventpp::MixinList<eventpp::MixinHeterFilter>;
+		using Mixins = eventpp::MixinList<eventpp::MixinHeterFilter>;
 	};
 	using ED = eventpp::HeterEventDispatcher<int, std::tuple<void (int, int), void ()>, MyPolicies>;
 	ED dispatcher;

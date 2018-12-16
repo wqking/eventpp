@@ -1,3 +1,5 @@
+// Don't include this header, include eventpolicies.h instead
+
 namespace internal_ {
 
 template <typename T>
@@ -56,10 +58,10 @@ template <typename T, typename Key, bool> struct SelectGetEvent;
 template <typename T, typename Key> struct SelectGetEvent<T, Key, true> { using Type = T; };
 template <typename T, typename Key> struct SelectGetEvent<T, Key, false> { using Type = DefaultGetEvent<Key>; };
 
-template <typename T>
+template <typename T, typename ...Args>
 struct HasFunctionCanContinueInvoking
 {
-	template <typename C> static std::true_type test(decltype(&C::canContinueInvoking) *) ;
+	template <typename C> static std::true_type test(decltype(C::canContinueInvoking(std::declval<Args>()...)) *) ;
 	template <typename C> static std::false_type test(...);    
 
 	enum { value = !! decltype(test<T>(0))() };
@@ -122,19 +124,6 @@ template <typename T> struct SelectMixins <T, true> { using Type = typename T::M
 template <typename T> struct SelectMixins <T, false> { using Type = MixinList<>; };
 
 
-template <typename T>
-struct HasTypeHeterMixins
-{
-	template <typename C> static std::true_type test(typename C::HeterMixins *) ;
-	template <typename C> static std::false_type test(...);    
-
-	enum { value = !! decltype(test<T>(0))() };
-};
-template <typename T, bool> struct SelectHeterMixins;
-template <typename T> struct SelectHeterMixins <T, true> { using Type = typename T::HeterMixins; };
-template <typename T> struct SelectHeterMixins <T, false> { using Type = MixinList<>; };
-
-
 template <typename Root, typename TList>
 struct InheritMixins;
 
@@ -187,20 +176,6 @@ struct HasFunctionMixinBeforeDispatch
 	template <typename C> static std::false_type test(...);    
 
 	enum { value = !! decltype(test<T>(0))() };
-};
-
-template <typename F, typename ...Args>
-struct CanInvoke
-{
-	template <typename U, typename ...X>
-	static auto invoke(int) -> decltype(std::declval<U>()(std::declval<X>()...), std::true_type());
-
-	template <typename U, typename ...X>
-	static auto invoke(...) -> std::false_type;
-
-	enum {
-		value = !! decltype(invoke<F, Args...>(0))()
-	};
 };
 
 

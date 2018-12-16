@@ -14,6 +14,8 @@
 #ifndef TYPEUTIL_I_H
 #define TYPEUTIL_I_H
 
+#include <utility>
+
 namespace eventpp {
 
 namespace internal_ {
@@ -69,6 +71,20 @@ auto intToConstant(const int index, C && c, Args && ...args)
 {
 	return IntToConstantHelper<0, M>::find(index, std::forward<C>(c), std::forward<Args>(args)...);
 }
+
+template <typename F, typename ...Args>
+struct CanInvoke
+{
+	template <typename U, typename ...X>
+	static auto invoke(int) -> decltype(std::declval<U>()(std::declval<X>()...), std::true_type());
+
+	template <typename U, typename ...X>
+	static auto invoke(...) -> std::false_type;
+
+	enum {
+		value = !! decltype(invoke<F, Args...>(0))()
+	};
+};
 
 
 } //namespace internal_

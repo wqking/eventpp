@@ -139,7 +139,10 @@ struct Tutor4MyEventPolicies
 		return e.type;
 	}
 
-	static bool canContinueInvoking(const Tutor4MyEvent & e) {
+	// E is Tutor4MyEvent and canContinueInvoking doesn't need to be template.
+	// We make it template to show canContinueInvoking can be templated member.
+	template <typename E>
+	static bool canContinueInvoking(const E & e) {
 		return ! e.canceled;
 	}
 };

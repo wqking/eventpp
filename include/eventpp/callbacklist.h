@@ -15,6 +15,7 @@
 #define CALLBACKLIST_H_588722158669
 
 #include "eventpolicies.h"
+#include "internal/typeutil_i.h"
 
 #include <atomic>
 #include <condition_variable>
@@ -55,7 +56,7 @@ private:
 	>::Type;
 
 	using CanContinueInvoking = typename SelectCanContinueInvoking<
-		Policies, HasFunctionCanContinueInvoking<Policies>::value
+		Policies, HasFunctionCanContinueInvoking<Policies, Args...>::value
 	>::Type;
 
 	struct Node;

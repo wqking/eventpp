@@ -14,6 +14,10 @@
 #ifndef HETEREVENTDISPATCHER_I_H
 #define HETEREVENTDISPATCHER_I_H
 
+#include "typeutil_i.h"
+
+#include <tuple>
+
 namespace eventpp {
 
 namespace internal_ {

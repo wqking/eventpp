@@ -14,8 +14,10 @@
 #ifndef HETEREVENTDISPATCHER_H_127766658555
 #define HETEREVENTDISPATCHER_H_127766658555
 
-#include "eventdispatcher.h"
 #include "internal/hetereventdispatcher_i.h"
+#include "eventdispatcher.h"
+#include "mixins/mixinheterfilter.h"
+#include "mixins/mixinfilter.h"
 
 #include <array>
 #include <string>
@@ -30,6 +32,37 @@
 namespace eventpp {
 
 namespace internal_ {
+
+template <template <typename> class MixinA, template <typename> class MixinB>
+struct IsSameMixin
+{
+	enum { value = false };
+};
+
+template <template <typename> class MixinA>
+struct IsSameMixin <MixinA, MixinA>
+{
+	enum { value = true };
+};
+
+template <typename MList, template <typename> class ...UnderlyingMixins>
+struct BuildHeterUnderlyingMixinList;
+
+template <template <typename> class First, template <typename> class ...Mixins, template <typename> class ...UnderlyingMixins>
+struct BuildHeterUnderlyingMixinList <MixinList<First, Mixins...>, UnderlyingMixins...>
+{
+	using Type = typename std::conditional<
+		IsSameMixin<First, MixinHeterFilter>::value,
+		typename BuildHeterUnderlyingMixinList<MixinList<Mixins...>, UnderlyingMixins..., MixinFilter>::Type,
+		typename BuildHeterUnderlyingMixinList<MixinList<Mixins...>, UnderlyingMixins..., First>::Type
+	>::type;
+};
+
+template <template <typename> class ...UnderlyingMixins>
+struct BuildHeterUnderlyingMixinList <MixinList<>, UnderlyingMixins...>
+{
+	using Type = MixinList<UnderlyingMixins...>;
+};
 
 template <
 	typename EventType_,
@@ -50,6 +83,13 @@ protected:
 		}
 	};
 
+	struct UnderlyingPoliciesType_
+	{
+		using Mixins = typename BuildHeterUnderlyingMixinList<
+			typename internal_::SelectMixins<Policies_, internal_::HasTypeMixins<Policies_>::value >::Type
+		>::Type;
+	};
+
 	class HomoDispatcherTypeBase
 	{
 	public:
@@ -58,10 +98,10 @@ protected:
 	};
 
 	template <typename T>
-	class HomoDispatcherType : public EventDispatcher<EventType_, T, Policies_>, public HomoDispatcherTypeBase
+	class HomoDispatcherType : public EventDispatcher<EventType_, T, UnderlyingPoliciesType_>, public HomoDispatcherTypeBase
 	{
 	private:
-		using super = EventDispatcher<EventType_, T, Policies_>;
+		using super = EventDispatcher<EventType_, T, UnderlyingPoliciesType_>;
 
 	public:
 		virtual bool doRemoveListener(const EventType_ & event, const Handle_ & handle) override {
@@ -217,8 +257,8 @@ private:
 	mutable Mutex dispatcherListMutex;
 };
 
-
 } //namespace internal_
+
 
 template <
 	typename Event_,
@@ -227,13 +267,13 @@ template <
 >
 class HeterEventDispatcher : public internal_::InheritMixins<
 		internal_::HeterEventDispatcherBase<Event_, PrototypeList_, Policies_, void>,
-		typename internal_::SelectHeterMixins<Policies_, internal_::HasTypeHeterMixins<Policies_>::value >::Type
+		typename internal_::SelectMixins<Policies_, internal_::HasTypeMixins<Policies_>::value >::Type
 	>::Type, public TagEventDispatcher
 {
 private:
 	using super = typename internal_::InheritMixins<
 		internal_::HeterEventDispatcherBase<Event_, PrototypeList_, Policies_, void>,
-		typename internal_::SelectHeterMixins<Policies_, internal_::HasTypeHeterMixins<Policies_>::value >::Type
+		typename internal_::SelectMixins<Policies_, internal_::HasTypeMixins<Policies_>::value >::Type
 	>::Type;
 
 public:
