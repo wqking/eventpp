@@ -29,15 +29,6 @@ This function requires the callback be able to be compared with equal operator (
 
 ```c++
 template <typename DispatcherType>
-bool hasEvent(
-	DispatcherType & dispatcher,
-	const typename DispatcherType::Event & event
-);
-```
-The function finds any listener of `event` in `dispatcher`, returns true if it finds any one, otherwise returns false.  
-
-```c++
-template <typename DispatcherType>
 bool hasListener(
 	DispatcherType & dispatcher,
 	const typename DispatcherType::Event & event,
@@ -48,6 +39,15 @@ The function finds `listener` of `event` in `dispatcher`, returns true if it fin
 This function requires the listener be able to be compared with equal operator (==).  
 
 ```c++
+template <typename DispatcherType>
+bool hasAnyListener(
+	DispatcherType & dispatcher,
+	const typename DispatcherType::Event & event
+);
+```
+The function finds any listener of `event` in `dispatcher`, returns true if it finds any one, otherwise returns false.  
+
+```c++
 template <typename CallbackListType>
 bool hasListener(
 	CallbackListType & callbackList,
@@ -56,3 +56,11 @@ bool hasListener(
 ```
 The function finds `callback` in `callbackList`, returns true if it finds one, otherwise returns false.  
 This function requires the callback be able to be compared with equal operator (==).  
+
+```c++
+template <typename CallbackListType>
+bool hasAnyListener(
+	CallbackListType & callbackList
+);
+```
+The function finds any callback in `callbackList`, returns true if it finds any one, otherwise returns false.  
