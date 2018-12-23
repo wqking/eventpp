@@ -63,30 +63,32 @@ TEST_CASE("eventutil, EventDispatcher removeListener")
 	REQUIRE(! eventpp::removeListener(dispatcher, event, &removeEd2));
 }
 
-TEST_CASE("eventutil, EventDispatcher hasEvent")
+TEST_CASE("eventutil, CallbackList removeListener")
 {
-	eventpp::EventDispatcher<int, void (std::vector<int> *), RemoveEdPolicies> dispatcher;
+	eventpp::CallbackList<void (std::vector<int> *), RemoveEdPolicies> callbackList;
+	
+	std::vector<int> dataList(2);
+	
+	REQUIRE(dataList == std::vector<int> { 0, 0 });
 
-	REQUIRE(! eventpp::hasEvent(dispatcher, 3));
-	REQUIRE(! eventpp::hasEvent(dispatcher, 5));
+	callbackList.append(&removeEd1);
+	callbackList.append(&removeEd2);
+	
+	callbackList(&dataList);
+	REQUIRE(dataList == std::vector<int> { 1, 1 });
 
-	dispatcher.appendListener(3, &removeEd1);
+	REQUIRE(eventpp::removeListener(callbackList, &removeEd1));
+	callbackList(&dataList);
+	REQUIRE(dataList == std::vector<int> { 1, 2 });
 
-	REQUIRE(eventpp::hasEvent(dispatcher, 3));
-	REQUIRE(! eventpp::hasEvent(dispatcher, 5));
+	REQUIRE(! eventpp::removeListener(callbackList, &removeEd1));
 
-	dispatcher.appendListener(5, &removeEd2);
+	REQUIRE(eventpp::removeListener(callbackList, &removeEd2));
+	callbackList(&dataList);
+	REQUIRE(dataList == std::vector<int> { 1, 2 });
 
-	REQUIRE(eventpp::hasEvent(dispatcher, 3));
-	REQUIRE(eventpp::hasEvent(dispatcher, 5));
-
-	eventpp::removeListener(dispatcher, 3, &removeEd1);
-	REQUIRE(! eventpp::hasEvent(dispatcher, 3));
-	REQUIRE(eventpp::hasEvent(dispatcher, 5));
-
-	eventpp::removeListener(dispatcher, 5, &removeEd2);
-	REQUIRE(! eventpp::hasEvent(dispatcher, 3));
-	REQUIRE(! eventpp::hasEvent(dispatcher, 5));
+	REQUIRE(! eventpp::removeListener(callbackList, &removeEd1));
+	REQUIRE(! eventpp::removeListener(callbackList, &removeEd2));
 }
 
 TEST_CASE("eventutil, EventDispatcher hasListener")
@@ -125,32 +127,30 @@ TEST_CASE("eventutil, EventDispatcher hasListener")
 	REQUIRE(! eventpp::hasListener(dispatcher, 5, &removeEd2));
 }
 
-TEST_CASE("eventutil, CallbackList removeListener")
+TEST_CASE("eventutil, EventDispatcher hasAnyListener")
 {
-	eventpp::CallbackList<void (std::vector<int> *), RemoveEdPolicies> callbackList;
-	
-	std::vector<int> dataList(2);
-	
-	REQUIRE(dataList == std::vector<int> { 0, 0 });
+	eventpp::EventDispatcher<int, void (std::vector<int> *), RemoveEdPolicies> dispatcher;
 
-	callbackList.append(&removeEd1);
-	callbackList.append(&removeEd2);
-	
-	callbackList(&dataList);
-	REQUIRE(dataList == std::vector<int> { 1, 1 });
+	REQUIRE(! eventpp::hasAnyListener(dispatcher, 3));
+	REQUIRE(! eventpp::hasAnyListener(dispatcher, 5));
 
-	REQUIRE(eventpp::removeListener(callbackList, &removeEd1));
-	callbackList(&dataList);
-	REQUIRE(dataList == std::vector<int> { 1, 2 });
+	dispatcher.appendListener(3, &removeEd1);
 
-	REQUIRE(! eventpp::removeListener(callbackList, &removeEd1));
+	REQUIRE(eventpp::hasAnyListener(dispatcher, 3));
+	REQUIRE(! eventpp::hasAnyListener(dispatcher, 5));
 
-	REQUIRE(eventpp::removeListener(callbackList, &removeEd2));
-	callbackList(&dataList);
-	REQUIRE(dataList == std::vector<int> { 1, 2 });
+	dispatcher.appendListener(5, &removeEd2);
 
-	REQUIRE(! eventpp::removeListener(callbackList, &removeEd1));
-	REQUIRE(! eventpp::removeListener(callbackList, &removeEd2));
+	REQUIRE(eventpp::hasAnyListener(dispatcher, 3));
+	REQUIRE(eventpp::hasAnyListener(dispatcher, 5));
+
+	eventpp::removeListener(dispatcher, 3, &removeEd1);
+	REQUIRE(! eventpp::hasAnyListener(dispatcher, 3));
+	REQUIRE(eventpp::hasAnyListener(dispatcher, 5));
+
+	eventpp::removeListener(dispatcher, 5, &removeEd2);
+	REQUIRE(! eventpp::hasAnyListener(dispatcher, 3));
+	REQUIRE(! eventpp::hasAnyListener(dispatcher, 5));
 }
 
 TEST_CASE("eventutil, CallbackList hasListener")
@@ -179,3 +179,19 @@ TEST_CASE("eventutil, CallbackList hasListener")
 	REQUIRE(! eventpp::hasListener(callbackList, &removeEd2));
 }
 
+TEST_CASE("eventutil, CallbackList hasAnyListener")
+{
+	eventpp::CallbackList<void (std::vector<int> *), RemoveEdPolicies> callbackList;
+
+	REQUIRE(! eventpp::hasAnyListener(callbackList));
+
+	callbackList.append(&removeEd1);
+	REQUIRE(eventpp::hasAnyListener(callbackList));
+	callbackList.append(&removeEd2);
+	REQUIRE(eventpp::hasAnyListener(callbackList));
+
+	eventpp::removeListener(callbackList, &removeEd1);
+	REQUIRE(eventpp::hasAnyListener(callbackList));
+	eventpp::removeListener(callbackList, &removeEd2);
+	REQUIRE(! eventpp::hasAnyListener(callbackList));
+}
