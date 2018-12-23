@@ -27,3 +27,32 @@ The function finds `callback` in `callbackList`, if it finds one, removes the ca
 Note: the function only removes the first found callback. To remove more than one callbacks, repeat calling this function until it returns false.  
 This function requires the callback be able to be compared with equal operator (==).  
 
+```c++
+template <typename DispatcherType>
+bool hasEvent(
+	DispatcherType & dispatcher,
+	const typename DispatcherType::Event & event
+);
+```
+The function finds any listener of `event` in `dispatcher`, returns true if it finds any one, otherwise returns false.  
+
+```c++
+template <typename DispatcherType>
+bool hasListener(
+	DispatcherType & dispatcher,
+	const typename DispatcherType::Event & event,
+	const typename DispatcherType::Callback & listener
+);
+```
+The function finds `listener` of `event` in `dispatcher`, returns true if it finds any one, otherwise returns false.  
+This function requires the listener be able to be compared with equal operator (==).  
+
+```c++
+template <typename CallbackListType>
+bool hasListener(
+	CallbackListType & callbackList,
+	const typename CallbackListType::Callback & callback
+);
+```
+The function finds `callback` in `callbackList`, returns true if it finds one, otherwise returns false.  
+This function requires the callback be able to be compared with equal operator (==).  
