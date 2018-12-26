@@ -134,4 +134,4 @@ The time complexities being discussed here is about when operating on the listen
 <a name="internal-data-structure"></a>
 ## Internal data structure
 
-EventDispatcher uses [CallbackList](doc/callbacklist.md) to manage the listener callbacks.  
+EventDispatcher uses [CallbackList](callbacklist.md) to manage the listener callbacks.  
