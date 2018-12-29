@@ -16,6 +16,10 @@
 #include "eventpp/mixins/mixinfilter.h"
 #include "eventpp/mixins/mixinheterfilter.h"
 
+using namespace eventpp;
+using namespace eventpp::internal_;
+static_assert(FindPrototypeByCallable<std::tuple<void(), void(int)>, void(int)>::index == 1, "aaa");
+
 TEST_CASE("xxx HeterEventDispatcher, 1")
 {
 	eventpp::HeterEventDispatcher<int, std::tuple<void (), void (int, int, int)> > dispatcher;
@@ -57,8 +61,9 @@ TEST_CASE("xxx HeterEventDispatcher, event filter")
 {
 	struct MyPolicies {
 		using Mixins = eventpp::MixinList<eventpp::MixinHeterFilter>;
+		using ArgumentPassingMode = eventpp::ArgumentPassingIncludeEvent;
 	};
-	using ED = eventpp::HeterEventDispatcher<int, std::tuple<void (int, int), void ()>, MyPolicies>;
+	using ED = eventpp::HeterEventDispatcher<int, std::tuple<void (int, int), void (int)>, MyPolicies>;
 	ED dispatcher;
 
 	constexpr int itemCount = 5;
@@ -78,13 +83,13 @@ TEST_CASE("xxx HeterEventDispatcher, event filter")
 			++filterData[0];
 			return true;
 		});
-		auto handle2 = dispatcher.appendFilter([&filterData]() -> bool {
+		auto handle2 = dispatcher.appendFilter([&filterData](int) -> bool {
 			++filterData[1];
 			return true;
 		});
 
 		for(int i = 0; i < itemCount; ++i) {
-			dispatcher.dispatch(i, i, 58);
+			dispatcher.dispatch(i, 58);
 			dispatcher.dispatch(i);
 		}
 
@@ -94,7 +99,7 @@ TEST_CASE("xxx HeterEventDispatcher, event filter")
 		dispatcher.removeFilter(handle1);
 
 		for(int i = 0; i < itemCount; ++i) {
-			dispatcher.dispatch(i, i, 38);
+			dispatcher.dispatch(i, 38);
 			dispatcher.dispatch(i);
 		}
 
@@ -104,13 +109,13 @@ TEST_CASE("xxx HeterEventDispatcher, event filter")
 		dispatcher.removeFilter(handle2);
 
 		for(int i = 0; i < itemCount; ++i) {
-			dispatcher.dispatch(i, i, 38);
+			dispatcher.dispatch(i, 38);
 			dispatcher.dispatch(i);
 		}
 
 		REQUIRE(filterData == std::vector<int>{ itemCount, itemCount * 2 });
 	}
-#if 0
+
 	SECTION("First filter blocks all other filters and listeners") {
 		dispatcher.appendFilter([&filterData](int e, int /*index*/) -> bool {
 			++filterData[0];
@@ -173,6 +178,6 @@ TEST_CASE("xxx HeterEventDispatcher, event filter")
 		REQUIRE(filterData == std::vector<int>{ itemCount, itemCount });
 		REQUIRE(dataList == std::vector<int>{ 58, 58, 59, 59, 59 });
 	}
-#endif
+
 }
 

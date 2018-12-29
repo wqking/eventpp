@@ -60,11 +60,12 @@ private:
 
 	struct QueuedItemBase
 	{
-		QueuedItemBase(const EventType_ & event, const ItemDispatcher dispatcher)
-			: event(event), dispatcher(dispatcher)
+		QueuedItemBase(const int callableIndex, const EventType_ & event, const ItemDispatcher dispatcher)
+			: callableIndex(callableIndex), event(event), dispatcher(dispatcher)
 		{
 		}
 
+		int callableIndex;
 		EventType_ event;
 		ItemDispatcher dispatcher;
 	};
@@ -72,8 +73,8 @@ private:
 	template <typename T>
 	struct QueuedItem : public QueuedItemBase
 	{
-		QueuedItem(const EventType_ & event, const ItemDispatcher dispatcher, T && arguments)
-			: QueuedItemBase(event, dispatcher), arguments(std::move(arguments))
+		QueuedItem(const int callableIndex, const EventType_ & event, const ItemDispatcher dispatcher, T && arguments)
+			: QueuedItemBase(callableIndex, event, dispatcher), arguments(std::move(arguments))
 		{
 		}
 
@@ -87,31 +88,55 @@ private:
 
 	using BufferedItemList = std::list<BufferedQueuedItem>;
 
+	using PrototypeList = typename super::PrototypeList;
+
+	using ArgumentPassingMode = typename super::ArgumentPassingMode;
+
 public:
 	using super::Event;
 	using super::Handle;
 	using Mutex = typename super::Mutex;
 
 public:
+	HeterEventQueueBase()
+		:
+		super(),
+		queueListConditionVariable(),
+		queueEmptyCounter(0),
+		queueNotifyCounter(0),
+		queueListMutex(),
+		queueList(),
+		freeListMutex(),
+		freeList()
+	{
+	}
+
+	HeterEventQueueBase(const HeterEventQueueBase & other)
+		: super(other)
+	{
+	}
+
+	HeterEventQueueBase(HeterEventQueueBase && other) noexcept
+		: super(std::move(other))
+	{
+	}
+
+	HeterEventQueueBase & operator = (const HeterEventQueueBase & other)
+	{
+		super::operator = (other);
+		return *this;
+	}
+
+	HeterEventQueueBase & operator = (HeterEventQueueBase && other) noexcept
+	{
+		super::operator = (std::move(other));
+		return *this;
+	}
+
 	template <typename T, typename ...Args>
 	void enqueue(T && first, Args ...args)
 	{
-		using GetEvent = typename SelectGetEvent<Policies_, EventType_, HasFunctionGetEvent<Policies_, T &&, Args...>::value>::Type;
-		using PrototypeInfo = FindPrototypeByArgs<PrototypeList_, Args...>;
-		using QueuedItemType = QueuedItem<typename PrototypeInfo::ArgsTuple>;
-
-		static_assert(PrototypeInfo::index >= 0, "Can't find invoker for the given argument types.");
-		static_assert(std::tuple_size<typename PrototypeInfo::ArgsTuple>::value == sizeof...(Args), "Arguments count mismatch.");
-
-		doEnqueue(QueuedItemType(
-			GetEvent::getEvent(std::forward<T>(first), args...),
-			&HeterEventQueueBase::doDispatchItem<typename PrototypeInfo::ArgsTuple>,
-			typename PrototypeInfo::ArgsTuple(std::forward<Args>(args)...)
-		));
-
-		if(doCanProcess()) {
-			queueListConditionVariable.notify_one();
-		}
+		doEnqueue<ArgumentPassingMode>(std::forward<T>(first), std::forward<Args>(args)...);
 	}
 
 	bool empty() const
@@ -179,56 +204,17 @@ public:
 
 		return false;
 	}
-/*
+
 	template <typename F>
 	bool processIf(F && func)
 	{
-		if(! queueList.empty()) {
-			BufferedItemList tempList;
-			BufferedItemList idleList;
-
-			// Use a counter to tell the queue list is not empty during processing
-			// even though queueList is swapped to empty.
-			CounterGuard<decltype(queueEmptyCounter)> counterGuard(queueEmptyCounter);
-
-			{
-				std::lock_guard<Mutex> queueListLock(queueListMutex);
-				std::swap(queueList, tempList);
-			}
-
-			if(! tempList.empty()) {
-				for(auto it = tempList.begin(); it != tempList.end(); ++it) {
-					if(doInvokeFuncWithQueuedEvent(
-						func,
-						it->template get<QueuedItemBase>(),
-						typename MakeIndexSequence<sizeof...(Args)>::Type())
-						) {
-						doDispatchQueuedEvent(item.template get<QueuedItemBase>());
-						it->clear();
-
-						auto tempIt = it;
-						--it;
-						idleList.splice(idleList.end(), tempList, tempIt);
-					}
-				}
-
-				if (! tempList.empty()) {
-					std::lock_guard<Mutex> queueListLock(queueListMutex);
-					queueList.splice(queueList.begin(), tempList);
-				}
-
-				if(! idleList.empty()) {
-					std::lock_guard<Mutex> queueListLock(freeListMutex);
-					freeList.splice(freeList.end(), idleList);
-
-					return true;
-				}
-			}
+		if(queueList.empty()) {
+			return false;
 		}
 
-		return false;
+		using PrototypeInfo = FindPrototypeByCallable<PrototypeList, F>;
+		return doProcessIf<PrototypeInfo>(std::forward<F>(func));
 	}
-*/
 
 	void wait() const
 	{
@@ -265,38 +251,149 @@ private:
 		item.dispatcher(this, item);
 	}
 
-	template <typename ArgsTuple>
+	template <typename PrototypeInfo>
 	static void doDispatchItem(const HeterEventQueueBase * self, const QueuedItemBase & baseItem)
 	{
-		const QueuedItem<ArgsTuple> & item = static_cast<const QueuedItem<ArgsTuple> &>(baseItem);
-		self->doDispatchQueuedItem(
+		const auto & item = static_cast<const QueuedItem<typename PrototypeInfo::ArgsTuple> &>(baseItem);
+		self->doDispatchQueuedItem<PrototypeInfo>(
 			item,
-			typename MakeIndexSequence<std::tuple_size<ArgsTuple>::value>::Type()
+			typename MakeIndexSequence<std::tuple_size<typename PrototypeInfo::ArgsTuple>::value>::Type()
 		);
 	}
 
-	template <typename T, size_t ...Indexes>
+	template <typename PrototypeInfo, typename T, size_t ...Indexes>
 	void doDispatchQueuedItem(T && item, IndexSequence<Indexes...>) const
 	{
-		this->dispatch(item.event, std::get<Indexes>(item.arguments)...);
+		auto dispatcher = this->template doGetDispatcher<PrototypeInfo>();
+		dispatcher->directDispatch(item.event, std::get<Indexes>(item.arguments)...);
 	}
 
-	/*
+	template <typename PrototypeInfo, typename F>
+	auto doProcessIf(F && func)
+		-> typename std::enable_if<(PrototypeInfo::index >= 0), bool>::type
+	{
+		BufferedItemList tempList;
+		BufferedItemList idleList;
+
+		// Use a counter to tell the queue list is not empty during processing
+		// even though queueList is swapped to empty.
+		CounterGuard<decltype(queueEmptyCounter)> counterGuard(queueEmptyCounter);
+
+		{
+			std::lock_guard<Mutex> queueListLock(queueListMutex);
+			std::swap(queueList, tempList);
+		}
+
+		if(! tempList.empty()) {
+			for(auto it = tempList.begin(); it != tempList.end(); ++it) {
+				using ArgsTuple = typename PrototypeInfo::ArgsTuple;
+				auto item = it->template get<QueuedItem<ArgsTuple> >();
+
+				if(item.callableIndex != PrototypeInfo::index) {
+					continue;
+				}
+				if(doInvokeFuncWithQueuedEvent(
+					func,
+					item,
+					typename MakeIndexSequence<std::tuple_size<ArgsTuple>::value>::Type())
+					) {
+					doDispatchQueuedEvent(item);
+					it->clear();
+
+					auto tempIt = it;
+					--it;
+					idleList.splice(idleList.end(), tempList, tempIt);
+				}
+			}
+
+			if (! tempList.empty()) {
+				std::lock_guard<Mutex> queueListLock(queueListMutex);
+				queueList.splice(queueList.begin(), tempList);
+			}
+
+			if(! idleList.empty()) {
+				std::lock_guard<Mutex> queueListLock(freeListMutex);
+				freeList.splice(freeList.end(), idleList);
+
+				return true;
+			}
+		}
+
+		using NextPrototypeInfo = FindPrototypeByCallableFromIndex<PrototypeInfo::index + 1, PrototypeList, F>;
+		if(doProcessIf<NextPrototypeInfo>(std::forward<F>(func))) {
+			return true;
+		}
+
+		return false;
+	}
+
+	template <typename PrototypeInfo, typename F>
+	auto doProcessIf(F && func)
+		-> typename std::enable_if<(PrototypeInfo::index < 0), bool>::type
+	{
+		return false;
+	}
+
 	template <typename F, typename T, size_t ...Indexes>
 	bool doInvokeFuncWithQueuedEvent(F && func, T && item, IndexSequence<Indexes...>) const
 	{
-		return doInvokeFuncWithQueuedEventHelper(std::forward<F>(func), item.event, std::get<Indexes>(item.arguments)...);
+		return doInvokeFuncWithQueuedEventHelper(std::forward<F>(func), std::get<Indexes>(item.arguments)...);
 	}
 
 	template <typename F, typename ...Args>
-	bool doInvokeFuncWithQueuedEventHelper(F && func, const typename super::Event & e, Args ...args) const
+	bool doInvokeFuncWithQueuedEventHelper(F && func, Args ...args) const
 	{
 		return func(std::forward<Args>(args)...);
 	}
-	*/
+
+	template <typename ArgumentMode, typename T, typename ...Args>
+	auto doEnqueue(T && first, Args ...args)
+		-> typename std::enable_if<std::is_same<ArgumentMode, ArgumentPassingIncludeEvent>::value>::type
+	{
+		using GetEvent = typename SelectGetEvent<Policies_, EventType_, HasFunctionGetEvent<Policies_, T &&, Args...>::value>::Type;
+		using PrototypeInfo = FindPrototypeByArgs<PrototypeList_, T, Args...>;
+		using QueuedItemType = QueuedItem<typename PrototypeInfo::ArgsTuple>;
+
+		static_assert(PrototypeInfo::index >= 0, "Can't find invoker for the given argument types.");
+		static_assert(std::tuple_size<typename PrototypeInfo::ArgsTuple>::value == 1 + sizeof...(Args), "Arguments count mismatch.");
+
+		doEnqueueItem(QueuedItemType(
+			PrototypeInfo::index,
+			GetEvent::getEvent(std::forward<T>(first), args...),
+			&HeterEventQueueBase::doDispatchItem<PrototypeInfo>,
+			typename PrototypeInfo::ArgsTuple(std::forward<T>(first), std::forward<Args>(args)...)
+		));
+
+		if(doCanProcess()) {
+			queueListConditionVariable.notify_one();
+		}
+	}
+
+	template <typename ArgumentMode, typename T, typename ...Args>
+	auto doEnqueue(T && first, Args ...args)
+		-> typename std::enable_if<std::is_same<ArgumentMode, ArgumentPassingExcludeEvent>::value>::type
+	{
+		using GetEvent = typename SelectGetEvent<Policies_, EventType_, HasFunctionGetEvent<Policies_, T &&, Args...>::value>::Type;
+		using PrototypeInfo = FindPrototypeByArgs<PrototypeList_, Args...>;
+		using QueuedItemType = QueuedItem<typename PrototypeInfo::ArgsTuple>;
+
+		static_assert(PrototypeInfo::index >= 0, "Can't find invoker for the given argument types.");
+		static_assert(std::tuple_size<typename PrototypeInfo::ArgsTuple>::value == sizeof...(Args), "Arguments count mismatch.");
+
+		doEnqueueItem(QueuedItemType(
+			PrototypeInfo::index,
+			GetEvent::getEvent(std::forward<T>(first), args...),
+			&HeterEventQueueBase::doDispatchItem<PrototypeInfo>,
+			typename PrototypeInfo::ArgsTuple(std::forward<Args>(args)...)
+		));
+
+		if(doCanProcess()) {
+			queueListConditionVariable.notify_one();
+		}
+	}
 
 	template <typename T>
-	void doEnqueue(T && item)
+	void doEnqueueItem(T && item)
 	{
 		BufferedItemList tempList;
 		if(! freeList.empty()) {

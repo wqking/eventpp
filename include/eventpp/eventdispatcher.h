@@ -65,7 +65,8 @@ protected:
 
 	using ArgumentPassingMode = typename SelectArgumentPassingMode<
 		Policies_,
-		HasTypeArgumentPassingMode<Policies_>::value
+		HasTypeArgumentPassingMode<Policies_>::value,
+		ArgumentPassingAutoDetect
 	>::Type;
 
 	using Callback_ = typename SelectCallback<
@@ -195,8 +196,8 @@ public:
 		using GetEvent = typename SelectGetEvent<Policies_, EventType_, HasFunctionGetEvent<Policies_, Args...>::value>::Type;
 
 		// can't std::forward<Args>(args) in GetEvent::getEvent because the pass by value arguments will be moved to getEvent
-		// then the other std::forward<Args>(args) to doDispatch will get empty values.
-		doDispatch(
+		// then the other std::forward<Args>(args) to directDispatch will get empty values.
+		directDispatch(
 			GetEvent::getEvent(args...),
 			std::forward<Args>(args)...
 		);
@@ -209,14 +210,15 @@ public:
 
 		using GetEvent = typename SelectGetEvent<Policies_, EventType_, HasFunctionGetEvent<Policies_, T &&, Args...>::value>::Type;
 
-		doDispatch(
+		directDispatch(
 			GetEvent::getEvent(std::forward<T>(first), args...),
 			std::forward<Args>(args)...
 		);
 	}
 
-protected:
-	void doDispatch(const Event & e, Args ...args) const
+	// Bypass any getEvent policy. The first argument is the event type.
+	// Most used for internal purpose.
+	void directDispatch(const Event & e, Args ...args) const
 	{
 		if(! internal_::ForEachMixins<MixinRoot, Mixins, DoMixinBeforeDispatch>::forEach(
 			this, typename std::add_lvalue_reference<Args>::type(args)...)) {
@@ -229,6 +231,7 @@ protected:
 		}
 	}
 
+protected:
 	const CallbackList_ * doFindCallableList(const Event & e) const
 	{
 		return doFindCallableListHelper(this, e);

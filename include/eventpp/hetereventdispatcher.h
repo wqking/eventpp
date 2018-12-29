@@ -83,6 +83,15 @@ protected:
 		}
 	};
 
+	using ArgumentPassingMode = typename SelectArgumentPassingMode<
+		Policies_,
+		HasTypeArgumentPassingMode<Policies_>::value,
+		ArgumentPassingExcludeEvent
+	>::Type;
+
+	static_assert(! std::is_same<ArgumentPassingMode, ArgumentPassingAutoDetect>::value,
+		"ArgumentPassingMode can't be ArgumentPassingAutoDetect in heterogeneous dispatcher.");
+
 	struct UnderlyingPoliciesType_
 	{
 		using Mixins = typename BuildHeterUnderlyingMixinList<
@@ -117,18 +126,8 @@ protected:
 		}
 	};
 
-	using ThisType = HeterEventDispatcherBase<
-		EventType_,
-		PrototypeList_,
-		Policies_,
-		MixinRoot_
-	>;
-
 	using Policies = Policies_;
 	using Threading = typename SelectThreading<Policies, HasTypeThreading<Policies>::value>::Type;
-
-	// Disable ArgumentPassingMode explicitly
-	static_assert(! HasTypeArgumentPassingMode<Policies>::value, "Policies can't have ArgumentPassingMode in heterogeneous dispatcher.");
 
 	using PrototypeList = PrototypeList_;
 
@@ -136,6 +135,7 @@ public:
 	using Handle = Handle_;
 	using Event = EventType_;
 	using Mutex = typename Threading::Mutex;
+
 public:
 	HeterEventDispatcherBase()
 		:
@@ -188,7 +188,7 @@ public:
 		using PrototypeInfo = FindPrototypeByCallable<PrototypeList_, C>;
 		static_assert(PrototypeInfo::index >= 0, "Can't find invoker for the given argument types.");
 
-		auto dispatcher = doFindDispatcher<PrototypeInfo>();
+		auto dispatcher = doGetDispatcher<PrototypeInfo>();
 		return Handle {
 			PrototypeInfo::index,
 			dispatcher->appendListener(event, callback)
@@ -201,7 +201,7 @@ public:
 		using PrototypeInfo = FindPrototypeByCallable<PrototypeList_, C>;
 		static_assert(PrototypeInfo::index >= 0, "Can't find invoker for the given argument types.");
 
-		auto dispatcher = doFindDispatcher<PrototypeInfo>();
+		auto dispatcher = doGetDispatcher<PrototypeInfo>();
 		return Handle {
 			PrototypeInfo::index,
 			dispatcher->prependListener(event, callback)
@@ -221,16 +221,34 @@ public:
 	template <typename T, typename ...Args>
 	void dispatch(T && first, Args ...args) const
 	{
-		using PrototypeInfo = FindPrototypeByArgs<PrototypeList_, Args...>;
-		static_assert(PrototypeInfo::index >= 0, "Can't find invoker for the given argument types.");
-
-		auto dispatcher = doFindDispatcher<PrototypeInfo>();
-		dispatcher->dispatch(std::forward<T>(first), std::forward<Args>(args)...);
+		doDispatch<ArgumentPassingMode>(std::forward<T>(first), std::forward<Args>(args)...);
 	}
 
 protected:
+	template <typename ArgumentMode, typename T, typename ...Args>
+	auto doDispatch(T && first, Args ...args) const
+		-> typename std::enable_if<std::is_same<ArgumentMode, ArgumentPassingIncludeEvent>::value>::type
+	{
+		using PrototypeInfo = FindPrototypeByArgs<PrototypeList_, T, Args...>;
+		static_assert(PrototypeInfo::index >= 0, "Can't find invoker for the given argument types.");
+
+		auto dispatcher = doGetDispatcher<PrototypeInfo>();
+		dispatcher->dispatch(std::forward<T>(first), std::forward<T>(first), std::forward<Args>(args)...);
+	}
+
+	template <typename ArgumentMode, typename T, typename ...Args>
+	auto doDispatch(T && first, Args ...args) const
+		-> typename std::enable_if<std::is_same<ArgumentMode, ArgumentPassingExcludeEvent>::value>::type
+	{
+		using PrototypeInfo = FindPrototypeByArgs<PrototypeList_, Args...>;
+		static_assert(PrototypeInfo::index >= 0, "Can't find invoker for the given argument types.");
+
+		auto dispatcher = doGetDispatcher<PrototypeInfo>();
+		dispatcher->dispatch(std::forward<T>(first), std::forward<Args>(args)...);
+	}
+
 	template <typename PrototypeInfo>
-	auto doFindDispatcher() const
+	auto doGetDispatcher() const
 		-> std::shared_ptr<HomoDispatcherType<typename PrototypeInfo::Prototype> >
 	{
 		static_assert(PrototypeInfo::index >= 0, "Can't find invoker for the given argument types.");
@@ -246,7 +264,15 @@ protected:
 		return std::static_pointer_cast<HomoDispatcherType<typename PrototypeInfo::Prototype> >(dispatcherList[PrototypeInfo::index]);
 	}
 
-	// Used by mixins
+	template <typename PrototypeInfo>
+	auto doFindDispatcher() const
+		-> std::shared_ptr<HomoDispatcherType<typename PrototypeInfo::Prototype> >
+	{
+		static_assert(PrototypeInfo::index >= 0, "Can't find invoker for the given argument types.");
+
+		return std::static_pointer_cast<HomoDispatcherType<typename PrototypeInfo::Prototype> >(dispatcherList[PrototypeInfo::index]);
+	}
+
 	std::shared_ptr<HomoDispatcherTypeBase> doGetDispatcherAt(const int index) const
 	{
 		return dispatcherList[index];

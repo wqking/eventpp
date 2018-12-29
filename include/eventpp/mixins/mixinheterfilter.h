@@ -49,7 +49,7 @@ private:
 			}
 
 			using PrototypeInfo = internal_::FindPrototypeByIndex<PrototypeList, N>;
-			auto dispatcher = self->template doFindDispatcher<PrototypeInfo>();
+			auto dispatcher = self->template doGetDispatcher<PrototypeInfo>();
 			if(! dispatcher) {
 				return false;
 			}
@@ -68,10 +68,10 @@ public:
 	template <typename C>
 	FilterHandle appendFilter(const C & callback) const
 	{
-		using PrototypeInfo = internal_::FindPrototypeByCallable<typename super::PrototypeList, C>;
+		using PrototypeInfo = internal_::FindPrototypeByCallable<typename super::PrototypeList, C, std::add_lvalue_reference>;
 		static_assert(PrototypeInfo::index >= 0, "Can't find invoker for the given argument types.");
 
-		auto dispatcher = this->template doFindDispatcher<PrototypeInfo>();
+		auto dispatcher = this->template doGetDispatcher<PrototypeInfo>();
 		return FilterHandle {
 			PrototypeInfo::index,
 			dispatcher->appendFilter(callback)

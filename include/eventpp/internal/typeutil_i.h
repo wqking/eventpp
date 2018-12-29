@@ -15,6 +15,7 @@
 #define TYPEUTIL_I_H
 
 #include <utility>
+#include <tuple>
 
 namespace eventpp {
 
@@ -86,6 +87,37 @@ struct CanInvoke
 	};
 };
 
+template <typename T>
+struct ShiftTuple;
+
+template <typename A, typename ...Args>
+struct ShiftTuple <std::tuple<A, Args...> >
+{
+	using Type = std::tuple<Args...>;
+};
+
+template <>
+struct ShiftTuple <std::tuple<> >
+{
+	using Type = std::tuple<>;
+};
+
+// for compile time debug
+template<typename T>
+void printTypeInCompileTime(T * = 0)
+{
+	static_assert(std::is_same<T, int>::value && ! std::is_same<T, int>::value, "The error shows the type name.");
+}
+template<int N>
+void printIntInCompileTime()
+{
+	int n = 0;
+	switch(n) {
+	case N:
+	case N:
+		break;
+	};
+}
 
 } //namespace internal_
 

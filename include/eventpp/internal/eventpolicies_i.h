@@ -10,8 +10,8 @@ struct HasTypeArgumentPassingMode
 
 	enum { value = !! decltype(test<T>(0))() };
 };
-template <typename T, bool> struct SelectArgumentPassingMode { using Type = typename T::ArgumentPassingMode; };
-template <typename T> struct SelectArgumentPassingMode <T, false> { using Type = ArgumentPassingAutoDetect; };
+template <typename T, bool, typename Default> struct SelectArgumentPassingMode { using Type = typename T::ArgumentPassingMode; };
+template <typename T, typename Default> struct SelectArgumentPassingMode <T, false, Default> { using Type = Default; };
 
 template <typename T>
 struct HasTypeThreading

@@ -22,35 +22,76 @@ namespace eventpp {
 
 namespace internal_ {
 
-template <int N, typename PrototypeList_, typename Callable>
-struct FindPrototypeByCallableHelper;
-
-template <int N, typename RT, typename ...Args, typename ...Others, typename Callable>
-struct FindPrototypeByCallableHelper <N, std::tuple<RT (Args...), Others...>, Callable>
+template <typename T>
+struct FindPrototypeDefaultArgTransformer
 {
-	enum { canInvoke = CanInvoke<Callable, Args...>::value };
+	using type = T;
+};
+
+template <
+	int N,
+	typename PrototypeList_,
+	typename Callable,
+	template <typename> class ArgTransformer = FindPrototypeDefaultArgTransformer,
+	int M = std::tuple_size<PrototypeList_>::value,
+	typename Enabled = void
+>
+struct FindPrototypeByCallableFromIndex;
+
+template <
+	int N,
+	typename RT,
+	typename ...Args,
+	typename ...Others,
+	typename Callable,
+	template <typename> class ArgTransformer,
+	int M
+>
+struct FindPrototypeByCallableFromIndex <
+	N,
+	std::tuple<RT (Args...), Others...>,
+	Callable,
+	ArgTransformer,
+	M,
+	typename std::enable_if<(N < M)>::type
+>
+{
+	enum { canInvoke = CanInvoke<Callable, typename ArgTransformer<Args>::type...>::value };
 
 	using Prototype = typename std::conditional<
 		canInvoke,
 		RT (Args...),
-		typename FindPrototypeByCallableHelper<N + 1, std::tuple<Others...>, Callable>::Prototype
+		typename FindPrototypeByCallableFromIndex<N + 1, std::tuple<Others...>, Callable, ArgTransformer, M>::Prototype
 	>::type;
 
 	using ArgsTuple = typename std::conditional<
 		canInvoke,
 		std::tuple<typename std::remove_cv<typename std::remove_reference<Args>::type>::type...>,
-		typename FindPrototypeByCallableHelper<N + 1, std::tuple<Others...>, Callable>::ArgsTuple
+		typename FindPrototypeByCallableFromIndex<N + 1, std::tuple<Others...>, Callable, ArgTransformer, M>::ArgsTuple
 	>::type;
 
 	enum {
 		index = canInvoke
 			? N
-			: FindPrototypeByCallableHelper<N + 1, std::tuple<Others...>, Callable>::index
+			: FindPrototypeByCallableFromIndex<N + 1, std::tuple<Others...>, Callable, ArgTransformer, M>::index
 	};
 };
 
-template <int N, typename Callable>
-struct FindPrototypeByCallableHelper <N, std::tuple<>, Callable>
+template <
+	int N,
+	typename PrototypeList_,
+	typename Callable,
+	template <typename> class ArgTransformer,
+	int M
+>
+struct FindPrototypeByCallableFromIndex <
+	N,
+	PrototypeList_,
+	Callable,
+	ArgTransformer,
+	M,
+	typename std::enable_if<(N >= M)>::type
+>
 {
 	using Prototype = void;
 
@@ -61,40 +102,40 @@ struct FindPrototypeByCallableHelper <N, std::tuple<>, Callable>
 	};
 };
 
-template <typename PrototypeList_, typename Callable>
-struct FindPrototypeByCallable : public FindPrototypeByCallableHelper <0, PrototypeList_, Callable>
+template <typename PrototypeList_, typename Callable, template <typename> class ArgTransformer = FindPrototypeDefaultArgTransformer>
+struct FindPrototypeByCallable : public FindPrototypeByCallableFromIndex <0, PrototypeList_, Callable, ArgTransformer>
 {
 };
 
 template <int N, typename PrototypeList_, typename ...InArgs>
-struct FindPrototypeByArgsHelper;
+struct FindPrototypeByArgsFromIndex;
 
 template <int N, typename RT, typename ...Args, typename ...Others, typename ...InArgs>
-struct FindPrototypeByArgsHelper <N, std::tuple<RT (Args...), Others...>, InArgs...>
+struct FindPrototypeByArgsFromIndex <N, std::tuple<RT (Args...), Others...>, InArgs...>
 {
 	enum { canInvoke = CanInvoke<RT (Args...), InArgs...>::value };
 
 	using Prototype = typename std::conditional<
 		canInvoke,
 		RT (Args...),
-		typename FindPrototypeByArgsHelper<N + 1, std::tuple<Others...>, InArgs...>::Prototype
+		typename FindPrototypeByArgsFromIndex<N + 1, std::tuple<Others...>, InArgs...>::Prototype
 	>::type;
 
 	using ArgsTuple = typename std::conditional<
 		canInvoke,
 		std::tuple<typename std::remove_cv<typename std::remove_reference<Args>::type>::type...>,
-		typename FindPrototypeByArgsHelper<N + 1, std::tuple<Others...>, InArgs...>::ArgsTuple
+		typename FindPrototypeByArgsFromIndex<N + 1, std::tuple<Others...>, InArgs...>::ArgsTuple
 	>::type;
 
 	enum {
 		index = canInvoke
 		? N
-		: FindPrototypeByArgsHelper<N + 1, std::tuple<Others...>, InArgs...>::index
+		: FindPrototypeByArgsFromIndex<N + 1, std::tuple<Others...>, InArgs...>::index
 	};
 };
 
 template <int N, typename ...InArgs>
-struct FindPrototypeByArgsHelper <N, std::tuple<>, InArgs...>
+struct FindPrototypeByArgsFromIndex <N, std::tuple<>, InArgs...>
 {
 	using Prototype = void;
 
@@ -104,7 +145,7 @@ struct FindPrototypeByArgsHelper <N, std::tuple<>, InArgs...>
 };
 
 template <typename PrototypeList_, typename ...InArgs>
-struct FindPrototypeByArgs : public FindPrototypeByArgsHelper <0, PrototypeList_, InArgs...>
+struct FindPrototypeByArgs : public FindPrototypeByArgsFromIndex <0, PrototypeList_, InArgs...>
 {
 };
 

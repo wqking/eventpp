@@ -405,7 +405,7 @@ protected:
 	template <typename T, size_t ...Indexes>
 	void doDispatchQueuedEvent(T && item, IndexSequence<Indexes...>)
 	{
-		this->doDispatch(item.event, std::get<Indexes>(item.arguments)...);
+		this->directDispatch(item.event, std::get<Indexes>(item.arguments)...);
 	}
 
 	template <typename F, typename T, size_t ...Indexes>
