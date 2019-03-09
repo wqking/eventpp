@@ -41,6 +41,11 @@ eventpp is currently usable and near stable.
 
 `eventpp`
 
+### Add eventpp to your project
+
+eventpp is header only library. Just add the 'include' folder in eventpp to your project, then you can use the library.  
+You don't need to link to any source code.
+
 ### Using CallbackList
 ```c++
 #include "eventpp/callbacklist.h"
