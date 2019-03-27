@@ -42,7 +42,7 @@ TEST_CASE("HeterEventQueue 1")
 	REQUIRE(b == 8);
 }
 
-TEST_CASE("xxx HeterEventQueue, processIf")
+TEST_CASE("HeterEventQueue, processIf")
 {
 	struct MyEventPolicies
 	{

@@ -20,7 +20,7 @@ using namespace eventpp;
 using namespace eventpp::internal_;
 static_assert(FindPrototypeByCallable<std::tuple<void(), void(int)>, void(int)>::index == 1, "aaa");
 
-TEST_CASE("xxx HeterEventDispatcher, 1")
+TEST_CASE("HeterEventDispatcher, 1")
 {
 	eventpp::HeterEventDispatcher<int, std::tuple<void (), void (int, int, int)> > dispatcher;
 
@@ -57,7 +57,7 @@ TEST_CASE("xxx HeterEventDispatcher, 1")
 	REQUIRE(dataList[1] == 24);
 }
 
-TEST_CASE("xxx HeterEventDispatcher, event filter")
+TEST_CASE("HeterEventDispatcher, event filter")
 {
 	struct MyPolicies {
 		using Mixins = eventpp::MixinList<eventpp::MixinHeterFilter>;
