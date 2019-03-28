@@ -23,7 +23,6 @@
 #include <memory>
 #include <mutex>
 #include <utility>
-#include <vector>
 
 namespace eventpp {
 

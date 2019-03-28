@@ -13,6 +13,7 @@ set(SRC_TEST
 	test_dispatcher_multithread.cpp
 	test_queue_basic.cpp
 	test_queue_multithread.cpp
+	test_hetercallbacklist_basic.cpp
 	test_heterdispatcher_basic.cpp
 	test_heterqueue_basic.cpp
 	test_eventutil.cpp
