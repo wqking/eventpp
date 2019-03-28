@@ -102,9 +102,9 @@ void forEach(Func && func);
 Apply `func` to all callbacks.  
 The `func` can be one of the three prototypes:  
 ```c++
-AnyReturnType func(const EventDispatcher::Handle &, const EventDispatcher::Callback &);
-AnyReturnType func(const EventDispatcher::Handle &);
-AnyReturnType func(const EventDispatcher::Callback &);
+AnyReturnType func(const CallbackList::Handle &, const CallbackList::Callback &);
+AnyReturnType func(const CallbackList::Handle &);
+AnyReturnType func(const CallbackList::Callback &);
 ```
 **Note**: the `func` can remove any callbacks, or add other callbacks, safely.
 
