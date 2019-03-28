@@ -176,6 +176,19 @@ public:
 		};
 	}
 
+	template <typename C>
+	Handle insert(const C & callback, const Handle & before)
+	{
+		using PrototypeInfo = FindPrototypeByCallable<PrototypeList_, C>;
+		static_assert(PrototypeInfo::index >= 0, "Can't find invoker for the given argument types.");
+
+		auto callbackList= doGetCallbackList<PrototypeInfo>();
+		return Handle {
+			PrototypeInfo::index,
+			callbackList->insert(callback, before)
+		};
+	}
+
 	bool remove(const Handle handle)
 	{
 		auto callbackList = callbackListList[handle.index];
@@ -195,7 +208,7 @@ public:
 		auto callbackList= doGetCallbackList<PrototypeInfo>();
 		using CL = typename decltype(callbackList)::element_type;
 		callbackList->forEach([this, &func](const typename CL::Handle & handle, const typename CL::Callback & callback) {
-			doForEachInvoke<void, CL, PrototypeInfo::index>(func, handle, callback);
+			doForEachInvoke<void, PrototypeInfo::index>(func, handle, callback);
 		});
 	}
 
@@ -208,7 +221,7 @@ public:
 		auto callbackList= doGetCallbackList<PrototypeInfo>();
 		using CL = typename decltype(callbackList)::element_type;
 		return callbackList->forEachIf([this, &func](const typename CL::Handle & handle, const typename CL::Callback & callback) {
-			return doForEachInvoke<bool, CL, PrototypeInfo::index>(func, handle, callback);
+			return doForEachInvoke<bool, PrototypeInfo::index>(func, handle, callback);
 		});
 	}
 
@@ -223,23 +236,23 @@ public:
 	}
 
 private:
-	template <typename RT, typename CL, int PrototypeIndex, typename Func>
-	auto doForEachInvoke(Func && func, const typename CL::Handle & handle, const typename CL::Callback & callback) const
-		-> typename std::enable_if<CanInvoke<Func, Handle, typename CL::Callback &>::value, RT>::type
+	template <typename RT, int PrototypeIndex, typename Func, typename H, typename CL>
+	auto doForEachInvoke(Func && func, const H & handle, CL && callback) const
+		-> typename std::enable_if<CanInvoke<Func, Handle, CL>::value, RT>::type
 	{
 		return func(Handle { PrototypeIndex, handle }, callback);
 	}
 
-	template <typename RT, typename CL, int PrototypeIndex, typename Func>
-	auto doForEachInvoke(Func && func, const typename CL::Handle & handle, const typename CL::Callback & callback) const
+	template <typename RT, int PrototypeIndex, typename Func, typename H, typename CL>
+	auto doForEachInvoke(Func && func, const H & handle, const CL & callback) const
 		-> typename std::enable_if<CanInvoke<Func, Handle>::value, RT>::type
 	{
 		return func(Handle { PrototypeIndex, handle });
 	}
 
-	template <typename RT, typename CL, int PrototypeIndex, typename Func>
-	auto doForEachInvoke(Func && func, const typename CL::Handle & handle, const typename CL::Callback & callback) const
-		-> typename std::enable_if<CanInvoke<Func, typename CL::Callback &>::value, RT>::type
+	template <typename RT, int PrototypeIndex, typename Func, typename H, typename CL>
+	auto doForEachInvoke(Func && func, const H & handle, CL && callback) const
+		-> typename std::enable_if<CanInvoke<Func, CL>::value, RT>::type
 	{
 		return func(callback);
 	}

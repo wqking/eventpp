@@ -18,7 +18,7 @@
 
 TEST_CASE("HeterCallbackList, empty")
 {
-	using CL = eventpp::HeterCallbackList<eventpp::HeterTuple<void (), void (int, int, int)> >;
+	using CL = eventpp::HeterCallbackList<eventpp::HeterTuple<void (), void (int)> >;
 	SECTION("empty") {
 		CL callbackList;
 		REQUIRE(callbackList.empty());
@@ -32,7 +32,7 @@ TEST_CASE("HeterCallbackList, empty")
 
 	SECTION("prepend") {
 		CL callbackList;
-		callbackList.prepend([](){});
+		callbackList.prepend([](int){});
 		REQUIRE(! callbackList.empty());
 	}
 

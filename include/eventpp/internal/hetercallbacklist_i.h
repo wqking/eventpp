@@ -238,6 +238,52 @@ struct GetCallablePrototypeMaxSize <HeterTuple<>, Record>
 	enum { value = 1 }; // set minimum size to 1 instead of 0
 };
 
+template <typename List, typename Item>
+struct PrependHeterTuple;
+
+template <typename Item, typename ...Types>
+struct PrependHeterTuple <HeterTuple<Types...>, Item>
+{
+	using Type = HeterTuple<Item, Types...>;
+};
+
+template <typename List, typename Replacement>
+struct ReplaceReturnTypeList;
+
+template <typename Replacement, typename RT, typename ...Args, typename ...Others>
+struct ReplaceReturnTypeList <HeterTuple<RT (Args...), Others...>, Replacement>
+{
+	using Type = typename PrependHeterTuple<
+		typename ReplaceReturnTypeList<HeterTuple<Others...>, Replacement>::Type,
+		Replacement (Args...)
+	>::Type;
+};
+
+template <typename Replacement>
+struct ReplaceReturnTypeList <HeterTuple<>, Replacement>
+{
+	using Type = HeterTuple<>;
+};
+
+template <typename F, template <typename> class T>
+struct TransformArgumentsList;
+
+template <template <typename> class T, typename RT, typename ...Args, typename ...Others>
+struct TransformArgumentsList <HeterTuple<RT (Args...), Others...>, T>
+{
+	using Type = typename PrependHeterTuple<
+		typename TransformArgumentsList<HeterTuple<Others...>, T>::Type,
+		RT (typename T<Args>::type...)
+	>::Type;
+};
+
+template <template <typename> class T>
+struct TransformArgumentsList <HeterTuple<>, T>
+{
+	using Type = HeterTuple<>;
+};
+
+
 } //namespace internal_
 
 

@@ -242,6 +242,7 @@ protected:
 	{
 		if(! internal_::ForEachMixins<MixinRoot, Mixins, DoMixinBeforeDispatch>::forEach(
 			this,
+			typename std::add_lvalue_reference<T>::type(first),
 			typename std::add_lvalue_reference<Args>::type(args)...)
 		) {
 			return;
@@ -251,7 +252,7 @@ protected:
 		const auto e = GetEvent::getEvent(std::forward<T>(first), args...);
 		const CallbackList_ * callableList = doFindCallableList(e);
 		if(callableList) {
-			(*callableList)(std::forward<T>(first), std::forward<T>(first), std::forward<Args>(args)...);
+			(*callableList)(std::forward<T>(first), std::forward<Args>(args)...);
 		}
 	}
 
@@ -260,7 +261,7 @@ protected:
 		-> typename std::enable_if<std::is_same<ArgumentMode, ArgumentPassingExcludeEvent>::value>::type
 	{
 		if(! internal_::ForEachMixins<MixinRoot, Mixins, DoMixinBeforeDispatch>::forEach(
-			this, typename std::add_lvalue_reference<T>::type(first),
+			this,
 			typename std::add_lvalue_reference<Args>::type(args)...)
 		) {
 			return;
