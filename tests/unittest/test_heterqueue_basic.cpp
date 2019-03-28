@@ -16,7 +16,7 @@
 
 TEST_CASE("HeterEventQueue 1")
 {
-	eventpp::HeterEventQueue<std::string, std::tuple<void (), void (const std::string &)> > queue;
+	eventpp::HeterEventQueue<std::string, eventpp::HeterTuple<void (), void (const std::string &)> > queue;
 
 	int a = 1;
 	int b = 5;
@@ -49,7 +49,7 @@ TEST_CASE("HeterEventQueue, processIf")
 		using ArgumentPassingMode = eventpp::ArgumentPassingIncludeEvent;
 	};
 
-	eventpp::HeterEventQueue<int, std::tuple<void (int), void (int, int)>, MyEventPolicies> queue;
+	eventpp::HeterEventQueue<int, eventpp::HeterTuple<void (int), void (int, int)>, MyEventPolicies> queue;
 
 	std::vector<int> dataList(3);
 

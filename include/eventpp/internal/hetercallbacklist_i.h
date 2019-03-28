@@ -11,14 +11,45 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef HETEREVENTDISPATCHER_I_H
-#define HETEREVENTDISPATCHER_I_H
+#ifndef HETERCALLBACKLIST_I_H
+#define HETERCALLBACKLIST_I_H
 
 #include "typeutil_i.h"
 
 #include <tuple>
 
 namespace eventpp {
+
+/*
+// We can't use std::tuple as HeterTuple because std::tuple is instantialized
+// somewhere in the Map in HeterEventDispatcherBase, that causes compile error
+// for that function type can't be declared.
+template <typename ...Types>
+using HeterTuple = std::tuple<Types...>;
+
+template <typename T>
+struct HeterTupleSize;
+
+template <typename ...Types>
+struct HeterTupleSize <HeterTuple <Types...> >
+{
+enum { value = std::tuple_size<HeterTuple <Types...> >::value };
+};
+*/
+
+template <typename ...Types>
+struct HeterTuple
+{
+};
+
+template <typename T>
+struct HeterTupleSize;
+
+template <typename ...Types>
+struct HeterTupleSize <HeterTuple <Types...> >
+{
+	enum { value = sizeof...(Types) };
+};
 
 namespace internal_ {
 
@@ -33,7 +64,7 @@ template <
 	typename PrototypeList_,
 	typename Callable,
 	template <typename> class ArgTransformer = FindPrototypeDefaultArgTransformer,
-	int M = std::tuple_size<PrototypeList_>::value,
+	int M = HeterTupleSize<PrototypeList_>::value,
 	typename Enabled = void
 >
 struct FindPrototypeByCallableFromIndex;
@@ -49,7 +80,7 @@ template <
 >
 struct FindPrototypeByCallableFromIndex <
 	N,
-	std::tuple<RT (Args...), Others...>,
+	HeterTuple<RT (Args...), Others...>,
 	Callable,
 	ArgTransformer,
 	M,
@@ -61,19 +92,19 @@ struct FindPrototypeByCallableFromIndex <
 	using Prototype = typename std::conditional<
 		canInvoke,
 		RT (Args...),
-		typename FindPrototypeByCallableFromIndex<N + 1, std::tuple<Others...>, Callable, ArgTransformer, M>::Prototype
+		typename FindPrototypeByCallableFromIndex<N + 1, HeterTuple<Others...>, Callable, ArgTransformer, M>::Prototype
 	>::type;
 
 	using ArgsTuple = typename std::conditional<
 		canInvoke,
 		std::tuple<typename std::remove_cv<typename std::remove_reference<Args>::type>::type...>,
-		typename FindPrototypeByCallableFromIndex<N + 1, std::tuple<Others...>, Callable, ArgTransformer, M>::ArgsTuple
+		typename FindPrototypeByCallableFromIndex<N + 1, HeterTuple<Others...>, Callable, ArgTransformer, M>::ArgsTuple
 	>::type;
 
 	enum {
 		index = canInvoke
 			? N
-			: FindPrototypeByCallableFromIndex<N + 1, std::tuple<Others...>, Callable, ArgTransformer, M>::index
+			: FindPrototypeByCallableFromIndex<N + 1, HeterTuple<Others...>, Callable, ArgTransformer, M>::index
 	};
 };
 
@@ -111,31 +142,31 @@ template <int N, typename PrototypeList_, typename ...InArgs>
 struct FindPrototypeByArgsFromIndex;
 
 template <int N, typename RT, typename ...Args, typename ...Others, typename ...InArgs>
-struct FindPrototypeByArgsFromIndex <N, std::tuple<RT (Args...), Others...>, InArgs...>
+struct FindPrototypeByArgsFromIndex <N, HeterTuple<RT (Args...), Others...>, InArgs...>
 {
 	enum { canInvoke = CanInvoke<RT (Args...), InArgs...>::value };
 
 	using Prototype = typename std::conditional<
 		canInvoke,
 		RT (Args...),
-		typename FindPrototypeByArgsFromIndex<N + 1, std::tuple<Others...>, InArgs...>::Prototype
+		typename FindPrototypeByArgsFromIndex<N + 1, HeterTuple<Others...>, InArgs...>::Prototype
 	>::type;
 
 	using ArgsTuple = typename std::conditional<
 		canInvoke,
 		std::tuple<typename std::remove_cv<typename std::remove_reference<Args>::type>::type...>,
-		typename FindPrototypeByArgsFromIndex<N + 1, std::tuple<Others...>, InArgs...>::ArgsTuple
+		typename FindPrototypeByArgsFromIndex<N + 1, HeterTuple<Others...>, InArgs...>::ArgsTuple
 	>::type;
 
 	enum {
 		index = canInvoke
 		? N
-		: FindPrototypeByArgsFromIndex<N + 1, std::tuple<Others...>, InArgs...>::index
+		: FindPrototypeByArgsFromIndex<N + 1, HeterTuple<Others...>, InArgs...>::index
 	};
 };
 
 template <int N, typename ...InArgs>
-struct FindPrototypeByArgsFromIndex <N, std::tuple<>, InArgs...>
+struct FindPrototypeByArgsFromIndex <N, HeterTuple<>, InArgs...>
 {
 	using Prototype = void;
 
@@ -153,9 +184,9 @@ template <int I, int N, typename PrototypeList_>
 struct FindPrototypeByIndexHelper;
 
 template <int I, int N, typename RT, typename ...Args, typename ...Others>
-struct FindPrototypeByIndexHelper <I, N, std::tuple<RT (Args...), Others...> >
+struct FindPrototypeByIndexHelper <I, N, HeterTuple<RT (Args...), Others...> >
 {
-	using NextType = FindPrototypeByIndexHelper<I + 1, N, std::tuple<Others...> >;
+	using NextType = FindPrototypeByIndexHelper<I + 1, N, HeterTuple<Others...> >;
 	using Prototype = typename NextType::Prototype;
 
 	using ArgsTuple = typename NextType::ArgsTuple;
@@ -164,21 +195,21 @@ struct FindPrototypeByIndexHelper <I, N, std::tuple<RT (Args...), Others...> >
 };
 
 template <int N, typename RT, typename ...Args, typename ...Others>
-struct FindPrototypeByIndexHelper <N, N, std::tuple<RT (Args...), Others...> >
+struct FindPrototypeByIndexHelper <N, N, HeterTuple<RT (Args...), Others...> >
 {
 	using Prototype = RT (Args...);
 
-	using ArgsTuple = std::tuple<typename std::remove_cv<typename std::remove_reference<Args>::type>::type...>;
+	using ArgsTuple = HeterTuple<typename std::remove_cv<typename std::remove_reference<Args>::type>::type...>;
 
 	enum { index = N };
 };
 
 template <int I, int N>
-struct FindPrototypeByIndexHelper <I, N, std::tuple<>>
+struct FindPrototypeByIndexHelper <I, N, HeterTuple<>>
 {
 	using Prototype = void;
 
-	using ArgsTuple = std::tuple<>;
+	using ArgsTuple = HeterTuple<>;
 
 	enum { index = -1 };
 };
@@ -192,17 +223,17 @@ template <typename PrototypeList_, template <typename ...> class Record>
 struct GetCallablePrototypeMaxSize;
 
 template <typename RT, typename ...Args, typename ...Others, template <typename ...> class Record>
-struct GetCallablePrototypeMaxSize <std::tuple<RT (Args...), Others...>, Record>
+struct GetCallablePrototypeMaxSize <HeterTuple<RT (Args...), Others...>, Record>
 {
 	enum {
 		my = sizeof(Record<Args...>),
-		other = GetCallablePrototypeMaxSize<std::tuple<Others...>, Record>::value
+		other = GetCallablePrototypeMaxSize<HeterTuple<Others...>, Record>::value
 	};
 	enum { value = (my > other ? (int)my : (int)other) };
 };
 
 template <template <typename ...> class Record>
-struct GetCallablePrototypeMaxSize <std::tuple<>, Record>
+struct GetCallablePrototypeMaxSize <HeterTuple<>, Record>
 {
 	enum { value = 1 }; // set minimum size to 1 instead of 0
 };

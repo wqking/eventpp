@@ -14,9 +14,7 @@
 #ifndef HETERCALLBACKLIST_H_966730936077
 #define HETERCALLBACKLIST_H_966730936077
 
-// TODO: move to hetercallbacklist_i.h
-#include "internal/hetereventdispatcher_i.h"
-
+#include "internal/hetercallbacklist_i.h"
 #include "callbacklist.h"
 
 #include <array>
@@ -215,13 +213,13 @@ public:
 	}
 
 	template <typename ...Args>
-	void operator() (Args ...args) const
+	void operator() (Args && ...args) const
 	{
 		using PrototypeInfo = FindPrototypeByArgs<PrototypeList, Args...>;
 		static_assert(PrototypeInfo::index >= 0, "Can't find invoker for the given argument types.");
 
 		auto callbackList= doGetCallbackList<PrototypeInfo>();
-		(*callbackList)(args...);
+		(*callbackList)(std::forward<Args>(args)...);
 	}
 
 private:
@@ -264,8 +262,8 @@ private:
 	}
 
 private:
-	// 'ListList' is not good, but it's better to use consistent naming convention.
-	mutable std::array<std::shared_ptr<HomoCallbackListTypeBase>, std::tuple_size<PrototypeList_>::value> callbackListList;
+	// the postfix 'ListList' is not good, but it's better to use consistent naming convention.
+	mutable std::array<std::shared_ptr<HomoCallbackListTypeBase>, HeterTupleSize<PrototypeList_>::value> callbackListList;
 	mutable Mutex callbackListListMutex;
 };
 

@@ -14,8 +14,8 @@
 #ifndef HETEREVENTDISPATCHER_H_127766658555
 #define HETEREVENTDISPATCHER_H_127766658555
 
-#include "internal/hetereventdispatcher_i.h"
 #include "eventdispatcher.h"
+#include "hetercallbacklist.h"
 #include "mixins/mixinheterfilter.h"
 #include "mixins/mixinfilter.h"
 
@@ -73,15 +73,20 @@ template <
 class HeterEventDispatcherBase
 {
 protected:
-	struct Handle_
-	{
-		int index;
-		std::weak_ptr<void> homoHandle;
+	using ThisType = HeterEventDispatcherBase<
+		EventType_,
+		PrototypeList_,
+		Policies_,
+		MixinRoot_
+	>;
+	using MixinRoot = typename std::conditional<
+		std::is_same<MixinRoot_, void>::value,
+		ThisType,
+		MixinRoot_
+	>::type;
+	using Policies = Policies_;
 
-		operator bool () const noexcept {
-			return (bool)homoHandle;
-		}
-	};
+	using Threading = typename SelectThreading<Policies_, HasTypeThreading<Policies_>::value>::Type;
 
 	using ArgumentPassingMode = typename SelectArgumentPassingMode<
 		Policies_,
@@ -92,136 +97,142 @@ protected:
 	static_assert(! std::is_same<ArgumentPassingMode, ArgumentPassingAutoDetect>::value,
 		"ArgumentPassingMode can't be ArgumentPassingAutoDetect in heterogeneous dispatcher.");
 
-	struct UnderlyingPoliciesType_
-	{
-		using Mixins = typename BuildHeterUnderlyingMixinList<
-			typename internal_::SelectMixins<Policies_, internal_::HasTypeMixins<Policies_>::value >::Type
-		>::Type;
-	};
+	using CallbackList_ = HeterCallbackList<PrototypeList_, Policies_>;
 
-	class HomoDispatcherTypeBase
-	{
-	public:
-		virtual bool doRemoveListener(const EventType_ & event, const Handle_ & handle) = 0;
-		virtual std::shared_ptr<HomoDispatcherTypeBase> doClone() = 0;
-	};
+	using Map = typename SelectMap<
+		EventType_,
+		CallbackList_,
+		Policies_,
+		HasTemplateMap<Policies_>::value
+	>::Type;
 
-	template <typename T>
-	class HomoDispatcherType : public EventDispatcher<EventType_, T, UnderlyingPoliciesType_>, public HomoDispatcherTypeBase
-	{
-	private:
-		using super = EventDispatcher<EventType_, T, UnderlyingPoliciesType_>;
-
-	public:
-		virtual bool doRemoveListener(const EventType_ & event, const Handle_ & handle) override {
-			auto sp = handle.homoHandle.lock();
-			if(! sp) {
-				return false;
-			}
-			return this->removeListener(event, typename super::Handle(std::static_pointer_cast<typename super::Handle::element_type>(sp)));
-		}
-
-		virtual std::shared_ptr<HomoDispatcherTypeBase> doClone() override {
-			return std::make_shared<HomoDispatcherType<T> >(*this);
-		}
-	};
-
-	using Policies = Policies_;
-	using Threading = typename SelectThreading<Policies, HasTypeThreading<Policies>::value>::Type;
-
-	using PrototypeList = PrototypeList_;
+	using Mixins = typename internal_::SelectMixins<
+		Policies_,
+		internal_::HasTypeMixins<Policies_>::value
+	>::Type;
 
 public:
-	using Handle = Handle_;
+	using PrototypeList = PrototypeList_;
+	using Handle = typename CallbackList_::Handle;
 	using Event = EventType_;
 	using Mutex = typename Threading::Mutex;
 
 public:
 	HeterEventDispatcherBase()
 		:
-			dispatcherList(),
-			dispatcherListMutex()
+		eventCallbackListMap(),
+		listenerMutex()
 	{
 	}
 
 	HeterEventDispatcherBase(const HeterEventDispatcherBase & other)
+		:
+		eventCallbackListMap(other.eventCallbackListMap),
+		listenerMutex()
 	{
-		for(size_t i = 0; i < dispatcherList.size(); ++i) {
-			dispatcherList[i] = other.dispatcherList[i]->doClone();
-		}
 	}
 
 	HeterEventDispatcherBase(HeterEventDispatcherBase && other) noexcept
 		:
-			dispatcherList(std::move(other.dispatcherList)),
-			dispatcherListMutex()
+		eventCallbackListMap(std::move(other.eventCallbackListMap)),
+		listenerMutex()
 	{
 	}
 
-	HeterEventDispatcherBase & operator = (HeterEventDispatcherBase other)
+	HeterEventDispatcherBase & operator = (const HeterEventDispatcherBase & other)
 	{
-		swap(*this, other);
-
-		return *this;
+		eventCallbackListMap = other;
 	}
 
 	HeterEventDispatcherBase & operator = (HeterEventDispatcherBase && other) noexcept
 	{
-		dispatcherList = std::move(other.dispatcherList);
-
-		return *this;
+		eventCallbackListMap = std::move(other);
 	}
 
 	void swap(HeterEventDispatcherBase & other) noexcept {
 		using std::swap;
-		
-		swap(dispatcherList, other.dispatcherList);
+
+		swap(eventCallbackListMap, other.eventCallbackListMap);
 	}
-	
+
 	friend void swap(HeterEventDispatcherBase & first, HeterEventDispatcherBase & second) noexcept {
 		first.swap(second);
 	}
 
-	template <typename C>
-	Handle appendListener(const Event & event, const C & callback)
+	template <typename Callback>
+	Handle appendListener(const Event & event, const Callback & callback)
 	{
-		using PrototypeInfo = FindPrototypeByCallable<PrototypeList_, C>;
-		static_assert(PrototypeInfo::index >= 0, "Can't find invoker for the given argument types.");
+		std::lock_guard<Mutex> lockGuard(listenerMutex);
 
-		auto dispatcher = doGetDispatcher<PrototypeInfo>();
-		return Handle {
-			PrototypeInfo::index,
-			dispatcher->appendListener(event, callback)
-		};
+		return eventCallbackListMap[event].append(callback);
 	}
 
-	template <typename C>
-	Handle prependListener(const Event & event, const C & callback)
+	template <typename Callback>
+	Handle prependListener(const Event & event, const Callback & callback)
 	{
-		using PrototypeInfo = FindPrototypeByCallable<PrototypeList_, C>;
-		static_assert(PrototypeInfo::index >= 0, "Can't find invoker for the given argument types.");
+		std::lock_guard<Mutex> lockGuard(listenerMutex);
 
-		auto dispatcher = doGetDispatcher<PrototypeInfo>();
-		return Handle {
-			PrototypeInfo::index,
-			dispatcher->prependListener(event, callback)
-		};
+		return eventCallbackListMap[event].prepend(callback);
 	}
 
-	bool removeListener(const Event & event, const Handle & handle)
+	template <typename Callback>
+	Handle insertListener(const Event & event, const Callback & callback, const Handle & before)
 	{
-		auto dispatcher = dispatcherList[handle.index];
-		if(dispatcher) {
-			return dispatcher->doRemoveListener(event, handle);
+		std::lock_guard<Mutex> lockGuard(listenerMutex);
+
+		return eventCallbackListMap[event].insert(callback, before);
+	}
+
+	bool removeListener(const Event & event, const Handle handle)
+	{
+		CallbackList_ * callableList = doFindCallableList(event);
+		if(callableList) {
+			return callableList->remove(handle);
 		}
 
 		return false;
 	}
 
+	template <typename Prototype, typename Func>
+	void forEach(const Event & event, Func && func) const
+	{
+		const CallbackList_ * callableList = doFindCallableList(event);
+		if(callableList) {
+			callableList->template forEach<Prototype>(std::forward<Func>(func));
+		}
+	}
+
+	template <typename Prototype, typename Func>
+	bool forEachIf(const Event & event, Func && func) const
+	{
+		const CallbackList_ * callableList = doFindCallableList(event);
+		if (callableList) {
+			return callableList->template forEachIf<Prototype>(std::forward<Func>(func));
+		}
+
+		return true;
+	}
+
 	template <typename T, typename ...Args>
-	void dispatch(T && first, Args ...args) const
+	void dispatch(T && first, Args && ...args) const
 	{
 		doDispatch<ArgumentPassingMode>(std::forward<T>(first), std::forward<Args>(args)...);
+	}
+
+	// Bypass any getEvent policy. The first argument is the event type.
+	// Most used for internal purpose.
+	template <typename ...Args>
+	void directDispatch(const Event & e, Args && ...args) const
+	{
+		if(! internal_::ForEachMixins<MixinRoot, Mixins, DoMixinBeforeDispatch>::forEach(
+			this, typename std::add_lvalue_reference<Args>::type(args)...)) {
+			return;
+		}
+
+		const CallbackList_ * callableList = doFindCallableList(e);
+		if(callableList) {
+			(*callableList)(std::forward<Args>(args)...);
+		}
 	}
 
 protected:
@@ -229,58 +240,89 @@ protected:
 	auto doDispatch(T && first, Args ...args) const
 		-> typename std::enable_if<std::is_same<ArgumentMode, ArgumentPassingIncludeEvent>::value>::type
 	{
-		using PrototypeInfo = FindPrototypeByArgs<PrototypeList_, T, Args...>;
-		static_assert(PrototypeInfo::index >= 0, "Can't find invoker for the given argument types.");
+		if(! internal_::ForEachMixins<MixinRoot, Mixins, DoMixinBeforeDispatch>::forEach(
+			this,
+			typename std::add_lvalue_reference<Args>::type(args)...)
+		) {
+			return;
+		}
 
-		auto dispatcher = doGetDispatcher<PrototypeInfo>();
-		dispatcher->dispatch(std::forward<T>(first), std::forward<T>(first), std::forward<Args>(args)...);
+		using GetEvent = typename SelectGetEvent<Policies_, EventType_, HasFunctionGetEvent<Policies_, T &&, Args...>::value>::Type;
+		const auto e = GetEvent::getEvent(std::forward<T>(first), args...);
+		const CallbackList_ * callableList = doFindCallableList(e);
+		if(callableList) {
+			(*callableList)(std::forward<T>(first), std::forward<T>(first), std::forward<Args>(args)...);
+		}
 	}
 
 	template <typename ArgumentMode, typename T, typename ...Args>
 	auto doDispatch(T && first, Args ...args) const
 		-> typename std::enable_if<std::is_same<ArgumentMode, ArgumentPassingExcludeEvent>::value>::type
 	{
-		using PrototypeInfo = FindPrototypeByArgs<PrototypeList_, Args...>;
-		static_assert(PrototypeInfo::index >= 0, "Can't find invoker for the given argument types.");
-
-		auto dispatcher = doGetDispatcher<PrototypeInfo>();
-		dispatcher->dispatch(std::forward<T>(first), std::forward<Args>(args)...);
-	}
-
-	template <typename PrototypeInfo>
-	auto doGetDispatcher() const
-		-> std::shared_ptr<HomoDispatcherType<typename PrototypeInfo::Prototype> >
-	{
-		static_assert(PrototypeInfo::index >= 0, "Can't find invoker for the given argument types.");
-
-		if(! dispatcherList[PrototypeInfo::index]) {
-			std::lock_guard<Mutex> lockGuard(dispatcherListMutex);
-
-			if(! dispatcherList[PrototypeInfo::index]) {
-				dispatcherList[PrototypeInfo::index] = std::make_shared<HomoDispatcherType<typename PrototypeInfo::Prototype> >();
-			}
+		if(! internal_::ForEachMixins<MixinRoot, Mixins, DoMixinBeforeDispatch>::forEach(
+			this, typename std::add_lvalue_reference<T>::type(first),
+			typename std::add_lvalue_reference<Args>::type(args)...)
+		) {
+			return;
 		}
 
-		return std::static_pointer_cast<HomoDispatcherType<typename PrototypeInfo::Prototype> >(dispatcherList[PrototypeInfo::index]);
+		using GetEvent = typename SelectGetEvent<Policies_, EventType_, HasFunctionGetEvent<Policies_, T &&, Args...>::value>::Type;
+		const auto e = GetEvent::getEvent(std::forward<T>(first), args...);
+		const CallbackList_ * callableList = doFindCallableList(e);
+		if(callableList) {
+			(*callableList)(std::forward<Args>(args)...);
+		}
 	}
 
-	template <typename PrototypeInfo>
-	auto doFindDispatcher() const
-		-> std::shared_ptr<HomoDispatcherType<typename PrototypeInfo::Prototype> >
+	const CallbackList_ * doFindCallableList(const Event & e) const
 	{
-		static_assert(PrototypeInfo::index >= 0, "Can't find invoker for the given argument types.");
-
-		return std::static_pointer_cast<HomoDispatcherType<typename PrototypeInfo::Prototype> >(dispatcherList[PrototypeInfo::index]);
+		return doFindCallableListHelper(this, e);
 	}
 
-	std::shared_ptr<HomoDispatcherTypeBase> doGetDispatcherAt(const int index) const
+	CallbackList_ * doFindCallableList(const Event & e)
 	{
-		return dispatcherList[index];
+		return doFindCallableListHelper(this, e);
 	}
 
 private:
-	mutable std::array<std::shared_ptr<HomoDispatcherTypeBase>, std::tuple_size<PrototypeList_>::value> dispatcherList;
-	mutable Mutex dispatcherListMutex;
+	// template helper to avoid code duplication in doFindCallableList
+	template <typename T>
+	static auto doFindCallableListHelper(T * self, const Event & e)
+		-> typename std::conditional<std::is_const<T>::value, const CallbackList_ *, CallbackList_ *>::type
+	{
+		std::lock_guard<Mutex> lockGuard(self->listenerMutex);
+
+		auto it = self->eventCallbackListMap.find(e);
+		if(it != self->eventCallbackListMap.end()) {
+			return &it->second;
+		}
+		else {
+			return nullptr;
+		}
+
+		return 0;
+	}
+
+private:
+	// Mixin related
+	struct DoMixinBeforeDispatch
+	{
+		template <typename T, typename Self, typename ...A>
+		static auto forEach(const Self * self, A && ...args)
+			-> typename std::enable_if<HasFunctionMixinBeforeDispatch<T, A...>::value, bool>::type {
+			return static_cast<const T *>(self)->mixinBeforeDispatch(std::forward<A>(args)...);
+		}
+
+		template <typename T, typename Self, typename ...A>
+		static auto forEach(const Self * self, A && ...args)
+			-> typename std::enable_if<! HasFunctionMixinBeforeDispatch<T, A...>::value, bool>::type {
+			return true;
+		}
+	};
+
+private:
+	Map eventCallbackListMap;
+	mutable Mutex listenerMutex;
 };
 
 } //namespace internal_

@@ -18,7 +18,7 @@
 
 TEST_CASE("HeterCallbackList, empty")
 {
-	using CL = eventpp::HeterCallbackList<std::tuple<void (), void (int, int, int)> >;
+	using CL = eventpp::HeterCallbackList<eventpp::HeterTuple<void (), void (int, int, int)> >;
 	SECTION("empty") {
 		CL callbackList;
 		REQUIRE(callbackList.empty());
@@ -48,7 +48,7 @@ TEST_CASE("HeterCallbackList, empty")
 
 TEST_CASE("HeterCallbackList, forEach")
 {
-	using CL = eventpp::HeterCallbackList<std::tuple<int (), int(int)> >;
+	using CL = eventpp::HeterCallbackList<eventpp::HeterTuple<int (), int(int)> >;
 	CL callbackList;
 
 	callbackList.append([]() { return 1; });
@@ -74,7 +74,7 @@ TEST_CASE("HeterCallbackList, forEach")
 
 TEST_CASE("HeterCallbackList, forEachIf")
 {
-	using CL = eventpp::HeterCallbackList<std::tuple<void (), void(int)> >;
+	using CL = eventpp::HeterCallbackList<eventpp::HeterTuple<void (), void(int)> >;
 	CL callbackList;
 
 	std::vector<int> dataListNoArg(3);
@@ -130,7 +130,7 @@ TEST_CASE("HeterCallbackList, forEachIf")
 
 TEST_CASE("HeterCallbackList, invoke")
 {
-	using CL = eventpp::HeterCallbackList<std::tuple<void (), void(int)> >;
+	using CL = eventpp::HeterCallbackList<eventpp::HeterTuple<void (), void(int)> >;
 	CL callbackList;
 
 	std::vector<int> dataListNoArg(3);

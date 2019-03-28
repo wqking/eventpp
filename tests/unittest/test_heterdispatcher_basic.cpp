@@ -16,13 +16,9 @@
 #include "eventpp/mixins/mixinfilter.h"
 #include "eventpp/mixins/mixinheterfilter.h"
 
-using namespace eventpp;
-using namespace eventpp::internal_;
-static_assert(FindPrototypeByCallable<std::tuple<void(), void(int)>, void(int)>::index == 1, "aaa");
-
 TEST_CASE("HeterEventDispatcher, 1")
 {
-	eventpp::HeterEventDispatcher<int, std::tuple<void (), void (int, int, int)> > dispatcher;
+	eventpp::HeterEventDispatcher<int, eventpp::HeterTuple<void (), void (int, int, int)> > dispatcher;
 
 	std::array<int, 2> dataList{};
 
@@ -57,13 +53,14 @@ TEST_CASE("HeterEventDispatcher, 1")
 	REQUIRE(dataList[1] == 24);
 }
 
+#if 0
 TEST_CASE("HeterEventDispatcher, event filter")
 {
 	struct MyPolicies {
 		using Mixins = eventpp::MixinList<eventpp::MixinHeterFilter>;
 		using ArgumentPassingMode = eventpp::ArgumentPassingIncludeEvent;
 	};
-	using ED = eventpp::HeterEventDispatcher<int, std::tuple<void (int, int), void (int)>, MyPolicies>;
+	using ED = eventpp::HeterEventDispatcher<int, eventpp::HeterTuple<void (int, int), void (int)>, MyPolicies>;
 	ED dispatcher;
 
 	constexpr int itemCount = 5;
@@ -181,3 +178,4 @@ TEST_CASE("HeterEventDispatcher, event filter")
 
 }
 
+#endif

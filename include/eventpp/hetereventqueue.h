@@ -264,8 +264,7 @@ private:
 	template <typename PrototypeInfo, typename T, size_t ...Indexes>
 	void doDispatchQueuedItem(T && item, IndexSequence<Indexes...>) const
 	{
-		auto dispatcher = this->template doGetDispatcher<PrototypeInfo>();
-		dispatcher->directDispatch(item.event, std::get<Indexes>(item.arguments)...);
+		this->directDispatch(item.event, std::get<Indexes>(item.arguments)...);
 	}
 
 	template <typename PrototypeInfo, typename F>

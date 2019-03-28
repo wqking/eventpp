@@ -14,7 +14,7 @@
 #ifndef MIXINHETERFILTER_H_990158796753
 #define MIXINHETERFILTER_H_990158796753
 
-#include "../callbacklist.h"
+#include "../hetercallbacklist.h"
 #include "../internal/typeutil_i.h"
 
 #include <functional>
@@ -28,68 +28,25 @@ class MixinHeterFilter : public Base
 private:
 	using super = Base;
 
-	struct FilterHandle_
-	{
-		int index;
-		std::weak_ptr<void> homoHandle;
-
-		operator bool () const noexcept {
-			return (bool)homoHandle;
-		}
-	};
-
-	struct RemoveFilterCallback
-	{
-		template <int N, typename PrototypeList>
-		bool operator() (MixinHeterFilter * self, const PrototypeList *, const FilterHandle_ & filterHandle) const
-		{
-			auto sp = filterHandle.homoHandle.lock();
-			if(! sp) {
-				return false;
-			}
-
-			using PrototypeInfo = internal_::FindPrototypeByIndex<PrototypeList, N>;
-			auto dispatcher = self->template doGetDispatcher<PrototypeInfo>();
-			if(! dispatcher) {
-				return false;
-			}
-			return dispatcher->removeFilter(typename decltype(dispatcher)::element_type::FilterHandle(
-				std::static_pointer_cast<
-					typename decltype(dispatcher)::element_type::FilterHandle::element_type
-				>(sp)
-			));
-		}
-	};
+	using FilterList = HeterCallbackList<typename super::PrototypeList>;
 
 public:
-	using FilterHandle = FilterHandle_;
+	using FilterHandle = typename FilterList::Handle;
 
 public:
-	template <typename C>
-	FilterHandle appendFilter(const C & callback) const
+	template <typename Callback>
+	FilterHandle appendFilter(const Callback & filter)
 	{
-		using PrototypeInfo = internal_::FindPrototypeByCallable<typename super::PrototypeList, C, std::add_lvalue_reference>;
-		static_assert(PrototypeInfo::index >= 0, "Can't find invoker for the given argument types.");
-
-		auto dispatcher = this->template doGetDispatcher<PrototypeInfo>();
-		return FilterHandle {
-			PrototypeInfo::index,
-			dispatcher->appendFilter(callback)
-		};
+		return filterList.append(filter);
 	}
 
 	bool removeFilter(const FilterHandle & filterHandle)
 	{
-		return internal_::intToConstant<std::tuple_size<typename super::PrototypeList>::value>(
-			filterHandle.index,
-			RemoveFilterCallback(),
-			this,
-			(typename super::PrototypeList *)nullptr,
-			filterHandle
-		);
+		return filterList.remove(filterHandle);
 	}
 
 private:
+	FilterList filterList;
 };
 
 
