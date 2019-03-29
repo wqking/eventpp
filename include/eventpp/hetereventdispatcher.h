@@ -20,49 +20,15 @@
 #include "mixins/mixinfilter.h"
 
 #include <array>
-#include <string>
 #include <functional>
 #include <type_traits>
 #include <mutex>
 #include <memory>
 #include <tuple>
 
-// source code for heterogeneous dispatcher
-
 namespace eventpp {
 
 namespace internal_ {
-
-template <template <typename> class MixinA, template <typename> class MixinB>
-struct IsSameMixin
-{
-	enum { value = false };
-};
-
-template <template <typename> class MixinA>
-struct IsSameMixin <MixinA, MixinA>
-{
-	enum { value = true };
-};
-
-template <typename MList, template <typename> class ...UnderlyingMixins>
-struct BuildHeterUnderlyingMixinList;
-
-template <template <typename> class First, template <typename> class ...Mixins, template <typename> class ...UnderlyingMixins>
-struct BuildHeterUnderlyingMixinList <MixinList<First, Mixins...>, UnderlyingMixins...>
-{
-	using Type = typename std::conditional<
-		IsSameMixin<First, MixinHeterFilter>::value,
-		typename BuildHeterUnderlyingMixinList<MixinList<Mixins...>, UnderlyingMixins..., MixinFilter>::Type,
-		typename BuildHeterUnderlyingMixinList<MixinList<Mixins...>, UnderlyingMixins..., First>::Type
-	>::type;
-};
-
-template <template <typename> class ...UnderlyingMixins>
-struct BuildHeterUnderlyingMixinList <MixinList<>, UnderlyingMixins...>
-{
-	using Type = MixinList<UnderlyingMixins...>;
-};
 
 template <
 	typename EventType_,

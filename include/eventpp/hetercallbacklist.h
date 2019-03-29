@@ -183,9 +183,22 @@ public:
 		static_assert(PrototypeInfo::index >= 0, "Can't find invoker for the given argument types.");
 
 		auto callbackList= doGetCallbackList<PrototypeInfo>();
+
+		if(before.index != PrototypeInfo::index) {
+			return Handle {
+				PrototypeInfo::index,
+				callbackList->append(callback)
+			};
+		}
+
+		using UnderlyingHandle = typename decltype(callbackList)::element_type::Handle;
+
 		return Handle {
 			PrototypeInfo::index,
-			callbackList->insert(callback, before)
+			callbackList->insert(
+				callback,
+				UnderlyingHandle(std::static_pointer_cast<typename UnderlyingHandle::element_type>(before.homoHandle.lock()))
+			)
 		};
 	}
 

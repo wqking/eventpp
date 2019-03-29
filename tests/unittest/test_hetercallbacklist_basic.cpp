@@ -46,6 +46,109 @@ TEST_CASE("HeterCallbackList, empty")
 	}
 }
 
+TEST_CASE("HeterCallbackList, append")
+{
+	using CL = eventpp::HeterCallbackList<eventpp::HeterTuple<void (), void (int)> >;
+	CL callbackList;
+
+	std::vector<int> orderList(5);
+
+	int order;
+
+	callbackList.append([&orderList, &order]() {
+		orderList[order++] = 1;
+	});
+	callbackList.append([&orderList, &order]() {
+		orderList[order++] = 2;
+	});
+	callbackList.append([&orderList, &order](int) {
+		orderList[order++] = 3;
+	});
+	callbackList.append([&orderList, &order](int) {
+		orderList[order++] = 4;
+	});
+	callbackList.append([&orderList, &order](int) {
+		orderList[order++] = 5;
+	});
+
+	REQUIRE(orderList == std::vector<int>{ 0, 0, 0, 0, 0 });
+
+	order = 0;
+	callbackList(3);
+	REQUIRE(orderList == std::vector<int>{ 3, 4, 5, 0, 0 });
+	callbackList();
+	REQUIRE(orderList == std::vector<int>{ 3, 4, 5, 1, 2 });
+}
+
+TEST_CASE("HeterCallbackList, prepend")
+{
+	using CL = eventpp::HeterCallbackList<eventpp::HeterTuple<void (), void (int)> >;
+	CL callbackList;
+
+	std::vector<int> orderList(5);
+
+	int order;
+
+	callbackList.prepend([&orderList, &order]() {
+		orderList[order++] = 1;
+	});
+	callbackList.prepend([&orderList, &order]() {
+		orderList[order++] = 2;
+	});
+	callbackList.prepend([&orderList, &order](int) {
+		orderList[order++] = 3;
+	});
+	callbackList.prepend([&orderList, &order](int) {
+		orderList[order++] = 4;
+	});
+	callbackList.prepend([&orderList, &order](int) {
+		orderList[order++] = 5;
+	});
+
+	REQUIRE(orderList == std::vector<int>{ 0, 0, 0, 0, 0 });
+
+	order = 0;
+	callbackList(3);
+	REQUIRE(orderList == std::vector<int>{ 5, 4, 3, 0, 0 });
+	callbackList();
+	REQUIRE(orderList == std::vector<int>{ 5, 4, 3, 2, 1 });
+}
+
+TEST_CASE("HeterCallbackList, insert")
+{
+	using CL = eventpp::HeterCallbackList<eventpp::HeterTuple<void (), void (int)> >;
+	CL callbackList;
+
+	std::vector<int> orderList(5);
+
+	int order;
+
+	auto h1 = callbackList.append([&orderList, &order]() {
+		orderList[order++] = 1;
+	});
+	callbackList.insert([&orderList, &order]() {
+		orderList[order++] = 2;
+	}, h1);
+	
+	auto h2 = callbackList.append([&orderList, &order](int) {
+		orderList[order++] = 3;
+	});
+	callbackList.insert([&orderList, &order](int) {
+		orderList[order++] = 4;
+	}, h2);
+	callbackList.insert([&orderList, &order](int) {
+		orderList[order++] = 5;
+	}, h2);
+
+	REQUIRE(orderList == std::vector<int>{ 0, 0, 0, 0, 0 });
+
+	order = 0;
+	callbackList(3);
+	REQUIRE(orderList == std::vector<int>{ 4, 5, 3, 0, 0 });
+	callbackList();
+	REQUIRE(orderList == std::vector<int>{ 4, 5, 3, 2, 1 });
+}
+
 TEST_CASE("HeterCallbackList, forEach")
 {
 	using CL = eventpp::HeterCallbackList<eventpp::HeterTuple<int (), int(int)> >;

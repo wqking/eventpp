@@ -284,11 +284,12 @@ private:
 		}
 
 		if(! tempList.empty()) {
-			for(auto it = tempList.begin(); it != tempList.end(); ++it) {
+			for(auto it = tempList.begin(); it != tempList.end(); ) {
 				using ArgsTuple = typename PrototypeInfo::ArgsTuple;
 				auto item = it->template get<QueuedItem<ArgsTuple> >();
 
 				if(item.callableIndex != PrototypeInfo::index) {
+					++it;
 					continue;
 				}
 				if(doInvokeFuncWithQueuedEvent(
@@ -300,8 +301,11 @@ private:
 					it->clear();
 
 					auto tempIt = it;
-					--it;
+					++it;
 					idleList.splice(idleList.end(), tempList, tempIt);
+				}
+				else {
+					++it;
 				}
 			}
 
