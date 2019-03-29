@@ -53,7 +53,6 @@ TEST_CASE("HeterEventDispatcher, 1")
 	REQUIRE(dataList[1] == 24);
 }
 
-#if 0
 TEST_CASE("HeterEventDispatcher, event filter")
 {
 	struct MyPolicies {
@@ -177,7 +176,4 @@ TEST_CASE("HeterEventDispatcher, event filter")
 	}
 
 }
-
-#endif
-
 
