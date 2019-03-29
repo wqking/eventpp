@@ -58,7 +58,7 @@ For multiple mixins, this function is called in the order of they appearing in M
 
 MixinFilter allows all events are filtered or modified before dispatching.
 
-`MixinFilter::appendFilter(filter)` adds an event filter to the dispatcher. The `filter` receives the arguments which types are the callback prototype with lvalue reference, and must return a boolean value. Return `true` to allow the dispatcher continues the dispatching, `false` to prevent the dispatcher from invoking any subsequence listeners and filters.  
+`MixinFilter::appendFilter(filter)` adds an event filter to the dispatcher. The `filter` receives the arguments which types are the callback prototype with lvalue reference.  
 
 The event filters are invoked for all events, and invoked before any listeners are invoked.  
 The event filters can modify the arguments since the arguments are passed as lvalue reference, no matter whether they are reference in the callback prototype (of course we can't modify a reference to const).  

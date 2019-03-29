@@ -286,7 +286,7 @@ public:
 			}
 
 			if(! tempList.empty()) {
-				for(auto it = tempList.begin(); it != tempList.end(); ++it) {
+				for(auto it = tempList.begin(); it != tempList.end(); ) {
 					if(doInvokeFuncWithQueuedEvent(
 							func,
 							it->template get<QueuedEvent_>(),
@@ -299,8 +299,11 @@ public:
 						it->clear();
 						
 						auto tempIt = it;
-						--it;
+						++it;
 						idleList.splice(idleList.end(), tempList, tempIt);
+					}
+					else {
+						++it;
 					}
 				}
 

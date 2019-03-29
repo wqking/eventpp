@@ -53,7 +53,7 @@ The disadvantage of EventDispatcher is that all events must have the same callba
 ## Class EventQueue
 
 EventQueue includes all features of EventDispatcher and adds event queue features. Note: EventQueue doesn't inherit from EventDispatcher, don't try to cast EventQueue to EventDispatcher.  
-EventQueue is asynchronous. Event are cached in the queue when `EventQueue::enqueue` is called, and dispatched later when `EventQueue::process` is called.  
+EventQueue is asynchronous. Events are cached in the queue when `EventQueue::enqueue` is called, and dispatched later when `EventQueue::process` is called.  
 EventQueue is equivalent to the event system (QEvent) in Qt, or the message processing in Windows.  
 
 ```c++

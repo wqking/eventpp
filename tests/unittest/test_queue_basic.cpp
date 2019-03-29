@@ -539,12 +539,23 @@ TEST_CASE("EventQueue, processIf")
 	REQUIRE(dataList == std::vector<int>{ 3, 2, 1 });
 	// Now the queue contains 6, 7, 7
 
+	// Ensure the callback in processIf is not called for unncessary times.
+	// Veriy the internal loops in processIf is correct.
+	std::vector<int> callbackCounters(10);
+
 	queue.enqueue(5);
 	queue.enqueue(6);
 	queue.enqueue(7);
-	queue.processIf([](const int event) -> bool { return event == 7; });
+	queue.processIf([&callbackCounters](const int event) -> bool {
+		++callbackCounters[event];
+		return event == 7;
+	});
 	REQUIRE(dataList == std::vector<int>{ 3, 2, 4 });
 	// Now the queue contains 5, 6, 6
+
+	REQUIRE(callbackCounters[5] == 1);
+	REQUIRE(callbackCounters[6] == 2);
+	REQUIRE(callbackCounters[7] == 3);
 
 	queue.process();
 	REQUIRE(dataList == std::vector<int>{ 4, 4, 4 });
