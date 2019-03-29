@@ -134,7 +134,7 @@ public:
 	}
 
 	template <typename T, typename ...Args>
-	void enqueue(T && first, Args ...args)
+	void enqueue(T && first, Args && ...args)
 	{
 		doEnqueue<ArgumentPassingMode>(std::forward<T>(first), std::forward<Args>(args)...);
 	}
@@ -142,6 +142,27 @@ public:
 	bool empty() const
 	{
 		return queueList.empty() && (queueEmptyCounter.load(std::memory_order_acquire) == 0);
+	}
+
+	void clearEvents()
+	{
+		if(! queueList.empty()) {
+			BufferedItemList tempList;
+
+			{
+				std::lock_guard<Mutex> queueListLock(queueListMutex);
+				std::swap(queueList, tempList);
+			}
+
+			if(! tempList.empty()) {
+				for(auto & item : tempList) {
+					item.clear();
+				}
+
+				std::lock_guard<Mutex> queueListLock(freeListMutex);
+				freeList.splice(freeList.end(), tempList);
+			}
+		}
 	}
 
 	bool process()
@@ -344,13 +365,13 @@ private:
 	}
 
 	template <typename F, typename ...Args>
-	bool doInvokeFuncWithQueuedEventHelper(F && func, Args ...args) const
+	bool doInvokeFuncWithQueuedEventHelper(F && func, Args && ...args) const
 	{
 		return func(std::forward<Args>(args)...);
 	}
 
 	template <typename ArgumentMode, typename T, typename ...Args>
-	auto doEnqueue(T && first, Args ...args)
+	auto doEnqueue(T && first, Args && ...args)
 		-> typename std::enable_if<std::is_same<ArgumentMode, ArgumentPassingIncludeEvent>::value>::type
 	{
 		using GetEvent = typename SelectGetEvent<Policies_, EventType_, HasFunctionGetEvent<Policies_, T &&, Args...>::value>::Type;
@@ -373,7 +394,7 @@ private:
 	}
 
 	template <typename ArgumentMode, typename T, typename ...Args>
-	auto doEnqueue(T && first, Args ...args)
+	auto doEnqueue(T && first, Args && ...args)
 		-> typename std::enable_if<std::is_same<ArgumentMode, ArgumentPassingExcludeEvent>::value>::type
 	{
 		using GetEvent = typename SelectGetEvent<Policies_, EventType_, HasFunctionGetEvent<Policies_, T &&, Args...>::value>::Type;

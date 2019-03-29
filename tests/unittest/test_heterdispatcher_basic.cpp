@@ -16,41 +16,352 @@
 #include "eventpp/mixins/mixinfilter.h"
 #include "eventpp/mixins/mixinheterfilter.h"
 
-TEST_CASE("HeterEventDispatcher, 1")
+TEST_CASE("HeterEventDispatcher, appendListener")
 {
-	eventpp::HeterEventDispatcher<int, eventpp::HeterTuple<void (), void (int, int, int)> > dispatcher;
+	eventpp::HeterEventDispatcher<int, eventpp::HeterTuple<void (), void (int)> > dispatcher;
+	constexpr int event = 3;
 
-	std::array<int, 2> dataList{};
+	std::vector<int> orderList(5);
 
-	dispatcher.appendListener(3, [&dataList]() {
+	int order;
+
+	dispatcher.appendListener(event, [&orderList, &order]() {
+		orderList[order++] = 1;
+	});
+	dispatcher.appendListener(event, [&orderList, &order]() {
+		orderList[order++] = 2;
+	});
+	dispatcher.appendListener(event, [&orderList, &order](int) {
+		orderList[order++] = 3;
+	});
+	dispatcher.appendListener(event, [&orderList, &order](int) {
+		orderList[order++] = 4;
+	});
+	dispatcher.appendListener(event, [&orderList, &order](int) {
+		orderList[order++] = 5;
+	});
+
+	REQUIRE(orderList == std::vector<int>{ 0, 0, 0, 0, 0 });
+
+	order = 0;
+	dispatcher.dispatch(event, 3);
+	REQUIRE(orderList == std::vector<int>{ 3, 4, 5, 0, 0 });
+	dispatcher.dispatch(event);
+	REQUIRE(orderList == std::vector<int>{ 3, 4, 5, 1, 2 });
+}
+
+TEST_CASE("HeterEventDispatcher, prependListener")
+{
+	eventpp::HeterEventDispatcher<int, eventpp::HeterTuple<void (), void (int)> > dispatcher;
+	constexpr int event = 3;
+
+	std::vector<int> orderList(5);
+
+	int order;
+
+	dispatcher.prependListener(event, [&orderList, &order]() {
+		orderList[order++] = 1;
+	});
+	dispatcher.prependListener(event, [&orderList, &order]() {
+		orderList[order++] = 2;
+	});
+	dispatcher.prependListener(event, [&orderList, &order](int) {
+		orderList[order++] = 3;
+	});
+	dispatcher.prependListener(event, [&orderList, &order](int) {
+		orderList[order++] = 4;
+	});
+	dispatcher.prependListener(event, [&orderList, &order](int) {
+		orderList[order++] = 5;
+	});
+
+	REQUIRE(orderList == std::vector<int>{ 0, 0, 0, 0, 0 });
+
+	order = 0;
+	dispatcher.dispatch(event, 3);
+	REQUIRE(orderList == std::vector<int>{ 5, 4, 3, 0, 0 });
+	dispatcher.dispatch(event);
+	REQUIRE(orderList == std::vector<int>{ 5, 4, 3, 2, 1 });
+}
+
+TEST_CASE("HeterEventDispatcher, insertListener")
+{
+	eventpp::HeterEventDispatcher<int, eventpp::HeterTuple<void (), void (int)> > dispatcher;
+	constexpr int event = 3;
+
+	std::vector<int> orderList(5);
+
+	int order;
+
+	auto h1 = dispatcher.appendListener(event, [&orderList, &order]() {
+		orderList[order++] = 1;
+	});
+	dispatcher.insertListener(event, [&orderList, &order]() {
+		orderList[order++] = 2;
+	}, h1);
+
+	auto h2 = dispatcher.appendListener(event, [&orderList, &order](int) {
+		orderList[order++] = 3;
+	});
+	dispatcher.insertListener(event, [&orderList, &order](int) {
+		orderList[order++] = 4;
+	}, h2);
+	dispatcher.insertListener(event, [&orderList, &order](int) {
+		orderList[order++] = 5;
+	}, h2);
+
+	REQUIRE(orderList == std::vector<int>{ 0, 0, 0, 0, 0 });
+
+	order = 0;
+	dispatcher.dispatch(event, 3);
+	REQUIRE(orderList == std::vector<int>{ 4, 5, 3, 0, 0 });
+	dispatcher.dispatch(event);
+	REQUIRE(orderList == std::vector<int>{ 4, 5, 3, 2, 1 });
+}
+
+TEST_CASE("HeterEventDispatcher, removeListener")
+{
+	eventpp::HeterEventDispatcher<int, eventpp::HeterTuple<void (), void (int)> > dispatcher;
+	constexpr int event = 3;
+
+	std::vector<int> dataList(5);
+
+	auto h1 = dispatcher.appendListener(event, [&dataList]() {
 		++dataList[0];
 	});
-	dispatcher.appendListener(3, [&dataList](const FromInt & a, int b, int c) -> int {
-		dataList[1] += a.value + b + c;
-		return 0;
+	auto h2 = dispatcher.appendListener(event, [&dataList]() {
+		++dataList[1];
 	});
-	dispatcher.appendListener(8, [&dataList](int a, int b, int c) {
-		dataList[1] += a + b + c;
+	auto h3 = dispatcher.appendListener(event, [&dataList](int) {
+		++dataList[2];
 	});
-	
-	REQUIRE(dataList[0] == 0);
-	REQUIRE(dataList[1] == 0);
+	auto h4 = dispatcher.appendListener(event, [&dataList](int) {
+		++dataList[3];
+	});
+	auto h5 = dispatcher.appendListener(event, [&dataList](int) {
+		++dataList[4];
+	});
 
-	dispatcher.dispatch(3);
-	REQUIRE(dataList[0] == 1);
-	REQUIRE(dataList[1] == 0);
+	REQUIRE(dataList == std::vector<int>{ 0, 0, 0, 0, 0 });
 
-	dispatcher.dispatch(8);
-	REQUIRE(dataList[0] == 1);
-	REQUIRE(dataList[1] == 0);
+	dispatcher.dispatch(event, 3);
+	REQUIRE(dataList == std::vector<int>{ 0, 0, 1, 1, 1 });
+	dispatcher.dispatch(event);
+	REQUIRE(dataList == std::vector<int>{ 1, 1, 1, 1, 1 });
 
-	dispatcher.dispatch(8, 5, 1, 3);
-	REQUIRE(dataList[0] == 1);
-	REQUIRE(dataList[1] == 9);
+	dispatcher.removeListener(event, h2);
+	dispatcher.dispatch(event, 3);
+	dispatcher.dispatch(event);
+	REQUIRE(dataList == std::vector<int>{ 2, 1, 2, 2, 2 });
 
-	dispatcher.dispatch(3, 2, 6, 7);
-	REQUIRE(dataList[0] == 1);
-	REQUIRE(dataList[1] == 24);
+	// double remove, no effect
+	dispatcher.removeListener(event, h2);
+	dispatcher.dispatch(event, 3);
+	dispatcher.dispatch(event);
+	REQUIRE(dataList == std::vector<int>{ 3, 1, 3, 3, 3 });
+
+	dispatcher.removeListener(event, h3);
+	dispatcher.dispatch(event, 3);
+	dispatcher.dispatch(event);
+	REQUIRE(dataList == std::vector<int>{ 4, 1, 3, 4, 4 });
+
+	dispatcher.removeListener(event, h5);
+	dispatcher.dispatch(event, 3);
+	dispatcher.dispatch(event);
+	REQUIRE(dataList == std::vector<int>{ 5, 1, 3, 5, 4 });
+
+	dispatcher.removeListener(event, h1);
+	dispatcher.dispatch(event, 3);
+	dispatcher.dispatch(event);
+	REQUIRE(dataList == std::vector<int>{ 5, 1, 3, 6, 4 });
+
+	dispatcher.removeListener(event, h4);
+	dispatcher.dispatch(event, 3);
+	dispatcher.dispatch(event);
+	REQUIRE(dataList == std::vector<int>{ 5, 1, 3, 6, 4 });
+}
+
+TEST_CASE("HeterEventDispatcher, forEach")
+{
+	eventpp::HeterEventDispatcher<int, eventpp::HeterTuple<int (), int (int)> > dispatcher;
+	constexpr int event = 3;
+
+	dispatcher.appendListener(event, []() { return 1; });
+	dispatcher.appendListener(event, []() { return 2; });
+	dispatcher.appendListener(event, []() { return 3; });
+
+	dispatcher.appendListener(event, [](int n) { return n + 5 + 0; });
+	dispatcher.appendListener(event, [](int n) { return n + 5 + 1; });
+	dispatcher.appendListener(event, [](int n) { return n + 5 + 2; });
+
+	int i = 1;
+	dispatcher.forEach<int ()>(event, [&i](const std::function<int ()> & callback) {
+		REQUIRE(callback() == i);
+		++i;
+	});
+
+	i = 0;
+	dispatcher.forEach<int (int)>(event, [&i](const std::function<int (int)> & callback) {
+		REQUIRE(callback(3) == 8 + i);
+		++i;
+	});
+}
+
+TEST_CASE("HeterEventDispatcher, forEachIf")
+{
+	eventpp::HeterEventDispatcher<int, eventpp::HeterTuple<void (), void (int)> > dispatcher;
+	constexpr int event = 3;
+
+	std::vector<int> dataListNoArg(3);
+	std::vector<int> dataListWithArg(3);
+
+	dispatcher.appendListener(event, [&dataListNoArg]() {
+		dataListNoArg[0] += 1;
+	});
+	dispatcher.appendListener(event, [&dataListNoArg]() {
+		dataListNoArg[1] += 2;
+	});
+	dispatcher.appendListener(event, [&dataListNoArg]() {
+		dataListNoArg[2] += 3;
+	});
+
+	dispatcher.appendListener(event, [&dataListWithArg](int n) {
+		dataListWithArg[0] += n;
+	});
+	dispatcher.appendListener(event, [&dataListWithArg](int n) {
+		dataListWithArg[1] += n * 2;
+	});
+	dispatcher.appendListener(event, [&dataListWithArg](int n) {
+		dataListWithArg[2] += n * 3;
+	});
+
+	REQUIRE(dataListNoArg == std::vector<int>{ 0, 0, 0 });
+	REQUIRE(dataListWithArg == std::vector<int>{ 0, 0, 0 });
+
+	int i = 0;
+	bool result = dispatcher.forEachIf<void ()>(event, [&i](const std::function<void ()> & callback) -> bool {
+		callback();
+		++i;
+
+		return i != 2;
+	});
+
+	REQUIRE(! result);
+	REQUIRE(dataListNoArg == std::vector<int>{ 1, 2, 0 });
+	REQUIRE(dataListWithArg == std::vector<int>{ 0, 0, 0 });
+
+	i = 0;
+	result = dispatcher.forEachIf<void (int)>(event, [&i](const std::function<void (int)> & callback) -> bool {
+		callback(3);
+		++i;
+
+		return i != 1;
+	});
+
+	REQUIRE(! result);
+	REQUIRE(dataListNoArg == std::vector<int>{ 1, 2, 0 });
+	REQUIRE(dataListWithArg == std::vector<int>{ 3, 0, 0 });
+}
+
+TEST_CASE("HeterEventDispatcher, invoke")
+{
+	eventpp::HeterEventDispatcher<int, eventpp::HeterTuple<void (), void (int)> > dispatcher;
+	constexpr int event = 3;
+
+	std::vector<int> dataListNoArg(3);
+	std::vector<int> dataListWithArg(3);
+
+	dispatcher.appendListener(event, [&dataListNoArg]() {
+		dataListNoArg[0] += 1;
+	});
+	dispatcher.appendListener(event, [&dataListNoArg]() {
+		dataListNoArg[1] += 2;
+	});
+	dispatcher.appendListener(event, [&dataListNoArg]() {
+		dataListNoArg[2] += 3;
+	});
+
+	dispatcher.appendListener(event, [&dataListWithArg](int n) {
+		dataListWithArg[0] += n;
+	});
+	dispatcher.appendListener(event, [&dataListWithArg](int n) {
+		dataListWithArg[1] += n * 2;
+	});
+	dispatcher.appendListener(event, [&dataListWithArg](int n) {
+		dataListWithArg[2] += n * 3;
+	});
+
+	REQUIRE(dataListNoArg == std::vector<int>{ 0, 0, 0 });
+	REQUIRE(dataListWithArg == std::vector<int>{ 0, 0, 0 });
+
+	dispatcher.dispatch(event);
+	REQUIRE(dataListNoArg == std::vector<int>{ 1, 2, 3 });
+	REQUIRE(dataListWithArg == std::vector<int>{ 0, 0, 0 });
+
+	dispatcher.dispatch(event);
+	REQUIRE(dataListNoArg == std::vector<int>{ 2, 4, 6 });
+	REQUIRE(dataListWithArg == std::vector<int>{ 0, 0, 0 });
+
+	dispatcher.dispatch(event, 1);
+	REQUIRE(dataListNoArg == std::vector<int>{ 2, 4, 6 });
+	REQUIRE(dataListWithArg == std::vector<int>{ 1, 2, 3 });
+
+	dispatcher.dispatch(event, 2);
+	REQUIRE(dataListNoArg == std::vector<int>{ 2, 4, 6 });
+	REQUIRE(dataListWithArg == std::vector<int>{ 3, 6, 9 });
+}
+
+TEST_CASE("HeterEventDispatcher, invoke, ArgumentPassingIncludeEvent")
+{
+	struct EventPolicies
+	{
+		using ArgumentPassingMode = eventpp::ArgumentPassingIncludeEvent;
+	};
+
+	eventpp::HeterEventDispatcher<int, eventpp::HeterTuple<void (int), void (int, int)>, EventPolicies> dispatcher;
+	constexpr int event = 3;
+
+	std::vector<int> dataListNoArg(3);
+	std::vector<int> dataListWithArg(3);
+
+	dispatcher.appendListener(event, [&dataListNoArg](int) {
+		dataListNoArg[0] += 1;
+	});
+	dispatcher.appendListener(event, [&dataListNoArg](int) {
+		dataListNoArg[1] += 2;
+	});
+	dispatcher.appendListener(event, [&dataListNoArg](int) {
+		dataListNoArg[2] += 3;
+	});
+
+	dispatcher.appendListener(event, [&dataListWithArg](int, int n) {
+		dataListWithArg[0] += n;
+	});
+	dispatcher.appendListener(event, [&dataListWithArg](int, int n) {
+		dataListWithArg[1] += n * 2;
+	});
+	dispatcher.appendListener(event, [&dataListWithArg](int, int n) {
+		dataListWithArg[2] += n * 3;
+	});
+
+	REQUIRE(dataListNoArg == std::vector<int>{ 0, 0, 0 });
+	REQUIRE(dataListWithArg == std::vector<int>{ 0, 0, 0 });
+
+	dispatcher.dispatch(event);
+	REQUIRE(dataListNoArg == std::vector<int>{ 1, 2, 3 });
+	REQUIRE(dataListWithArg == std::vector<int>{ 0, 0, 0 });
+
+	dispatcher.dispatch(event);
+	REQUIRE(dataListNoArg == std::vector<int>{ 2, 4, 6 });
+	REQUIRE(dataListWithArg == std::vector<int>{ 0, 0, 0 });
+
+	dispatcher.dispatch(event, 1);
+	REQUIRE(dataListNoArg == std::vector<int>{ 2, 4, 6 });
+	REQUIRE(dataListWithArg == std::vector<int>{ 1, 2, 3 });
+
+	dispatcher.dispatch(event, 2);
+	REQUIRE(dataListNoArg == std::vector<int>{ 2, 4, 6 });
+	REQUIRE(dataListWithArg == std::vector<int>{ 3, 6, 9 });
 }
 
 TEST_CASE("HeterEventDispatcher, event filter")

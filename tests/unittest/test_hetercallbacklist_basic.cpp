@@ -149,6 +149,68 @@ TEST_CASE("HeterCallbackList, insert")
 	REQUIRE(orderList == std::vector<int>{ 4, 5, 3, 2, 1 });
 }
 
+TEST_CASE("HeterCallbackList, remove")
+{
+	using CL = eventpp::HeterCallbackList<eventpp::HeterTuple<void (), void (int)> >;
+	CL callbackList;
+
+	std::vector<int> dataList(5);
+
+	auto h1 = callbackList.append([&dataList]() {
+		++dataList[0];
+	});
+	auto h2 = callbackList.append([&dataList]() {
+		++dataList[1];
+	});
+	auto h3 = callbackList.append([&dataList](int) {
+		++dataList[2];
+	});
+	auto h4 = callbackList.append([&dataList](int) {
+		++dataList[3];
+	});
+	auto h5 = callbackList.append([&dataList](int) {
+		++dataList[4];
+	});
+
+	REQUIRE(dataList == std::vector<int>{ 0, 0, 0, 0, 0 });
+
+	callbackList(3);
+	REQUIRE(dataList == std::vector<int>{ 0, 0, 1, 1, 1 });
+	callbackList();
+	REQUIRE(dataList == std::vector<int>{ 1, 1, 1, 1, 1 });
+
+	callbackList.remove(h2);
+	callbackList(3);
+	callbackList();
+	REQUIRE(dataList == std::vector<int>{ 2, 1, 2, 2, 2 });
+
+	// double remove, no effect
+	callbackList.remove(h2);
+	callbackList(3);
+	callbackList();
+	REQUIRE(dataList == std::vector<int>{ 3, 1, 3, 3, 3 });
+
+	callbackList.remove(h3);
+	callbackList(3);
+	callbackList();
+	REQUIRE(dataList == std::vector<int>{ 4, 1, 3, 4, 4 });
+
+	callbackList.remove(h5);
+	callbackList(3);
+	callbackList();
+	REQUIRE(dataList == std::vector<int>{ 5, 1, 3, 5, 4 });
+
+	callbackList.remove(h1);
+	callbackList(3);
+	callbackList();
+	REQUIRE(dataList == std::vector<int>{ 5, 1, 3, 6, 4 });
+
+	callbackList.remove(h4);
+	callbackList(3);
+	callbackList();
+	REQUIRE(dataList == std::vector<int>{ 5, 1, 3, 6, 4 });
+}
+
 TEST_CASE("HeterCallbackList, forEach")
 {
 	using CL = eventpp::HeterCallbackList<eventpp::HeterTuple<int (), int(int)> >;

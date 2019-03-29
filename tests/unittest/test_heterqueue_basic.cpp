@@ -14,32 +14,159 @@
 #include "test.h"
 #include "eventpp/hetereventqueue.h"
 
-TEST_CASE("HeterEventQueue 1")
+TEST_CASE("HeterEventQueue, clearEvents")
 {
-	eventpp::HeterEventQueue<std::string, eventpp::HeterTuple<void (), void (const std::string &)> > queue;
+	eventpp::HeterEventQueue<int, eventpp::HeterTuple<void (), void (int)> > queue;
 
-	int a = 1;
-	int b = 5;
+	SECTION("void ()") {
+		REQUIRE(queue.empty());
 
-	queue.appendListener("event1", [&a](const std::string &) {
-		a = 2;
+		queue.enqueue(1);
+
+		REQUIRE(! queue.empty());
+
+		queue.clearEvents();
+		REQUIRE(queue.empty());
+	}
+
+	SECTION("void (int)") {
+		REQUIRE(queue.empty());
+
+		queue.enqueue(6, 3);
+
+		REQUIRE(! queue.empty());
+
+		queue.clearEvents();
+		REQUIRE(queue.empty());
+	}
+
+	SECTION("void (), more events") {
+		REQUIRE(queue.empty());
+
+		queue.enqueue(6);
+
+		REQUIRE(! queue.empty());
+
+		queue.enqueue(10);
+		queue.enqueue(99);
+
+		queue.clearEvents();
+		REQUIRE(queue.empty());
+	}
+
+	SECTION("void (int), more events") {
+		REQUIRE(queue.empty());
+
+		queue.enqueue(1, 3);
+
+		REQUIRE(! queue.empty());
+
+		queue.enqueue(2, 5);
+		queue.enqueue(8, 6);
+
+		queue.clearEvents();
+		REQUIRE(queue.empty());
+	}
+}
+
+TEST_CASE("HeterEventQueue, enqueue")
+{
+	eventpp::HeterEventQueue<int, eventpp::HeterTuple<void (), void (int)> > queue;
+	constexpr int event = 3;
+
+	SECTION("void ()") {
+		REQUIRE(queue.empty());
+
+		queue.enqueue(event);
+
+		REQUIRE(! queue.empty());
+	}
+
+	SECTION("void (int)") {
+		REQUIRE(queue.empty());
+
+		queue.enqueue(event, 3);
+
+		REQUIRE(! queue.empty());
+	}
+}
+
+TEST_CASE("HeterEventQueue, process")
+{
+	eventpp::HeterEventQueue<int, eventpp::HeterTuple<void (), void (int)> > queue;
+	constexpr int event = 3;
+
+	std::vector<int> dataList(2);
+
+	queue.appendListener(event, [&dataList]() {
+		++dataList[0];
 	});
-	queue.appendListener("event1", [&b]() {
-		b = 8;
+	queue.appendListener(event, [&dataList](int n) {
+		dataList[1] += n;
 	});
 
-	REQUIRE(a != 2);
-	REQUIRE(b != 8);
+	SECTION("0, 1") {
+		REQUIRE(dataList == std::vector<int>{ 0, 0 });
 
-	queue.enqueue("event1");
-	queue.process();
-	REQUIRE(a == 1);
-	REQUIRE(b == 8);
+		queue.enqueue(event); // 0 argument
+		queue.enqueue(event, 2); // 1 argument
+		queue.process();
+		REQUIRE(dataList == std::vector<int>{ 1, 2 });
+	}
 
-	queue.enqueue("event1", "a");
-	queue.process();
-	REQUIRE(a == 2);
-	REQUIRE(b == 8);
+	SECTION("0, 0, 1, 1") {
+		REQUIRE(dataList == std::vector<int>{ 0, 0 });
+
+		queue.enqueue(event);
+		queue.enqueue(event);
+		queue.enqueue(event, 2);
+		queue.enqueue(event, 2);
+		queue.process();
+		REQUIRE(dataList == std::vector<int>{ 2, 4 });
+	}
+
+	SECTION("1, 0, 1, 0") {
+		REQUIRE(dataList == std::vector<int>{ 0, 0 });
+
+		queue.enqueue(event, 2);
+		queue.enqueue(event);
+		queue.enqueue(event, 2);
+		queue.enqueue(event);
+		queue.process();
+		REQUIRE(dataList == std::vector<int>{ 2, 4 });
+	}
+}
+
+TEST_CASE("HeterEventQueue, processOne")
+{
+	eventpp::HeterEventQueue<int, eventpp::HeterTuple<void (), void (int)> > queue;
+	constexpr int event = 3;
+
+	std::vector<int> dataList(2);
+
+	queue.appendListener(event, [&dataList]() {
+		++dataList[0];
+	});
+	queue.appendListener(event, [&dataList](int n) {
+		dataList[1] += n;
+	});
+
+	REQUIRE(dataList == std::vector<int>{ 0, 0 });
+
+	queue.enqueue(event);
+	queue.enqueue(event, 2);
+	queue.processOne();
+	REQUIRE(dataList == std::vector<int>{ 1, 0 });
+
+	queue.enqueue(event);
+	queue.enqueue(event, 2);
+	queue.processOne();
+	REQUIRE(dataList == std::vector<int>{ 1, 2 });
+
+	queue.processOne();
+	REQUIRE(dataList == std::vector<int>{ 2, 2 });
+	queue.processOne();
+	REQUIRE(dataList == std::vector<int>{ 2, 4 });
 }
 
 TEST_CASE("HeterEventQueue, processIf")

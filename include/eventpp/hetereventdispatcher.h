@@ -203,7 +203,7 @@ public:
 
 protected:
 	template <typename ArgumentMode, typename T, typename ...Args>
-	auto doDispatch(T && first, Args ...args) const
+	auto doDispatch(T && first, Args && ...args) const
 		-> typename std::enable_if<std::is_same<ArgumentMode, ArgumentPassingIncludeEvent>::value>::type
 	{
 		if(! internal_::ForEachMixins<MixinRoot, Mixins, DoMixinBeforeDispatch>::forEach(
@@ -223,7 +223,7 @@ protected:
 	}
 
 	template <typename ArgumentMode, typename T, typename ...Args>
-	auto doDispatch(T && first, Args ...args) const
+	auto doDispatch(T && first, Args && ...args) const
 		-> typename std::enable_if<std::is_same<ArgumentMode, ArgumentPassingExcludeEvent>::value>::type
 	{
 		if(! internal_::ForEachMixins<MixinRoot, Mixins, DoMixinBeforeDispatch>::forEach(
