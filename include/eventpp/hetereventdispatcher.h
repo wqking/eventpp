@@ -303,7 +303,7 @@ template <
 class HeterEventDispatcher : public internal_::InheritMixins<
 		internal_::HeterEventDispatcherBase<Event_, PrototypeList_, Policies_, void>,
 		typename internal_::SelectMixins<Policies_, internal_::HasTypeMixins<Policies_>::value >::Type
-	>::Type, public TagEventDispatcher
+	>::Type, public TagEventDispatcher, public TagHeterEventDispatcher
 {
 private:
 	using super = typename internal_::InheritMixins<

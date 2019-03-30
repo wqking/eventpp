@@ -462,7 +462,7 @@ template <
 class HeterEventQueue : public internal_::InheritMixins<
 		internal_::HeterEventQueueBase<Event_, PrototypeList_, Policies_>,
 		typename internal_::SelectMixins<Policies_, internal_::HasTypeMixins<Policies_>::value >::Type
-	>::Type, public TagEventDispatcher
+	>::Type, public TagEventDispatcher, public TagEventQueue, public TagHeterEventDispatcher, public TagHeterEventQueue
 {
 private:
 	using super = typename internal_::InheritMixins<

@@ -300,7 +300,7 @@ template <
 	typename PrototypeList_,
 	typename Policies_ = DefaultPolicies
 >
-class HeterCallbackList : public internal_::HeterCallbackListBase<PrototypeList_, Policies_>, public TagCallbackList
+class HeterCallbackList : public internal_::HeterCallbackListBase<PrototypeList_, Policies_>, public TagCallbackList, public TagHeterCallbackList
 {
 private:
 	using super = internal_::HeterCallbackListBase<PrototypeList_, Policies_>;

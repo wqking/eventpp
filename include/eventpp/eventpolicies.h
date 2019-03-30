@@ -24,9 +24,15 @@
 
 namespace eventpp {
 
-struct TagCallbackList {};
-struct TagEventDispatcher {};
-struct TagEventQueue {};
+struct TagHomo {};
+struct TagCallbackList : public TagHomo {};
+struct TagEventDispatcher : public TagHomo {};
+struct TagEventQueue : public TagHomo {};
+
+struct TagHeter {};
+struct TagHeterCallbackList : public TagHeter {};
+struct TagHeterEventDispatcher : public TagHeter {};
+struct TagHeterEventQueue : public TagHeter {};
 
 struct SpinLock
 {

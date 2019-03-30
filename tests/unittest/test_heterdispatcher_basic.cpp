@@ -364,6 +364,83 @@ TEST_CASE("HeterEventDispatcher, invoke, ArgumentPassingIncludeEvent")
 	REQUIRE(dataListWithArg == std::vector<int>{ 3, 6, 9 });
 }
 
+TEST_CASE("HeterEventDispatcher, getEvent")
+{
+	struct MyEvent {
+		int type;
+	};
+	struct EventPolicies
+	{
+		static int getEvent(const MyEvent & e) {
+			return e.type;
+		}
+
+		static int getEvent(const MyEvent & e, int) {
+			return e.type;
+		}
+	};
+
+
+	eventpp::HeterEventDispatcher<int, eventpp::HeterTuple<void (), void (int)>, EventPolicies> dispatcher;
+	constexpr int event = 3;
+
+	std::vector<int> dataList(2);
+
+	dispatcher.appendListener(event, [&dataList]() {
+		++dataList[0];
+	});
+	dispatcher.appendListener(event, [&dataList](int i) {
+		dataList[1] = i;
+	});
+
+	REQUIRE(dataList == std::vector<int>{ 0, 0 });
+
+	dispatcher.dispatch(MyEvent{ event });
+	REQUIRE(dataList == std::vector<int>{ 1, 0 });
+	dispatcher.dispatch(MyEvent{ event }, 3);
+	REQUIRE(dataList == std::vector<int>{ 1, 3 });
+}
+
+TEST_CASE("HeterEventDispatcher, getEvent, ArgumentPassingIncludeEvent")
+{
+	struct MyEvent {
+		int type;
+		int param;
+	};
+	struct EventPolicies
+	{
+		using ArgumentPassingMode = eventpp::ArgumentPassingIncludeEvent;
+
+		static int getEvent(const MyEvent & e) {
+			return e.type;
+		}
+
+		static int getEvent(const MyEvent & e, int) {
+			return e.type;
+		}
+	};
+
+
+	eventpp::HeterEventDispatcher<int, eventpp::HeterTuple<void (const MyEvent &), void (const MyEvent &, int)>, EventPolicies> dispatcher;
+	constexpr int event = 3;
+
+	std::vector<int> dataList(2);
+
+	dispatcher.appendListener(event, [&dataList](const MyEvent & e) {
+		dataList[0] = e.param;
+	});
+	dispatcher.appendListener(event, [&dataList](const MyEvent & e, int i) {
+		dataList[1] = e.param + i;
+	});
+
+	REQUIRE(dataList == std::vector<int>{ 0, 0 });
+
+	dispatcher.dispatch(MyEvent{ event, 5 });
+	REQUIRE(dataList == std::vector<int>{ 5, 0 });
+	dispatcher.dispatch(MyEvent{ event, 5 }, 3);
+	REQUIRE(dataList == std::vector<int>{ 5, 8 });
+}
+
 TEST_CASE("HeterEventDispatcher, event filter")
 {
 	struct MyPolicies {
