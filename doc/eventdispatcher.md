@@ -20,7 +20,7 @@ EventDispatcher holds a map of `<EventType, CallbackList>` pairs. On dispatching
 
 eventpp/eventdispatcher.h
 
-**Template parameters**
+### Template parameters
 
 ```c++
 template <

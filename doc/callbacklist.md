@@ -21,7 +21,7 @@ The *callback* can be any callback target -- functions, pointers to functions, ,
 
 eventpp/callbacklist.h
 
-**Template parameters**
+### Template parameters
 
 ```c++
 template <

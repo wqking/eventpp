@@ -18,7 +18,7 @@ EventQueue is equivalent to the event system (QEvent) in Qt, or the message proc
 
 eventpp/eventqueue.h
 
-**Template parameters**
+### Template parameters
 
 ```c++
 template <
