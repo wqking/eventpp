@@ -48,7 +48,7 @@ class CallbackList;
 <a id="a3_3"></a>
 ### Public types
 
-`Handle`: the handle type returned by appendListener, prependListener and insertListener. A handle can be used to insert a callback or remove a callback. To check if a `Handle` is empty, convert it to boolean, *false* is empty. `Handle` is copyable.  
+`Handle`: the handle type returned by append, prepend and insert. A handle can be used to insert a callback or remove a callback. To check if a `Handle` is empty, convert it to boolean, *false* is empty. `Handle` is copyable.  
 `Callback`: the callback storage type.
 
 <a id="a3_4"></a>
@@ -117,7 +117,6 @@ Apply `func` to all callbacks.
 The `func` can be one of the three prototypes:  
 ```c++
 AnyReturnType func(const CallbackList::Handle &, const CallbackList::Callback &);
-AnyReturnType func(const CallbackList::Handle &);
 AnyReturnType func(const CallbackList::Callback &);
 ```
 **Note**: the `func` can remove any callbacks, or add other callbacks, safely.

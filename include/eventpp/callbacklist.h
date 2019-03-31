@@ -236,7 +236,7 @@ public:
 		return append(callback);
 	}
 
-	bool remove(const Handle handle)
+	bool remove(const Handle & handle)
 	{
 		std::lock_guard<Mutex> lockGuard(mutex);
 		auto node = handle.lock();
@@ -307,13 +307,6 @@ private:
 		-> typename std::enable_if<CanInvoke<Func, Handle, Callback &>::value, RT>::type
 	{
 		return func(Handle(node), node->callback);
-	}
-
-	template <typename RT, typename Func>
-	auto doForEachInvoke(Func && func, NodePtr & node) const
-		-> typename std::enable_if<CanInvoke<Func, Handle>::value, RT>::type
-	{
-		return func(Handle(node));
 	}
 
 	template <typename RT, typename Func>

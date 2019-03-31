@@ -119,7 +119,8 @@ queue.process();
 ## Build the unit tests
 
 The library itself is header only and doesn't need building.  
-The unit test requires CMake to build, and there is a makefile to ease the building.  
+The unit tests require CMake to build, and there is a makefile to ease the building.  
+Note the unit tests require C++14 (generic lambda), the library itself only requires C++11.  
 Go to folder `tests/build`, then run `make` with different target.
 - `make vc17` #generate solution files for Microsoft Visual Studio 2017, then open eventpptest.sln in folder project_vc17
 - `make vc15` #generate solution files for Microsoft Visual Studio 2015, then open eventpptest.sln in folder project_vc15

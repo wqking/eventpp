@@ -118,7 +118,6 @@ Apply `func` to all listeners of `event`.
 The `func` can be one of the three prototypes:  
 ```c++
 AnyReturnType func(const EventDispatcher::Handle &, const EventDispatcher::Callback &);
-AnyReturnType func(const EventDispatcher::Handle &);
 AnyReturnType func(const EventDispatcher::Callback &);
 ```
 **Note**: the `func` can remove any listeners, or add other listeners, safely.
