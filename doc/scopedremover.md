@@ -1,16 +1,33 @@
 # Class ScopedRemover reference
 
+<a id="a2_1"></a>
+## Table Of Contents
+
+<!--begintoc-->
+* [Table Of Contents](#a2_1)
+* [Description](#a2_2)
+* [API reference](#a2_3)
+  * [Header](#a3_1)
+  * [Template parameters](#a3_2)
+  * [Member functions](#a3_3)
+  * [Sample code](#a3_4)
+  * [Automatic disconnection](#a3_5)
+<!--endtoc-->
+
+<a id="a2_2"></a>
 ## Description
 
 ScopedRemover is a utility class that automatically removes listeners when ScopedRemover object goes out of scope.  
 
-<a name="apis"></a>
+<a id="a2_3"></a>
 ## API reference
 
+<a id="a3_1"></a>
 ### Header
 
 eventpp/utilities/scopedremover.h
 
+<a id="a3_2"></a>
 ### Template parameters
 
 ```c++
@@ -20,6 +37,7 @@ class ScopedRemover;
 
 `DispatcherType` can be CallbackList, EventDispatcher, or EventQueue.
 
+<a id="a3_3"></a>
 ### Member functions
 
 ```c++
@@ -76,6 +94,7 @@ The function `setDispatcher()` and `setCallbackList` sets the dispatcher or call
 
 The other member functions that have the same names with the corresponding underlying class (CallbackList, EventDispatcher, or EventQueue). Those functions add listener to the dispatcher.  
 
+<a id="a3_4"></a>
 ### Sample code
 
 ```c++
@@ -129,6 +148,7 @@ dispatcher.dispatch(event);
 
 ```
 
+<a id="a3_5"></a>
 ### Automatic disconnection
 
 ScopedRemover can be used to auto disconnect listeners when the object involved in the listeners is destroyed. For example, pseudo code,  

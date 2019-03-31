@@ -1,17 +1,34 @@
 # Class ConditionalRemover reference
 
+<a id="a2_1"></a>
+## Table Of Contents
+
+<!--begintoc-->
+* [Table Of Contents](#a2_1)
+* [Description](#a2_2)
+* [API reference](#a2_3)
+  * [Header](#a3_1)
+  * [Template parameters](#a3_2)
+  * [Member functions](#a3_3)
+  * [Free functions](#a3_4)
+  * [Sample code](#a3_5)
+<!--endtoc-->
+
+<a id="a2_2"></a>
 ## Description
 
 ConditionalRemover is a utility class that automatically removes listeners after the listeners are triggered and certain condition is satisfied.  
 ConditionalRemover is a pure functional class. After the member functions in ConditionalRemover are invoked, the ConditionalRemover object can be destroyed safely.  
 
-<a name="apis"></a>
+<a id="a2_3"></a>
 ## API reference
 
+<a id="a3_1"></a>
 ### Header
 
 eventpp/utilities/conditionalremover.h
 
+<a id="a3_2"></a>
 ### Template parameters
 
 ```c++
@@ -21,6 +38,7 @@ class ConditionalRemover;
 
 `DispatcherType` can be CallbackList, EventDispatcher, or EventQueue.
 
+<a id="a3_3"></a>
 ### Member functions
 
 ```c++
@@ -78,6 +96,7 @@ typename CallbackListType::Handle insert(
 
 The member functions have the same names with the corresponding underlying class (CallbackList, EventDispatcher, or EventQueue), and also have the same parameters except there is one more parameter, `condition`. `condition` is a predicate function of prototype `bool()`. It's invoked after each trigger, if it returns true, the listener will be removed.  
 
+<a id="a3_4"></a>
 ### Free functions
 
 ```c++
@@ -87,6 +106,7 @@ ConditionalRemover<DispatcherType> conditionalRemover(DispatcherType & dispatche
 
 Since ConditionalRemover takes one template parameter and it's verbose to instantiate its instance, the function `conditionalRemover` is used to construct an instance of ConditionalRemover via the deduced argument.
 
+<a id="a3_5"></a>
 ### Sample code
 
 ```c++

@@ -2,14 +2,10 @@
 
 ## Table Of Contents
 
-- [Tutorial 1 -- Basic usage](#tutorial1)
-- [Tutorial 2 -- Listener with parameters](#tutorial2)
-- [Tutorial 3 -- Customized event struct](#tutorial3)
+<!--toc-->
 
-<a name="tutorials"></a>
 ## Tutorials
 
-<a name="tutorial1"></a>
 ### Tutorial 1 -- Basic usage
 
 **Code**  
@@ -72,7 +68,6 @@ dispatcher.dispatch(5);
 Here we dispatched two events, one is event 3, the other is event 5.  
 During the dispatching, all listeners of that event will be invoked one by one in the order of they were added.
 
-<a name="tutorial2"></a>
 ### Tutorial 2 -- Listener with parameters
 
 **Code**  
@@ -106,7 +101,6 @@ dispatcher.dispatch(5, "World", false);
 Now the dispatcher callback prototype takes two parameters, `const std::string &` and `const bool`.  
 The listener's prototype is not required to be same as the dispatcher, it's fine as long as the prototype is compatible with the dispatcher. See the second listener, `[](std::string s, int b)`, its prototype is not same as the dispatcher.
 
-<a name="tutorial3"></a>
 ### Tutorial 3 -- Customized event struct
 
 **Code**  

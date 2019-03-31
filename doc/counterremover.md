@@ -1,17 +1,34 @@
 # Class CounterRemover reference
 
+<a id="a2_1"></a>
+## Table Of Contents
+
+<!--begintoc-->
+* [Table Of Contents](#a2_1)
+* [Description](#a2_2)
+* [API reference](#a2_3)
+  * [Header](#a3_1)
+  * [Template parameters](#a3_2)
+  * [Member functions](#a3_3)
+  * [Free functions](#a3_4)
+  * [Sample code](#a3_5)
+<!--endtoc-->
+
+<a id="a2_2"></a>
 ## Description
 
 CounterRemover is a utility class that automatically removes listeners after the listeners are triggered for certain times.  
 CounterRemover is a pure functional class. After the member functions in CounterRemover are invoked, the CounterRemover object can be destroyed safely.  
 
-<a name="apis"></a>
+<a id="a2_3"></a>
 ## API reference
 
+<a id="a3_1"></a>
 ### Header
 
 eventpp/utilities/counterremover.h
 
+<a id="a3_2"></a>
 ### Template parameters
 
 ```c++
@@ -21,6 +38,7 @@ class CounterRemover;
 
 `DispatcherType` can be CallbackList, EventDispatcher, or EventQueue.
 
+<a id="a3_3"></a>
 ### Member functions
 
 ```c++
@@ -73,6 +91,7 @@ typename CallbackListType::Handle insert(
 The member functions have the same names with the corresponding underlying class (CallbackList, EventDispatcher, or EventQueue), and also have the same parameters except there is one more parameter, `triggerCount`. `triggerCount` is decreased by one on each trigger, and when `triggerCount` is zero or negative, the listener will be removed.  
 The default value of `triggerCount` is 1, that means the listener is removed after the first trigger, which is one shot listener.
 
+<a id="a3_4"></a>
 ### Free functions
 
 ```c++
@@ -82,6 +101,7 @@ CounterRemover<DispatcherType> counterRemover(DispatcherType & dispatcher);
 
 Since CounterRemover takes one template parameter and it's verbose to instantiate its instance, the function `counterRemover` is used to construct an instance of CounterRemover via the deduced argument.
 
+<a id="a3_5"></a>
 ### Sample code
 
 ```c++

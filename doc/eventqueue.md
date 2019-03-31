@@ -1,23 +1,35 @@
 # Class EventQueue reference
 
+<a id="a2_1"></a>
 ## Table Of Contents
 
-- [API reference](#apis)
-- [Internal data structure](#internal-data-structure)
+<!--begintoc-->
+* [Table Of Contents](#a2_1)
+* [Description](#a2_2)
+* [API reference](#a2_3)
+  * [Header](#a3_1)
+  * [Template parameters](#a3_2)
+  * [Public types](#a3_3)
+  * [Member functions](#a3_4)
+* [Internal data structure](#a2_4)
+<!--endtoc-->
 
+<a id="a2_2"></a>
 ## Description
 
 EventQueue includes all features of EventDispatcher and adds event queue features. Note: EventQueue doesn't inherit from EventDispatcher, don't try to cast EventQueue to EventDispatcher.  
 EventQueue is asynchronous. Events are cached in the queue when `EventQueue::enqueue` is called, and dispatched later when `EventQueue::process` is called.  
 EventQueue is equivalent to the event system (QEvent) in Qt, or the message processing in Windows API.  
 
-<a name="apis"></a>
+<a id="a2_3"></a>
 ## API reference
 
+<a id="a3_1"></a>
 ### Header
 
 eventpp/eventqueue.h
 
+<a id="a3_2"></a>
 ### Template parameters
 
 ```c++
@@ -31,6 +43,7 @@ class EventQueue;
 
 EventQueue has the exactly same template parameters with EventDispatcher. Please reference [EventDispatcher document](eventdispatcher.md) for details.
 
+<a id="a3_3"></a>
 ### Public types
 
 `QueuedEvent`: the data type of event stored in the queue. It's declaration in pseudo code is,  
@@ -43,6 +56,7 @@ struct EventQueue::QueuedEvent
 ```
 `event` is the EventQueue::Event, `arguments` are the arguments passed in `enqueue`.  
 
+<a id="a3_4"></a>
 ### Member functions
 
 ```c++
@@ -200,7 +214,7 @@ EQ queue;
 queue.enqueue(3);
 ```
 
-<a name="internal-data-structure"></a>
+<a id="a2_4"></a>
 ## Internal data structure
 
 EventQueue uses three `std::list` to manage the event queue.  

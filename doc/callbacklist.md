@@ -1,12 +1,22 @@
 # Class CallbackList reference
 
+<a id="a2_1"></a>
 ## Table Of Contents
 
-- [API reference](#apis)
-- [Nested callback safety](#nested-callback-safety)
-- [Time complexities](#time-complexities)
-- [Internal data structure](#internal-data-structure)
+<!--begintoc-->
+* [Table Of Contents](#a2_1)
+* [Description](#a2_2)
+* [API reference](#a2_3)
+  * [Header](#a3_1)
+  * [Template parameters](#a3_2)
+  * [Public types](#a3_3)
+  * [Member functions](#a3_4)
+* [Nested callback safety](#a2_4)
+* [Time complexities](#a2_5)
+* [Internal data structure](#a2_6)
+<!--endtoc-->
 
+<a id="a2_2"></a>
 ## Description
 
 CallbackList is the fundamental class in eventpp. The other classes EventDispatcher and EventQueue are built on CallbackList.  
@@ -14,13 +24,15 @@ CallbackList is the fundamental class in eventpp. The other classes EventDispatc
 CallbackList holds a list of callbacks. At the time of the call, CallbackList simply invokes each callback one by one. Consider CallbackList as the signal/slot system in Qt, or the callback function pointer in some Windows APIs (such as lpCompletionRoutine in `ReadFileEx`).  
 The *callback* can be any callback target -- functions, pointers to functions, , pointers to member functions, lambda expressions, and function objects.  
 
-<a name="apis"></a>
+<a id="a2_3"></a>
 ## API reference
 
+<a id="a3_1"></a>
 ### Header
 
 eventpp/callbacklist.h
 
+<a id="a3_2"></a>
 ### Template parameters
 
 ```c++
@@ -33,11 +45,13 @@ class CallbackList;
 `Prototype`:  the callback prototype. It's C++ function type such as `void(int, std::string, const MyClass *)`.  
 `Policies`: the policies to configure and extend the callback list. The default value is `DefaultPolicies`. See [document of policies](policies.md) for details.  
 
+<a id="a3_3"></a>
 ### Public types
 
 `Handle`: the handle type returned by appendListener, prependListener and insertListener. A handle can be used to insert a callback or remove a callback. To check if a `Handle` is empty, convert it to boolean, *false* is empty. `Handle` is copyable.  
 `Callback`: the callback storage type.
 
+<a id="a3_4"></a>
 ### Member functions
 
 ```c++
@@ -122,21 +136,21 @@ Invoke each callbacks in the callback list.
 The callbacks are called with arguments `args`.  
 The callbacks are called in the thread same as the callee of `operator()`.
 
-<a name="nested-callback-safety"></a>
+<a id="a2_4"></a>
 ## Nested callback safety
 1. If a callback adds another callback to the callback list during a invoking, the new callback is guaranteed not to be triggered within the same invoking. This is guaranteed by an unsigned 64 bits integer counter. This rule will be broken is the counter is overflowed to zero in a invoking, but this rule will continue working on the subsequence invoking.  
 2. Any callbacks that are removed during a invoking are guaranteed not triggered.  
 3. All above points are not true in multiple threading. That's to say, if one thread is invoking a callback list, the other thread add or remove a callback, the added or removed callback may be called during the invoking.
 
 
-<a name="time-complexities"></a>
+<a id="a2_5"></a>
 ## Time complexities
 - `append`: O(1)
 - `prepend`: O(1)
 - `insert`: O(1)
 - `remove`: O(1)
 
-<a name="internal-data-structure"></a>
+<a id="a2_6"></a>
 ## Internal data structure
 
 CallbackList uses doubly linked list to manage the callbacks.  

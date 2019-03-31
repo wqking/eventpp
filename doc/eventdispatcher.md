@@ -1,25 +1,37 @@
 # Class EventDispatcher reference
 
+<a id="a2_1"></a>
 ## Table Of Contents
 
-- [API reference](#apis)
-- [Nested listener safety](#nested-listener-safety)
-- [Time complexities](#time-complexities)
-- [Internal data structure](#internal-data-structure)
+<!--begintoc-->
+* [Table Of Contents](#a2_1)
+* [Description](#a2_2)
+* [API reference](#a2_3)
+  * [Header](#a3_1)
+  * [Template parameters](#a3_2)
+  * [Public types](#a3_3)
+  * [Member functions](#a3_4)
+* [Nested listener safety](#a2_4)
+* [Time complexities](#a2_5)
+* [Internal data structure](#a2_6)
+<!--endtoc-->
 
+<a id="a2_2"></a>
 ## Description
 
 EventDispatcher is something like std::map<EventType, CallbackList>.
 
 EventDispatcher holds a map of `<EventType, CallbackList>` pairs. On dispatching, EventDispatcher finds the CallbackList of the event type, then invoke the callback list. The invocation is always synchronous. The listeners are triggered when `EventDispatcher::dispatch` is called.  
 
-<a name="apis"></a>
+<a id="a2_3"></a>
 ## API reference
 
+<a id="a3_1"></a>
 ### Header
 
 eventpp/eventdispatcher.h
 
+<a id="a3_2"></a>
 ### Template parameters
 
 ```c++
@@ -34,12 +46,14 @@ class EventDispatcher;
 `Prototype`: the listener prototype. It's C++ function type such as `void(int, std::string, const MyClass *)`.  
 `Policies`: the policies to configure and extend the dispatcher. The default value is `DefaultPolicies`. See [document of policies](policies.md) for details.  
 
+<a id="a3_3"></a>
 ### Public types
 
 `Handle`: the handle type returned by appendListener, prependListener and insertListener. A handle can be used to insert a listener or remove a listener. To check if a `Handle` is empty, convert it to boolean, *false* is empty. `Handle` is copyable.  
 `Callback`: the callback storage type.  
 `Event`: the event type.  
 
+<a id="a3_4"></a>
 ### Member functions
 
 ```c++
@@ -116,13 +130,13 @@ bool forEachIf(const Event & event, Func && func);
 Apply `func` to all listeners of `event`. `func` must return a boolean value, and if the return value is false, forEachIf stops the looping immediately.  
 Return `true` if all listeners are invoked, or `event` is not found, `false` if `func` returns `false`.
 
-<a name="nested-listener-safety"></a>
+<a id="a2_4"></a>
 ## Nested listener safety
 1. If a listener adds another listener of the same event to the dispatcher during a dispatching, the new listener is guaranteed not to be triggered within the same dispatching. This is guaranteed by an unsigned 64 bits integer counter. This rule will be broken is the counter is overflowed to zero in a dispatching, but this rule will continue working on the subsequence dispatching.  
 2. Any listeners that are removed during a dispatching are guaranteed not triggered.  
 3. All above points are not true in multiple threading. That's to say, if one thread is invoking a callback list, the other thread add or remove a callback, the added or removed callback may be triggered during the invoking.
 
-<a name="time-complexities"></a>
+<a id="a2_5"></a>
 ## Time complexities
 The time complexities being discussed here is about when operating on the listener in the underlying list, and `n` is the number of listeners. It doesn't include the event searching in the underlying `std::map` which is always O(log n).
 - `appendListener`: O(1)
@@ -131,7 +145,7 @@ The time complexities being discussed here is about when operating on the listen
 - `removeListener`: O(1)
 - `enqueue`: O(1)
 
-<a name="internal-data-structure"></a>
+<a id="a2_6"></a>
 ## Internal data structure
 
 EventDispatcher uses [CallbackList](callbacklist.md) to manage the listener callbacks.  
