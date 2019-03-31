@@ -447,4 +447,31 @@ TEST_CASE("CallbackList, remove")
 	}
 }
 
+TEST_CASE("CallbackList, prototype convert")
+{
+	struct MyClass
+	{
+		MyClass(int) {}
+	};
+
+	using CL = eventpp::CallbackList<void (int)>;
+	CL callbackList;
+
+	std::vector<int> dataList(2);
+
+	callbackList.append([&dataList](int) {
+		++dataList[0];
+	});
+	callbackList.append([&dataList](const MyClass &) {
+		++dataList[1];
+	});
+
+	REQUIRE(dataList == std::vector<int>{ 0, 0 });
+
+	callbackList((int)5);
+	REQUIRE(dataList == std::vector<int>{ 1, 1 });
+
+	callbackList((char)5);
+	REQUIRE(dataList == std::vector<int>{ 2, 2 });
+}
 

@@ -340,3 +340,31 @@ TEST_CASE("HeterCallbackList, invoke")
 	REQUIRE(dataListNoArg == std::vector<int>{ 2, 4, 6 });
 	REQUIRE(dataListWithArg == std::vector<int>{ 3, 6, 9 });
 }
+
+TEST_CASE("HeterCallbackList, prototype convert")
+{
+	struct MyClass
+	{
+		MyClass(int) {}
+	};
+
+	using CL = eventpp::HeterCallbackList<eventpp::HeterTuple<void (int)> >;
+	CL callbackList;
+
+	std::vector<int> dataList(2);
+
+	callbackList.append([&dataList](int) {
+		++dataList[0];
+	});
+	callbackList.append([&dataList](const MyClass &) {
+		++dataList[1];
+	});
+
+	REQUIRE(dataList == std::vector<int>{ 0, 0 });
+
+	callbackList((int)5);
+	REQUIRE(dataList == std::vector<int>{ 1, 1 });
+
+	callbackList((char)5);
+	REQUIRE(dataList == std::vector<int>{ 2, 2 });
+}
