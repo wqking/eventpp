@@ -1,85 +1,56 @@
-# Class EventQueue reference
+# Class HeterEventQueue reference
 
-<a id="a2_1"></a>
 ## Table Of Contents
 
-<!--begintoc-->
-* [Table Of Contents](#a2_1)
-* [Description](#a2_2)
-* [API reference](#a2_3)
-  * [Header](#a3_1)
-  * [Template parameters](#a3_2)
-  * [Public types](#a3_3)
-  * [Member functions](#a3_4)
-* [Internal data structure](#a2_4)
-<!--endtoc-->
+<!--toc-->
 
-<a id="a2_2"></a>
 ## Description
 
-EventQueue includes all features of EventDispatcher and adds event queue features. Note: EventQueue doesn't inherit from EventDispatcher, don't try to cast EventQueue to EventDispatcher.  
-EventQueue is asynchronous. Events are cached in the queue when `EventQueue::enqueue` is called, and dispatched later when `EventQueue::process` is called.  
-EventQueue is equivalent to the event system (QEvent) in Qt, or the message processing in Windows API.  
+HeterEventQueue includes all features of HeterEventDispatcher and adds event queue features. Note: HeterEventQueue doesn't inherit from HeterEventDispatcher, don't try to cast HeterEventQueue to HeterEventDispatcher.  
+HeterEventQueue is asynchronous. Events are cached in the queue when `HeterEventQueue::enqueue` is called, and dispatched later when `HeterEventQueue::process` is called.  
+HeterEventQueue is equivalent to the event system (QEvent) in Qt, or the message processing in Windows API.  
 
-<a id="a2_3"></a>
 ## API reference
 
-<a id="a3_1"></a>
 ### Header
 
 eventpp/eventqueue.h
 
-<a id="a3_2"></a>
 ### Template parameters
 
 ```c++
 template <
 	typename Event,
-	typename Prototype,
+	typename PrototypeList,
 	typename Policies = DefaultPolicies
 >
-class EventQueue;
+class HeterEventQueue;
 ```
 
-EventQueue has the exactly same template parameters with EventDispatcher. Please reference [EventDispatcher document](eventdispatcher.md) for details.
+HeterEventQueue has the exactly same template parameters with EventDispatcher. Please reference [HeterEventDispatcher document](hetereventdispatcher.md) for details.
 
-<a id="a3_3"></a>
 ### Public types
 
-`QueuedEvent`: the data type of event stored in the queue. It's declaration in pseudo code is,  
-```c++
-struct EventQueue::QueuedEvent
-{
-	TheEventType event;
-	std::tuple<ArgumentTypes...> arguments;
-};
-```
-`event` is the EventQueue::Event, `arguments` are the arguments passed in `enqueue`.  
-
-<a id="a3_4"></a>
 ### Member functions
 
 ```c++
-EventQueue();
-EventQueue(const EventQueue & other);
-EventQueue(EventQueue && other) noexcept;
-EventQueue & operator = (const EventQueue & other);
-EventQueue & operator = (EventQueue && other) noexcept;
+HeterEventQueue();
+HeterEventQueue(const HeterEventQueue & other);
+HeterEventQueue(HeterEventQueue && other) noexcept;
+HeterEventQueue & operator = (const HeterEventQueue & other);
+HeterEventQueue & operator = (HeterEventQueue && other) noexcept;
 ```
 
 EventDispatcher can be copied, moved,  assigned, and move assigned.  
 Note: the queued events are not copied, moved, assigned, or move assigned, only the listeners are performed these operations.
 
 ```c++
-template <typename ...A>
-void enqueue(A ...args);
-
-template <typename T, typename ...A>
-void enqueue(T && first, A ...args);
+template <typename T, typename ...Args>
+void enqueue(T && first, Args && ...args);
 ```  
 Put an event into the event queue. The event type is deducted from the arguments of `enqueue`.  
 All copyable arguments are copied to internal data structure. All non-copyable but movable arguments are moved.  
-EventQueue requires the arguments either copyable or movable.  
+HeterEventQueue requires the arguments either copyable or movable.  
 If an argument is a reference to a base class and a derived object is passed in, only the base object will be stored and the derived object is lost. Usually shared pointer should be used in such situation.  
 If an argument is a pointer, only the pointer will be stored. The object it points to must be available until the event is processed.  
 `enqueue` wakes up any threads that are blocked by `wait` or `waitFor`.  
@@ -110,7 +81,7 @@ template <typename F>
 bool processIf(F && func);
 ```
 Process the event queue. Before processing an event, the event is passed to `func` and the event will be processed only if `func` returns true.  
-`func` takes exactly the same arguments as `EventQueue::enqueue`, and returns a boolean value.  
+`func` takes exactly the same arguments as `HeterEventQueue::enqueue`, and returns a boolean value.  
 `processIf` returns true if any event was dispatched, false if no event was dispatched.  
 `processIf` has some good use scenarios:  
 1. Process certain events in certain thread. For example, in a GUI application, the UI related events may be only desired to processed in the main thread.  
@@ -162,45 +133,16 @@ for(;;) {
 }
 ```
 
-```c++
-bool peekEvent(EventQueue::QueuedEvent * queuedEvent);
-```
-Retrieve an event from the queue. The event is returned in `queuedEvent`.  
-```c++
-struct EventQueue::QueuedEvent
-{
-	TheEventType event;
-	std::tuple<ArgumentTypes...> arguments;
-};
-```
-`queuedEvent` is a EventQueue::QueuedEvent struct. `event` is the EventQueue::Event, `arguments` are the arguments passed in `enqueue`.  
-If the queue is empty, the function returns false, otherwise true if an event is retrieved successfully.  
-After the function returns, the original even is still in the queue.  
-Note: `peekEvent` doesn't work with any non-copyable event arguments. If `peekEvent` is called when any arguments are non-copyable, compile fails.
+**Inner class HeterEventQueue::DisableQueueNotify**  
 
-```c++
-bool takeEvent(EventQueue::QueuedEvent * queuedEvent);
-```
-Take an event from the queue and remove the original event from the queue. The event is returned in `queuedEvent`.  
-If the queue is empty, the function returns false, otherwise true if an event is retrieved successfully.  
-After the function returns, the original even is removed from the queue.  
-Note: `takeEvent` works with non-copyable event arguments.
-
-```c++
-void dispatch(const QueuedEvent & queuedEvent);
-```
-Dispatch an event which was returned by `peekEvent` or `takeEvent`.  
-
-**Inner class EventQueue::DisableQueueNotify**  
-
-`EventQueue::DisableQueueNotify` is a RAII class that temporarily prevents the event queue from waking up any waiting threads. When any `DisableQueueNotify` object exist, calling `enqueue` doesn't wake up any threads that are blocked by `wait`. When the `DisableQueueNotify` object is out of scope, the waking up is resumed. If there are more than one `DisableQueueNotify` objects, the waking up is only resumed after all `DisableQueueNotify` objects are destroyed.  
+`HeterEventQueue::DisableQueueNotify` is a RAII class that temporarily prevents the event queue from waking up any waiting threads. When any `DisableQueueNotify` object exist, calling `enqueue` doesn't wake up any threads that are blocked by `wait`. When the `DisableQueueNotify` object is out of scope, the waking up is resumed. If there are more than one `DisableQueueNotify` objects, the waking up is only resumed after all `DisableQueueNotify` objects are destroyed.  
 `DisableQueueNotify` is useful to improve performance when batching adding events to the queue. For example, in a main loop of a game engine, `DisableQueueNotify` can be created on the start in a frame, then the game adding events to the queue, and the `DisableQueueNotify` is destroyed at the end of a frame and the events are processed.
 
 To use `DisableQueueNotify`, construct it with a pointer to event queue.
 
 Sample code
 ```c++
-using EQ = eventpp::EventQueue<int, void ()>;
+using EQ = eventpp::HeterEventQueue<int, void ()>;
 EQ queue;
 {
 	EQ::DisableQueueNotify disableNotify(&queue);
@@ -213,12 +155,4 @@ EQ queue;
 // any blocking threads will be waken up by below line since there is no DisableQueueNotify.
 queue.enqueue(3);
 ```
-
-<a id="a2_4"></a>
-## Internal data structure
-
-EventQueue uses three `std::list` to manage the event queue.  
-The first busy list holds all nodes of queued events.  
-The second idle list holds all idle nodes. After an event is dispatched and removed from the queue, instead of freeing the memory, EventQueue moves the unused node to the idle list. This can improve performance and avoid memory fragment.  
-The third list is a local temporary list used in function `process()`. During processing, the busy list is swapped to the temporary list, all events are dispatched from the temporary list, then the temporary list is returned and appended to the idle list.
 

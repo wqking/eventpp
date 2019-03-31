@@ -44,29 +44,32 @@ TEST_CASE("HeterCallbackList tutorial 1, basic")
 	callbackList(5);
 }
 
-#if 0
 TEST_CASE("HeterCallbackList tutorial 2, for each")
 {
-	std::cout << "HeterCallbackList tutorial 4, for each" << std::endl;
+	std::cout << "HeterCallbackList tutorial 2, for each" << std::endl;
 
-	using CL = eventpp::HeterCallbackList<eventpp::HeterTuple<void (), void (int), void (int, int)> >;
+	using CL = eventpp::HeterCallbackList<eventpp::HeterTuple<void (), void (int)> >;
 	CL callbackList;
 
 	// Add some callbacks.
 	callbackList.append([]() {
 		std::cout << "Got callback void()." << std::endl;
 	});
-	callbackList.append([](int a) {
-		std::cout << "Got callback void(" << a << ")." << std::endl;
+	callbackList.append([]() {
+		std::cout << "Got callback void() again." << std::endl;
 	});
-	callbackList.append([](int a, int b) {
-		std::cout << "Got callback void(" << a << ", " << b << ")." << std::endl;
+	callbackList.append([](int a) {
+		std::cout << "Got callback void(int a)." << std::endl;
+	});
+	callbackList.append([](int a) {
+		std::cout << "Got callback void(int a) again." << std::endl;
 	});
 
 	// Now call forEach to remove the second callback
-	// The forEach callback prototype is void(const HeterCallbackList::Handle & handle, const HeterCallbackList::Callback & callback)
+	// forEach has one template parameter, here is void(). It's which prototype to iterate for.
+	// The forEach callback prototype is void(const HeterCallbackList::Handle & handle, const std::function<prototype> & callback)
 	int index = 0;
-	callbackList.forEach([&callbackList, &index](const CL::Handle & handle, const CL::Callback & /*callback*/) {
+	callbackList.forEach<void()>([&callbackList, &index](const CL::Handle & handle, const std::function<void()> & /*callback*/) {
 		std::cout << "forEach(Handle, Callback), invoked " << index << std::endl;
 		if(index == 1) {
 			callbackList.remove(handle);
@@ -75,18 +78,14 @@ TEST_CASE("HeterCallbackList tutorial 2, for each")
 		++index;
 	});
 
-	// The forEach callback prototype can also be void(const HeterCallbackList::Handle & handle)
-	callbackList.forEach([&callbackList, &index](const CL::Handle & /*handle*/) {
-		std::cout << "forEach(Handle), invoked" << std::endl;
-	});
-
-	// The forEach callback prototype can also be void(const HeterCallbackList::Callback & callback)
-	callbackList.forEach([&callbackList, &index](const CL::Callback & /*callback*/) {
+	// The forEach callback prototype can also be void(const std::function<prototype> & callback)
+	// Here uses C++14 generic lambda to simplify the callback.
+	callbackList.forEach<void (int)>([&callbackList, &index](const auto & callback) {
 		std::cout << "forEach(Callback), invoked" << std::endl;
+		callback(3);
 	});
 
 	// Invoke the callback list
-	// The "Got callback 2" callback should not be triggered.
 	callbackList();
 }
-#endif
+

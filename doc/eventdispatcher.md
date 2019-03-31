@@ -101,21 +101,11 @@ Return true if the listener is removed successfully, false if the listener is no
 The time complexity is O(1).  
 
 ```c++
-void dispatch(Args ...args);  
-
-template <typename T>  
-void dispatch(T && first, Args ...args);
-```  
-Dispatch an event. The event type is deducted from the arguments of `dispatch`.  
-In both overloads, the listeners are called with arguments `args`.  
-The function is synchronous. The listeners are called in the thread same as the caller of `dispatch`.
-
-```c++
 template <typename Func>  
 void forEach(const Event & event, Func && func);
 ```  
 Apply `func` to all listeners of `event`.  
-The `func` can be one of the three prototypes:  
+The `func` can be one of the two prototypes:  
 ```c++
 AnyReturnType func(const EventDispatcher::Handle &, const EventDispatcher::Callback &);
 AnyReturnType func(const EventDispatcher::Callback &);
@@ -128,6 +118,16 @@ bool forEachIf(const Event & event, Func && func);
 ```  
 Apply `func` to all listeners of `event`. `func` must return a boolean value, and if the return value is false, forEachIf stops the looping immediately.  
 Return `true` if all listeners are invoked, or `event` is not found, `false` if `func` returns `false`.
+
+```c++
+void dispatch(Args ...args);  
+
+template <typename T>  
+void dispatch(T && first, Args ...args);
+```  
+Dispatch an event. The event type is deducted from the arguments of `dispatch`.  
+In both overloads, the listeners are called with arguments `args`.  
+The function is synchronous. The listeners are called in the thread same as the caller of `dispatch`.
 
 <a id="a2_4"></a>
 ## Nested listener safety

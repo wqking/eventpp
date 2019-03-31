@@ -125,24 +125,24 @@ public:
 		first.swap(second);
 	}
 
-	template <typename Callback>
-	Handle appendListener(const Event & event, const Callback & callback)
+	template <typename C>
+	Handle appendListener(const Event & event, const C & callback)
 	{
 		std::lock_guard<Mutex> lockGuard(listenerMutex);
 
 		return eventCallbackListMap[event].append(callback);
 	}
 
-	template <typename Callback>
-	Handle prependListener(const Event & event, const Callback & callback)
+	template <typename C>
+	Handle prependListener(const Event & event, const C & callback)
 	{
 		std::lock_guard<Mutex> lockGuard(listenerMutex);
 
 		return eventCallbackListMap[event].prepend(callback);
 	}
 
-	template <typename Callback>
-	Handle insertListener(const Event & event, const Callback & callback, const Handle & before)
+	template <typename C>
+	Handle insertListener(const Event & event, const C & callback, const Handle & before)
 	{
 		std::lock_guard<Mutex> lockGuard(listenerMutex);
 

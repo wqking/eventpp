@@ -139,7 +139,7 @@ public:
 		doEnqueue<ArgumentPassingMode>(std::forward<T>(first), std::forward<Args>(args)...);
 	}
 
-	bool empty() const
+	bool emptyQueue() const
 	{
 		return queueList.empty() && (queueEmptyCounter.load(std::memory_order_acquire) == 0);
 	}
@@ -259,7 +259,7 @@ public:
 private:
 	bool doCanProcess() const
 	{
-		return ! empty() && doCanNotifyQueueAvailable();
+		return ! emptyQueue() && doCanNotifyQueueAvailable();
 	}
 
 	bool doCanNotifyQueueAvailable() const

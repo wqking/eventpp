@@ -225,7 +225,7 @@ TEST_CASE("HeterCallbackList, forEach")
 	callbackList.append([](int n) { return n + 5 + 2; });
 
 	int i = 1;
-	callbackList.forEach<int ()>([&i](const std::function<int ()> & callback) {
+	callbackList.forEach<int ()>([&i](auto callback) {
 		REQUIRE(callback() == i);
 		++i;
 	});

@@ -98,7 +98,7 @@ public:
 		{
 			--queue->queueNotifyCounter;
 
-			if(queue->doCanNotifyQueueAvailable() && ! queue->empty()) {
+			if(queue->doCanNotifyQueueAvailable() && ! queue->emptyQueue()) {
 				queue->queueListConditionVariable.notify_one();
 			}
 		}
@@ -176,7 +176,7 @@ public:
 		}
 	}
 
-	bool empty() const
+	bool emptyQueue() const
 	{
 		return queueList.empty() && (queueEmptyCounter.load(std::memory_order_acquire) == 0);
 	}
@@ -397,7 +397,7 @@ public:
 protected:
 	bool doCanProcess() const
 	{
-		return ! empty() && doCanNotifyQueueAvailable();
+		return ! emptyQueue() && doCanNotifyQueueAvailable();
 	}
 
 	bool doCanNotifyQueueAvailable() const

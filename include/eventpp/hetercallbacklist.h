@@ -202,7 +202,7 @@ public:
 		};
 	}
 
-	bool remove(const Handle handle)
+	bool remove(const Handle & handle)
 	{
 		auto callbackList = callbackListList[handle.index];
 		if(callbackList) {
@@ -254,13 +254,6 @@ private:
 		-> typename std::enable_if<CanInvoke<Func, Handle, CL>::value, RT>::type
 	{
 		return func(Handle { PrototypeIndex, handle }, callback);
-	}
-
-	template <typename RT, int PrototypeIndex, typename Func, typename H, typename CL>
-	auto doForEachInvoke(Func && func, const H & handle, const CL & callback) const
-		-> typename std::enable_if<CanInvoke<Func, Handle>::value, RT>::type
-	{
-		return func(Handle { PrototypeIndex, handle });
 	}
 
 	template <typename RT, int PrototypeIndex, typename Func, typename H, typename CL>

@@ -19,53 +19,53 @@ TEST_CASE("HeterEventQueue, clearEvents")
 	eventpp::HeterEventQueue<int, eventpp::HeterTuple<void (), void (int)> > queue;
 
 	SECTION("void ()") {
-		REQUIRE(queue.empty());
+		REQUIRE(queue.emptyQueue());
 
 		queue.enqueue(1);
 
-		REQUIRE(! queue.empty());
+		REQUIRE(! queue.emptyQueue());
 
 		queue.clearEvents();
-		REQUIRE(queue.empty());
+		REQUIRE(queue.emptyQueue());
 	}
 
 	SECTION("void (int)") {
-		REQUIRE(queue.empty());
+		REQUIRE(queue.emptyQueue());
 
 		queue.enqueue(6, 3);
 
-		REQUIRE(! queue.empty());
+		REQUIRE(! queue.emptyQueue());
 
 		queue.clearEvents();
-		REQUIRE(queue.empty());
+		REQUIRE(queue.emptyQueue());
 	}
 
 	SECTION("void (), more events") {
-		REQUIRE(queue.empty());
+		REQUIRE(queue.emptyQueue());
 
 		queue.enqueue(6);
 
-		REQUIRE(! queue.empty());
+		REQUIRE(! queue.emptyQueue());
 
 		queue.enqueue(10);
 		queue.enqueue(99);
 
 		queue.clearEvents();
-		REQUIRE(queue.empty());
+		REQUIRE(queue.emptyQueue());
 	}
 
 	SECTION("void (int), more events") {
-		REQUIRE(queue.empty());
+		REQUIRE(queue.emptyQueue());
 
 		queue.enqueue(1, 3);
 
-		REQUIRE(! queue.empty());
+		REQUIRE(! queue.emptyQueue());
 
 		queue.enqueue(2, 5);
 		queue.enqueue(8, 6);
 
 		queue.clearEvents();
-		REQUIRE(queue.empty());
+		REQUIRE(queue.emptyQueue());
 	}
 }
 
@@ -75,19 +75,19 @@ TEST_CASE("HeterEventQueue, enqueue")
 	constexpr int event = 3;
 
 	SECTION("void ()") {
-		REQUIRE(queue.empty());
+		REQUIRE(queue.emptyQueue());
 
 		queue.enqueue(event);
 
-		REQUIRE(! queue.empty());
+		REQUIRE(! queue.emptyQueue());
 	}
 
 	SECTION("void (int)") {
-		REQUIRE(queue.empty());
+		REQUIRE(queue.emptyQueue());
 
 		queue.enqueue(event, 3);
 
-		REQUIRE(! queue.empty());
+		REQUIRE(! queue.emptyQueue());
 	}
 }
 
