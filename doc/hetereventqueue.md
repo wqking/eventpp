@@ -2,20 +2,31 @@
 
 ## Table Of Contents
 
-<!--toc-->
+<!--begintoc-->
+* [Description](#a2_1)
+* [API reference](#a2_2)
+  * [Header](#a3_1)
+  * [Template parameters](#a3_2)
+  * [Public types](#a3_3)
+  * [Member functions](#a3_4)
+<!--endtoc-->
 
+<a id="a2_1"></a>
 ## Description
 
 HeterEventQueue includes all features of HeterEventDispatcher and adds event queue features. Note: HeterEventQueue doesn't inherit from HeterEventDispatcher, don't try to cast HeterEventQueue to HeterEventDispatcher.  
 HeterEventQueue is asynchronous. Events are cached in the queue when `HeterEventQueue::enqueue` is called, and dispatched later when `HeterEventQueue::process` is called.  
 HeterEventQueue is equivalent to the event system (QEvent) in Qt, or the message processing in Windows API.  
 
+<a id="a2_2"></a>
 ## API reference
 
+<a id="a3_1"></a>
 ### Header
 
 eventpp/eventqueue.h
 
+<a id="a3_2"></a>
 ### Template parameters
 
 ```c++
@@ -29,8 +40,10 @@ class HeterEventQueue;
 
 HeterEventQueue has the exactly same template parameters with EventDispatcher. Please reference [HeterEventDispatcher document](hetereventdispatcher.md) for details.
 
+<a id="a3_3"></a>
 ### Public types
 
+<a id="a3_4"></a>
 ### Member functions
 
 ```c++
@@ -155,4 +168,3 @@ EQ queue;
 // any blocking threads will be waken up by below line since there is no DisableQueueNotify.
 queue.enqueue(3);
 ```
-

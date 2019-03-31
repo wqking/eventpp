@@ -2,8 +2,16 @@
 
 ## Table Of Contents
 
-<!--toc-->
+<!--begintoc-->
+* [Description](#a2_1)
+* [API reference](#a2_2)
+  * [Header](#a3_1)
+  * [Template parameters](#a3_2)
+  * [Public types](#a3_3)
+  * [Member functions](#a3_4)
+<!--endtoc-->
 
+<a id="a2_1"></a>
 ## Description
 
 HeterCallbackList is the heterogeneous counterpart of CallbackList in eventpp. The other classes HeterEventDispatcher and HeterEventQueue are built on HeterCallbackList.  
@@ -11,12 +19,15 @@ HeterCallbackList is the heterogeneous counterpart of CallbackList in eventpp. T
 HeterCallbackList holds a list of callbacks. The callbacks can have different prototypes. At the time of the call, HeterCallbackList invokes each callback which matches the invoking parameters.  
 The *callback* can be any callback target -- functions, pointers to functions, , pointers to member functions, lambda expressions, and function objects.  
 
+<a id="a2_2"></a>
 ## API reference
 
+<a id="a3_1"></a>
 ### Header
 
 eventpp/hetercallbacklist.h
 
+<a id="a3_2"></a>
 ### Template parameters
 
 ```c++
@@ -29,11 +40,13 @@ class HeterCallbackList;
 `Prototype`:  a list of function types in `eventpp::HeterTuple`, such as `eventpp::HeterTuple<void (), void (std::string), void (int, int)>`.  
 `Policies`: the policies to configure and extend the callback list. The default value is `DefaultPolicies`. See [document of policies](policies.md) for details.  
 
+<a id="a3_3"></a>
 ### Public types
 
 `Handle`: the handle type returned by append, prepend and insert. A handle can be used to insert a callback or remove a callback. To check if a `Handle` is empty, convert it to boolean, *false* is empty. `Handle` is copyable.  
 `Callback`: the callback storage type.
 
+<a id="a3_4"></a>
 ### Member functions
 
 ```c++
@@ -123,4 +136,3 @@ void operator() (Args && ...args) const;
 Invoke each callbacks that can be called with `Args` in the callback list.  
 The callbacks are called with arguments `args`.  
 The callbacks are called in the thread same as the callee of `operator()`.
-

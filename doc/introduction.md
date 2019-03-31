@@ -81,5 +81,3 @@ Exceptions may be thrown by underlying code when,
 
 Almost all operations guarantee strong exception safety, which means the underlying data remains original value on exception is thrown.  
 An except is `EventQueue::process`, on exception, the remaining events will not be dispatched, and the queue becomes empty.
-
-

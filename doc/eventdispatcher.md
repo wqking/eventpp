@@ -1,29 +1,27 @@
 # Class EventDispatcher reference
 
-<a id="a2_1"></a>
 ## Table Of Contents
 
 <!--begintoc-->
-* [Table Of Contents](#a2_1)
-* [Description](#a2_2)
-* [API reference](#a2_3)
+* [Description](#a2_1)
+* [API reference](#a2_2)
   * [Header](#a3_1)
   * [Template parameters](#a3_2)
   * [Public types](#a3_3)
   * [Member functions](#a3_4)
-* [Nested listener safety](#a2_4)
-* [Time complexities](#a2_5)
-* [Internal data structure](#a2_6)
+* [Nested listener safety](#a2_3)
+* [Time complexities](#a2_4)
+* [Internal data structure](#a2_5)
 <!--endtoc-->
 
-<a id="a2_2"></a>
+<a id="a2_1"></a>
 ## Description
 
 EventDispatcher is something like std::map<EventType, CallbackList>.
 
 EventDispatcher holds a map of `<EventType, CallbackList>` pairs. On dispatching, EventDispatcher finds the CallbackList of the event type, then invoke the callback list. The invocation is always synchronous. The listeners are triggered when `EventDispatcher::dispatch` is called.  
 
-<a id="a2_3"></a>
+<a id="a2_2"></a>
 ## API reference
 
 <a id="a3_1"></a>
@@ -129,13 +127,13 @@ Dispatch an event. The event type is deducted from the arguments of `dispatch`.
 In both overloads, the listeners are called with arguments `args`.  
 The function is synchronous. The listeners are called in the thread same as the caller of `dispatch`.
 
-<a id="a2_4"></a>
+<a id="a2_3"></a>
 ## Nested listener safety
 1. If a listener adds another listener of the same event to the dispatcher during a dispatching, the new listener is guaranteed not to be triggered within the same dispatching. This is guaranteed by an unsigned 64 bits integer counter. This rule will be broken is the counter is overflowed to zero in a dispatching, but this rule will continue working on the subsequence dispatching.  
 2. Any listeners that are removed during a dispatching are guaranteed not triggered.  
 3. All above points are not true in multiple threading. That's to say, if one thread is invoking a callback list, the other thread add or remove a callback, the added or removed callback may be triggered during the invoking.
 
-<a id="a2_5"></a>
+<a id="a2_4"></a>
 ## Time complexities
 The time complexities being discussed here is about when operating on the listener in the underlying list, and `n` is the number of listeners. It doesn't include the event searching in the underlying `std::map` which is always O(log n).
 - `appendListener`: O(1)
@@ -144,7 +142,7 @@ The time complexities being discussed here is about when operating on the listen
 - `removeListener`: O(1)
 - `enqueue`: O(1)
 
-<a id="a2_6"></a>
+<a id="a2_5"></a>
 ## Internal data structure
 
 EventDispatcher uses [CallbackList](callbacklist.md) to manage the listener callbacks.  

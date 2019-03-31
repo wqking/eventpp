@@ -82,4 +82,3 @@ Note: Ideally it would be better to use `std::tuple` instead of `eventpp::HeterT
 ### Member functions and types
 
 The heter-classes have similar functions and types as the homo-classes. The major difference is, in the homo-classes, listeners can have only one prototype, while in the heter-classes, listeners can have any prototypes which are in the `PrototypeList` specified in the class template parameters.
-

@@ -1,7 +1,5 @@
 # Tutorials of EventQueue
 
-## Table Of Contents
-
 <!--toc-->
 
 ### Tutorial 1 -- Basic usage

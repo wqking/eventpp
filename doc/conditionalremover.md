@@ -1,12 +1,10 @@
 # Class ConditionalRemover reference
 
-<a id="a2_1"></a>
 ## Table Of Contents
 
 <!--begintoc-->
-* [Table Of Contents](#a2_1)
-* [Description](#a2_2)
-* [API reference](#a2_3)
+* [Description](#a2_1)
+* [API reference](#a2_2)
   * [Header](#a3_1)
   * [Template parameters](#a3_2)
   * [Member functions](#a3_3)
@@ -14,13 +12,13 @@
   * [Sample code](#a3_5)
 <!--endtoc-->
 
-<a id="a2_2"></a>
+<a id="a2_1"></a>
 ## Description
 
 ConditionalRemover is a utility class that automatically removes listeners after the listeners are triggered and certain condition is satisfied.  
 ConditionalRemover is a pure functional class. After the member functions in ConditionalRemover are invoked, the ConditionalRemover object can be destroyed safely.  
 
-<a id="a2_3"></a>
+<a id="a2_2"></a>
 ## API reference
 
 <a id="a3_1"></a>

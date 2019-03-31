@@ -1,27 +1,25 @@
 # Class EventQueue reference
 
-<a id="a2_1"></a>
 ## Table Of Contents
 
 <!--begintoc-->
-* [Table Of Contents](#a2_1)
-* [Description](#a2_2)
-* [API reference](#a2_3)
+* [Description](#a2_1)
+* [API reference](#a2_2)
   * [Header](#a3_1)
   * [Template parameters](#a3_2)
   * [Public types](#a3_3)
   * [Member functions](#a3_4)
-* [Internal data structure](#a2_4)
+* [Internal data structure](#a2_3)
 <!--endtoc-->
 
-<a id="a2_2"></a>
+<a id="a2_1"></a>
 ## Description
 
 EventQueue includes all features of EventDispatcher and adds event queue features. Note: EventQueue doesn't inherit from EventDispatcher, don't try to cast EventQueue to EventDispatcher.  
 EventQueue is asynchronous. Events are cached in the queue when `EventQueue::enqueue` is called, and dispatched later when `EventQueue::process` is called.  
 EventQueue is equivalent to the event system (QEvent) in Qt, or the message processing in Windows API.  
 
-<a id="a2_3"></a>
+<a id="a2_2"></a>
 ## API reference
 
 <a id="a3_1"></a>
@@ -214,11 +212,10 @@ EQ queue;
 queue.enqueue(3);
 ```
 
-<a id="a2_4"></a>
+<a id="a2_3"></a>
 ## Internal data structure
 
 EventQueue uses three `std::list` to manage the event queue.  
 The first busy list holds all nodes of queued events.  
 The second idle list holds all idle nodes. After an event is dispatched and removed from the queue, instead of freeing the memory, EventQueue moves the unused node to the idle list. This can improve performance and avoid memory fragment.  
 The third list is a local temporary list used in function `process()`. During processing, the busy list is swapped to the temporary list, all events are dispatched from the temporary list, then the temporary list is returned and appended to the idle list.
-

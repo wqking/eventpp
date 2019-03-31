@@ -1,7 +1,5 @@
 # Tutorials of EventDispatcher
 
-## Table Of Contents
-
 <!--toc-->
 
 ## Tutorials
@@ -157,4 +155,3 @@ dispatcher.dispatch(MyEvent { 3, "Hello world", 38 }, true);
 
 **Remarks**
 A common situation is an Event class is defined as the base class, all other events derive from Event, and the actual event type is a data member of Event (think QEvent in Qt). To let EventDispatcher knows how to get the event type from class Event, policies (the third template parameter) is used.  
-

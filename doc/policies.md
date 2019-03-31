@@ -1,23 +1,21 @@
 # Policies
 
-<a id="a2_1"></a>
 ## Table Of Contents
 
 <!--begintoc-->
-* [Table Of Contents](#a2_1)
-* [Introduction](#a2_2)
-* [Policies](#a2_3)
+* [Introduction](#a2_1)
+* [Policies](#a2_2)
   * [Function getEvent](#a3_1)
   * [Function canContinueInvoking](#a3_2)
   * [Type Mixins](#a3_3)
   * [Type Callback](#a3_4)
   * [Type Threading](#a3_5)
-* [Type ArgumentPassingMode](#a2_4)
+* [Type ArgumentPassingMode](#a2_3)
   * [Template Map](#a3_6)
-* [How to use policies](#a2_5)
+* [How to use policies](#a2_4)
 <!--endtoc-->
 
-<a id="a2_2"></a>
+<a id="a2_1"></a>
 ## Introduction
 
 eventpp uses policy based design to configure and extend each components' behavior. The last template parameter in EventDispatcher, EventQueue, and CallbackList is the policies class. All those three classes have default policies class named `DefaultPolicies`.  
@@ -25,7 +23,7 @@ A policy is either a type or a static function member in the policies class. All
 All policies are optional. If any policy is omitted, the default value is used.  In fact `DefaultPolicies` is just an empty struct.  
 The same policy mechanism applies to all three classes, EventDispatcher, EventQueue, and CallbackList, though not all classes requires the same policy.
 
-<a id="a2_3"></a>
+<a id="a2_2"></a>
 ## Policies
 
 <a id="a3_1"></a>
@@ -220,7 +218,7 @@ eventpp::EventDispatcher<int, void (), MyEventPolicies> dispatcher;
 eventpp::CallbackList<void (), MyEventPolicies> callbackList;
 ```
 
-<a id="a2_4"></a>
+<a id="a2_3"></a>
 ## Type ArgumentPassingMode
 
 **Default value**: `using ArgumentPassingMode = ArgumentPassingAutoDetect`.  
@@ -328,7 +326,7 @@ using Map = // std::map <Key, T> or other map type
 `Map` must support operations `[]`, `find()`, and `end()`.  
 If `Map` is not specified, eventpp will auto determine the type. If the event type supports `std::hash`, `std::unordered_map` is used, otherwise, `std::map` is used.
 
-<a id="a2_5"></a>
+<a id="a2_4"></a>
 ## How to use policies
 
 To use policies, declare a struct, define the policies in it, and pass the struct to CallbackList, EventDispatcher, or EventQueue.  

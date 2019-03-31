@@ -1,21 +1,9 @@
 # Tutorials of CallbackList
 
-<a id="a2_1"></a>
-## Table Of Contents
+<!--toc-->
 
-<!--begintoc-->
-* [Table Of Contents](#a2_1)
-* [Tutorials](#a2_2)
-  * [CallbackList tutorial 1, basic](#a3_1)
-  * [CallbackList tutorial 2, callback with parameters](#a3_2)
-  * [CallbackList tutorial 3, remove](#a3_3)
-  * [CallbackList tutorial 4, for each](#a3_4)
-<!--endtoc-->
-
-<a id="a2_2"></a>
 ## Tutorials
 
-<a id="a3_1"></a>
 ### CallbackList tutorial 1, basic
 
 **Code**  
@@ -67,7 +55,6 @@ callbackList();
 ```
 During the invoking, all callbacks will be invoked one by one in the order of they were added.
 
-<a id="a3_2"></a>
 ### CallbackList tutorial 2, callback with parameters
 
 **Code**  
@@ -96,7 +83,6 @@ callbackList("Hello world", true);
 Now the callback list prototype takes two parameters, `const std::string &` and `const bool`.  
 The callback's prototype is not required to be same as the callback list, it's fine as long as the prototype is compatible with the callback list. See the second callback, `[](std::string s, int b)`, its prototype is not same as the callback list.
 
-<a id="a3_3"></a>
 ### CallbackList tutorial 3, remove
 
 **Code**  
@@ -130,7 +116,6 @@ callbackList();
 
 **Remarks**  
 
-<a id="a3_4"></a>
 ### CallbackList tutorial 4, for each
 
 **Code**  
@@ -181,4 +166,3 @@ callbackList();
 > Got callback 3.  
 
 **Remarks**  
-

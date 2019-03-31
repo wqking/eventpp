@@ -2,20 +2,31 @@
 
 ## Table Of Contents
 
-<!--toc-->
+<!--begintoc-->
+* [Description](#a2_1)
+* [API reference](#a2_2)
+  * [Header](#a3_1)
+  * [Template parameters](#a3_2)
+  * [Public types](#a3_3)
+  * [Member functions](#a3_4)
+<!--endtoc-->
 
+<a id="a2_1"></a>
 ## Description
 
 HeterEventDispatcher is something like std::map<EventType, HeterCallbackList>.
 
 HeterEventDispatcher holds a map of `<EventType, HeterCallbackList>` pairs. On dispatching, HeterEventDispatcher finds the HeterCallbackList of the event type, then invoke the callback list. The invocation is always synchronous. The listeners are triggered when `HeterEventDispatcher::dispatch` is called.  
 
+<a id="a2_2"></a>
 ## API reference
 
+<a id="a3_1"></a>
 ### Header
 
 eventpp/hetereventdispatcher.h
 
+<a id="a3_2"></a>
 ### Template parameters
 
 ```c++
@@ -30,11 +41,13 @@ class HeterEventDispatcher;
 `Prototype`:  a list of function types in `eventpp::HeterTuple`, such as `eventpp::HeterTuple<void (), void (std::string), void (int, int)>`.  
 `Policies`: the policies to configure and extend the dispatcher. The default value is `DefaultPolicies`. See [document of policies](policies.md) for details.  
 
+<a id="a3_3"></a>
 ### Public types
 
 `Handle`: the handle type returned by appendListener, prependListener and insertListener. A handle can be used to insert a listener or remove a listener. To check if a `Handle` is empty, convert it to boolean, *false* is empty. `Handle` is copyable.  
 `Event`: the event type.  
 
+<a id="a3_4"></a>
 ### Member functions
 
 ```c++

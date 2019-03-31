@@ -1,21 +1,19 @@
 # Mixins
 
-<a id="a2_1"></a>
 ## Table Of Contents
 
 <!--begintoc-->
-* [Table Of Contents](#a2_1)
-* [Introduction](#a2_2)
-* [Define a mixin](#a2_3)
-* [Inject(enable) mixins to EventDispatcher](#a2_4)
-* [Optional interceptor points](#a2_5)
-* [MixinFilter](#a2_6)
+* [Introduction](#a2_1)
+* [Define a mixin](#a2_2)
+* [Inject(enable) mixins to EventDispatcher](#a2_3)
+* [Optional interceptor points](#a2_4)
+* [MixinFilter](#a2_5)
   * [Public type](#a3_1)
   * [Functions](#a3_2)
   * [Sample code for MixinFilter](#a3_3)
 <!--endtoc-->
 
-<a id="a2_2"></a>
+<a id="a2_1"></a>
 ## Introduction
 
 A mixin is used to inject code in the EventDispatcher/EventQueue inheritance hierarchy to extend the functionalities. In this document we will use EventDispatcher as the example, the usage for EventQueue is exactly the same.  
@@ -31,7 +29,7 @@ EventDispatcher <- MixinA <- MixinB <- EventDispatcherBase
 ```
 The mixins can use all public and protected members (types, functions and data) in EventDispatcherBase. All public members in the mixins are visible and usable by the user.
 
-<a id="a2_3"></a>
+<a id="a2_2"></a>
 ## Define a mixin
 
 A mixin is a template class with one template argument. The mixin must inherit from it's template argument.  
@@ -43,7 +41,7 @@ class MyMixin : public Base
 };
 ```
 
-<a id="a2_4"></a>
+<a id="a2_3"></a>
 ## Inject(enable) mixins to EventDispatcher
 
 To enable mixins, add them to the `Mixins` type in the policies class. For example, to enable `MixinFilter`, define the dispatcher as,   
@@ -60,7 +58,7 @@ EventDispatcher <- MixinA <- MixinB <- MixinC <- EventDispatcherBase
 ```
 The front mixin is the lowest in the hierarchy.
 
-<a id="a2_5"></a>
+<a id="a2_4"></a>
 ## Optional interceptor points
 
 A mixin can have special named functions that are called at certain point. The special functions must be public.  
@@ -73,7 +71,7 @@ bool mixinBeforeDispatch(Args && ...args) const;
 The function returns `true` to continue the dispatch, `false` will stop any further dispatching.  
 For multiple mixins, this function is called in the order of they appearing in MixinList in the policies class.
 
-<a id="a2_6"></a>
+<a id="a2_5"></a>
 ## MixinFilter
 
 MixinFilter allows all events are filtered or modified before dispatching.
