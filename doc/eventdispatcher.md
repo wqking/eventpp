@@ -1,8 +1,8 @@
 # Class EventDispatcher reference
 
+<!--begintoc-->
 ## Table Of Contents
 
-<!--begintoc-->
 * [Description](#a2_1)
 * [API reference](#a2_2)
   * [Header](#a3_1)
@@ -54,6 +54,8 @@ class EventDispatcher;
 <a id="a3_4"></a>
 ### Member functions
 
+#### constructors
+
 ```c++
 EventDispatcher();
 EventDispatcher(const EventDispatcher & other);
@@ -63,6 +65,8 @@ EventDispatcher & operator = (EventDispatcher && other) noexcept;
 ```
 
 EventDispatcher can be copied, moved,  assigned, and move assigned.
+
+#### appendListener
 
 ```c++
 Handle appendListener(const Event & event, const Callback & callback);
@@ -74,6 +78,8 @@ If `appendListener` is called in another listener during a dispatching, the new 
 If the same callback is added twice, it results duplicated listeners.  
 The time complexity is O(1).
 
+#### prependListener
+
 ```c++
 Handle prependListener(const Event & event, const Callback & callback);
 ```  
@@ -83,6 +89,8 @@ Return a handle which represents the listener. The handle can be used to remove 
 If `prependListener` is called in another listener during a dispatching, the new listener is guaranteed not triggered during the same dispatching.  
 The time complexity is O(1).
 
+#### insertListener
+
 ```c++
 Handle insertListener(const Event & event, const Callback & callback, const Handle before);
 ```  
@@ -91,12 +99,16 @@ Return a handle which represents the listener. The handle can be used to remove 
 If `insertListener` is called in another listener during a dispatching, the new listener is guaranteed not triggered during the same dispatching.  
 The time complexity is O(1).  
 
+#### removeListener
+
 ```c++
 bool removeListener(const Event & event, const Handle handle);
 ```  
 Remove the listener *handle* which listens to *event* from the dispatcher.  
 Return true if the listener is removed successfully, false if the listener is not found.  
 The time complexity is O(1).  
+
+#### forEach
 
 ```c++
 template <typename Func>  
@@ -110,12 +122,16 @@ AnyReturnType func(const EventDispatcher::Callback &);
 ```
 **Note**: the `func` can remove any listeners, or add other listeners, safely.
 
+#### forEachIf
+
 ```c++
 template <typename Func>  
 bool forEachIf(const Event & event, Func && func);
 ```  
 Apply `func` to all listeners of `event`. `func` must return a boolean value, and if the return value is false, forEachIf stops the looping immediately.  
 Return `true` if all listeners are invoked, or `event` is not found, `false` if `func` returns `false`.
+
+#### dispatch
 
 ```c++
 void dispatch(Args ...args);  

@@ -1,8 +1,8 @@
 # Class CallbackList reference
 
+<!--begintoc-->
 ## Table Of Contents
 
-<!--begintoc-->
 * [Description](#a2_1)
 * [API reference](#a2_2)
   * [Header](#a3_1)
@@ -52,6 +52,8 @@ class CallbackList;
 <a id="a3_4"></a>
 ### Member functions
 
+#### constructors
+
 ```c++
 CallbackList() noexcept;
 CallbackList(const CallbackList & other);
@@ -62,17 +64,23 @@ CallbackList & operator = (CallbackList && other) noexcept;
 
 CallbackList can be copied, moved,  assigned, and move assigned.
 
+#### empty
+
 ```c++
 bool empty() const;
 ```
 Return true if the callback list is empty.  
 Note: in multi threading, this function returning true doesn't guarantee that the list is empty. The list may immediately become non-empty after the function returns true.
 
+#### bool casting operator
+
 ```c++
 operator bool() const;
 ```
 Return true if the callback list is not empty.  
 This operator allows a CallbackList instance be used in condition statement.
+
+#### append
 
 ```c++
 Handle append(const Callback & callback);
@@ -83,6 +91,8 @@ Return a handle that represents the callback. The handle can be used to remove t
 If `append` is called in another callback during the invoking of the callback list, the new callback is guaranteed not to be triggered during the same callback list invoking.  
 The time complexity is O(1).
 
+#### prepend
+
 ```c++
 Handle prepend(const Callback & callback);
 ```  
@@ -92,6 +102,8 @@ Return a handle that represents the callback. The handle can be used to remove t
 If `prepend` is called in another callback during the invoking of the callback list, the new callback is guaranteed not to be triggered during the same callback list invoking.  
 The time complexity is O(1).
 
+#### insert
+
 ```c++
 Handle insert(const Callback & callback, const Handle before);
 ```  
@@ -100,12 +112,15 @@ Return a handle that represents the callback. The handle can be used to remove t
 If `insert` is called in another callback during the invoking of the callback list, the new callback is guaranteed not to be triggered during the same callback list invoking.  
 The time complexity is O(1).  
 
+#### remove
 ```c++
 bool remove(const Handle handle);
 ```  
 Remove the callback *handle* from the callback list.  
 Return true if the callback is removed successfully, false if the callback is not found.  
 The time complexity is O(1).  
+
+#### forEach
 
 ```c++
 template <typename Func>  
@@ -119,12 +134,16 @@ AnyReturnType func(const CallbackList::Callback &);
 ```
 **Note**: the `func` can remove any callbacks, or add other callbacks, safely.
 
+#### forEachIf
+
 ```c++
 template <typename Func>  
 bool forEachIf(Func && func) const;
 ```  
 Apply `func` to all callbacks. `func` must return a boolean value, and if the return value is false, forEachIf stops the looping immediately.  
 Return `true` if all callbacks are invoked, or `event` is not found, `false` if `func` returns `false`.
+
+#### invoking operator
 
 ```c++
 void operator() (Args ...args) const;

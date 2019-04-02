@@ -1,8 +1,8 @@
 # Mixins
 
+<!--begintoc-->
 ## Table Of Contents
 
-<!--begintoc-->
 * [Introduction](#a2_1)
 * [Define a mixin](#a2_2)
 * [Inject(enable) mixins to EventDispatcher](#a2_3)

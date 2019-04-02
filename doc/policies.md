@@ -1,8 +1,8 @@
 # Policies
 
+<!--begintoc-->
 ## Table Of Contents
 
-<!--begintoc-->
 * [Introduction](#a2_1)
 * [Policies](#a2_2)
   * [Function getEvent](#a3_1)

@@ -1,8 +1,8 @@
 # Class HeterCallbackList reference
 
+<!--begintoc-->
 ## Table Of Contents
 
-<!--begintoc-->
 * [Description](#a2_1)
 * [API reference](#a2_2)
   * [Header](#a3_1)
@@ -49,6 +49,8 @@ class HeterCallbackList;
 <a id="a3_4"></a>
 ### Member functions
 
+#### constructors
+
 ```c++
 HeterCallbackList() noexcept;
 HeterCallbackList(const HeterCallbackList & other);
@@ -59,17 +61,23 @@ HeterCallbackList & operator = (HeterCallbackList && other) noexcept;
 
 HeterCallbackList can be copied, moved,  assigned, and move assigned.
 
+#### empty
+
 ```c++
 bool empty() const;
 ```
 Return true if the callback list is empty.  
 Note: in multi threading, this function returning true doesn't guarantee that the list is empty. The list may immediately become non-empty after the function returns true.
 
+#### bool casting operator
+
 ```c++
 operator bool() const;
 ```
 Return true if the callback list is not empty.  
 This operator allows a HeterCallbackList instance be used in condition statement.
+
+#### append
 
 ```c++
 template <typename C>
@@ -82,6 +90,8 @@ Return a handle that represents the callback. The handle can be used to remove t
 If `append` is called in another callback during the invoking of the callback list, the new callback is guaranteed not to be triggered during the same callback list invoking.  
 The time complexity is O(1).
 
+#### prepend
+
 ```c++
 template <typename C>
 Handle prepend(const C & callback);
@@ -93,6 +103,8 @@ Return a handle that represents the callback. The handle can be used to remove t
 If `prepend` is called in another callback during the invoking of the callback list, the new callback is guaranteed not to be triggered during the same callback list invoking.  
 The time complexity is O(1).
 
+#### insert
+
 ```c++
 template <typename C>
 Handle insert(const C & callback, const Handle & before);
@@ -103,12 +115,16 @@ Return a handle that represents the callback. The handle can be used to remove t
 If `insert` is called in another callback during the invoking of the callback list, the new callback is guaranteed not to be triggered during the same callback list invoking.  
 The time complexity is O(1).  
 
+#### remove
+
 ```c++
 bool remove(const Handle & handle);
 ```  
 Remove the callback *handle* from the callback list.  
 Return true if the callback is removed successfully, false if the callback is not found.  
 The time complexity is O(1).  
+
+#### forEach
 
 ```c++
 template <typename Prototype, typename Func>
@@ -117,17 +133,20 @@ void forEach(Func && func) const;
 Apply `func` to all callbacks which has the `Prototype`.  
 The `func` can be one of the two prototypes:  
 ```c++
-AnyReturnType func(const HeterCallbackList::Handle &, const std::function<Prototype> &);
-AnyReturnType func(const std::function<Prototype> &);
+AnyReturnType func(const HeterCallbackList::Handle & handle, const std::function<Prototype> & callback);
+AnyReturnType func(const std::function<Prototype> & callback);
 ```
 **Note**: the `func` can remove any callbacks, or add other callbacks, safely.
 
+#### forEachIf
 ```c++
 template <typename Prototype, typename Func>
 bool forEachIf(Func && func) const;
 ```  
 Apply `func` to all callbacks. `func` must return a boolean value, and if the return value is false, forEachIf stops the looping immediately.  
 Return `true` if all callbacks are invoked, or `event` is not found, `false` if `func` returns `false`.
+
+#### invoking operator
 
 ```c++
 template <typename ...Args>

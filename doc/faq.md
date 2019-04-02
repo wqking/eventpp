@@ -1,8 +1,8 @@
 # Frequently Asked Questions
 
+<!--begintoc-->
 ## Table Of Contents
 
-<!--begintoc-->
 * [Why can't rvalue reference be used as callback prototype in EventDispatcher and CallbackList? Such as CallbackList<void (int &&)>](#a2_1)
 * [Can the callback prototype have return value? Such as CallbackList<std::string (const std::string &, int)>?](#a2_2)
 * [Why can't callback prototype be function pointer such as CallbackList<void (*)()>?](#a2_3)

@@ -1,4 +1,4 @@
-# Heterogeneous classes
+# Overview of heterogeneous classes
 
 ## Description
 
@@ -78,7 +78,3 @@ The only difference is the `Prototype` in homo-classes becomes `PrototypeList` i
 In the homo-classes, `Prototype` is a single function type such as `void ()`.  
 In the heter-classes, `PrototypeList` is a list of function types in `eventpp::HeterTuple`, such as `eventpp::HeterTuple<void (), void (std::string), void (int, int)>`.  
 Note: Ideally it would be better to use `std::tuple` instead of `eventpp::HeterTuple`, but the problem is that the tuple is instantiated in HeterEventDispatcher which cause compile error that function type can't be instantiated.
-
-### Member functions and types
-
-The heter-classes have similar functions and types as the homo-classes. The major difference is, in the homo-classes, listeners can have only one prototype, while in the heter-classes, listeners can have any prototypes which are in the `PrototypeList` specified in the class template parameters.

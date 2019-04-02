@@ -1,14 +1,15 @@
 # Class HeterEventQueue reference
 
+<!--begintoc-->
 ## Table Of Contents
 
-<!--begintoc-->
 * [Description](#a2_1)
 * [API reference](#a2_2)
   * [Header](#a3_1)
   * [Template parameters](#a3_2)
   * [Public types](#a3_3)
   * [Member functions](#a3_4)
+  * [Inner class HeterEventQueue::DisableQueueNotify](#a3_5)
 <!--endtoc-->
 
 <a id="a2_1"></a>
@@ -16,7 +17,6 @@
 
 HeterEventQueue includes all features of HeterEventDispatcher and adds event queue features. Note: HeterEventQueue doesn't inherit from HeterEventDispatcher, don't try to cast HeterEventQueue to HeterEventDispatcher.  
 HeterEventQueue is asynchronous. Events are cached in the queue when `HeterEventQueue::enqueue` is called, and dispatched later when `HeterEventQueue::process` is called.  
-HeterEventQueue is equivalent to the event system (QEvent) in Qt, or the message processing in Windows API.  
 
 <a id="a2_2"></a>
 ## API reference
@@ -46,6 +46,8 @@ HeterEventQueue has the exactly same template parameters with EventDispatcher. P
 <a id="a3_4"></a>
 ### Member functions
 
+#### constructors
+
 ```c++
 HeterEventQueue();
 HeterEventQueue(const HeterEventQueue & other);
@@ -56,6 +58,8 @@ HeterEventQueue & operator = (HeterEventQueue && other) noexcept;
 
 EventDispatcher can be copied, moved,  assigned, and move assigned.  
 Note: the queued events are not copied, moved, assigned, or move assigned, only the listeners are performed these operations.
+
+#### enqueue
 
 ```c++
 template <typename T, typename ...Args>
@@ -69,6 +73,8 @@ If an argument is a pointer, only the pointer will be stored. The object it poin
 `enqueue` wakes up any threads that are blocked by `wait` or `waitFor`.  
 The time complexity is O(1).  
 
+#### process
+
 ```c++
 bool process();
 ```  
@@ -79,6 +85,8 @@ Any new events added to the queue during `process()` are not dispatched during c
 `process()` is efficient in single thread event processing, it processes all events in the queue in current thread. To process events from multiple threads efficiently, use `processOne()`.  
 Note: if `process()` is called from multiple threads simultaneously, the events in the event queue are guaranteed dispatched only once.  
 
+#### processOne
+
 ```c++
 bool processOne();
 ```  
@@ -88,6 +96,8 @@ The listener is called in the thread same as the caller of `processOne`.
 Any new events added to the queue during `processOne()` are not dispatched during current `processOne()`.  
 If there are multiple threads processing events, `processOne()` is more efficient than `process()` because it can split the events processing to different threads. However, if there is only one thread processing events, 'process()' is more efficient.  
 Note: if `processOne()` is called from multiple threads simultaneously, the events in the event queue are guaranteed dispatched only once.  
+
+#### processIf
 
 ```c++
 template <typename F>
@@ -100,6 +110,8 @@ Process the event queue. Before processing an event, the event is passed to `fun
 1. Process certain events in certain thread. For example, in a GUI application, the UI related events may be only desired to processed in the main thread.  
 2. Process the events until certain time. For example, in a game engine, the event process may be limited to only several milliseconds, the remaining events will be process in next game loop.  
 
+#### emptyQueue
+
 ```c++
 bool emptyQueue() const;
 ```
@@ -107,11 +119,15 @@ Return true if there is no any event in the event queue, false if there are any 
 Note: in multiple threading environment, the empty state may change immediately after the function returns.  
 Note: don't write loop as `while(! eventQueue.emptyQueue()) {}`. It's dead loop since the compiler will inline the code and the change of empty state is never seen by the loop. The safe approach is `while(eventQueue.waitFor(std::chrono::nanoseconds(0))) ;`.  
 
+#### clearEvents
+
 ```c++
 void clearEvents();
 ```
 Clear all queued events without dispatching them.  
 This is useful to clear any references such as shared pointer in the queued events to avoid cyclic reference.
+
+#### wait
 
 ```c++
 void wait() const;
@@ -126,6 +142,8 @@ for(;;) {
 }
 ```
 The code works event if it doesn't `wait`, but doing that will waste CPU power resource.
+
+#### waitFor
 
 ```c++
 template <class Rep, class Period>
@@ -146,7 +164,8 @@ for(;;) {
 }
 ```
 
-**Inner class HeterEventQueue::DisableQueueNotify**  
+<a id="a3_5"></a>
+### Inner class HeterEventQueue::DisableQueueNotify  
 
 `HeterEventQueue::DisableQueueNotify` is a RAII class that temporarily prevents the event queue from waking up any waiting threads. When any `DisableQueueNotify` object exist, calling `enqueue` doesn't wake up any threads that are blocked by `wait`. When the `DisableQueueNotify` object is out of scope, the waking up is resumed. If there are more than one `DisableQueueNotify` objects, the waking up is only resumed after all `DisableQueueNotify` objects are destroyed.  
 `DisableQueueNotify` is useful to improve performance when batching adding events to the queue. For example, in a main loop of a game engine, `DisableQueueNotify` can be created on the start in a frame, then the game adding events to the queue, and the `DisableQueueNotify` is destroyed at the end of a frame and the events are processed.

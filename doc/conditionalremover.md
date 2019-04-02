@@ -1,8 +1,8 @@
 # Class ConditionalRemover reference
 
+<!--begintoc-->
 ## Table Of Contents
 
-<!--begintoc-->
 * [Description](#a2_1)
 * [API reference](#a2_2)
   * [Header](#a3_1)
