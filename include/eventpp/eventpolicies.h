@@ -89,7 +89,7 @@ struct SingleThreading
 			value = desired;
 		}
 		
-		T load(std::memory_order order = std::memory_order_seq_cst) const noexcept
+		T load(std::memory_order /*order*/ = std::memory_order_seq_cst) const noexcept
 		{
 			return value;
 		}

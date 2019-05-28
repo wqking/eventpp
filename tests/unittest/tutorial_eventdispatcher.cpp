@@ -154,7 +154,7 @@ TEST_CASE("EventDispatcher tutorial 4, event canceling")
 		std::cout << "Got event 3" << std::endl;
 		e.canceled = true;
 	});
-	dispatcher.appendListener(3, [](const Tutor4MyEvent & e) {
+	dispatcher.appendListener(3, [](const Tutor4MyEvent & /*e*/) {
 		std::cout << "Should not get this event 3" << std::endl;
 	});
 
