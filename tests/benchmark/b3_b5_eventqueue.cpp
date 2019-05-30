@@ -154,47 +154,50 @@ void doMultiThreadingExecuteEventQueue(
 
 } //unnamed namespace
 
+// To avoid warning "typedef locally defined but not used" in GCC,
+// let's move the policies outside of the test case functions
+
+struct B3PoliciesMultiThreading {
+	using Threading = eventpp::MultipleThreading;
+};
+struct B3PoliciesSingleThreading {
+	using Threading = eventpp::SingleThreading;
+};
+
 TEST_CASE("b3, EventQueue, one thread")
 {
-	struct PoliciesMultiThreading {
-		using Threading = eventpp::MultipleThreading;
-	};
-	struct PoliciesSingleThreading {
-		using Threading = eventpp::SingleThreading;
-	};
+	doExecuteEventQueue<B3PoliciesMultiThreading>("Multi threading", 100, 1000 * 100, 100);
+	doExecuteEventQueue<B3PoliciesMultiThreading>("Multi threading", 1000, 1000 * 100, 100);
+	doExecuteEventQueue<B3PoliciesMultiThreading>("Multi threading", 1000, 1000 * 100, 1000);
 
-	doExecuteEventQueue<PoliciesMultiThreading>("Multi threading", 100, 1000 * 100, 100);
-	doExecuteEventQueue<PoliciesMultiThreading>("Multi threading", 1000, 1000 * 100, 100);
-	doExecuteEventQueue<PoliciesMultiThreading>("Multi threading", 1000, 1000 * 100, 1000);
-
-	doExecuteEventQueue<PoliciesSingleThreading>("Single threading", 100, 1000 * 100, 100);
-	doExecuteEventQueue<PoliciesSingleThreading>("Single threading", 1000, 1000 * 100, 100);
-	doExecuteEventQueue<PoliciesSingleThreading>("Single threading", 1000, 1000 * 100, 1000);
+	doExecuteEventQueue<B3PoliciesSingleThreading>("Single threading", 100, 1000 * 100, 100);
+	doExecuteEventQueue<B3PoliciesSingleThreading>("Single threading", 1000, 1000 * 100, 100);
+	doExecuteEventQueue<B3PoliciesSingleThreading>("Single threading", 1000, 1000 * 100, 1000);
 }
+
+struct B4PoliciesMultiThreading {
+	using Threading = eventpp::GeneralThreading<std::mutex>;
+};
 
 TEST_CASE("b4, EventQueue, multi threads, mutex")
 {
-	struct PoliciesMultiThreading {
-		using Threading = eventpp::GeneralThreading<std::mutex>;
-	};
-
-	doMultiThreadingExecuteEventQueue<PoliciesMultiThreading>("Mutex", 1, 1, 1000 * 1000 * 10, 100);
-	doMultiThreadingExecuteEventQueue<PoliciesMultiThreading>("Mutex", 1, 3, 1000 * 1000 * 10, 100);
-	doMultiThreadingExecuteEventQueue<PoliciesMultiThreading>("Mutex", 2, 2, 1000 * 1000 * 10, 100);
-	doMultiThreadingExecuteEventQueue<PoliciesMultiThreading>("Mutex", 4, 4, 1000 * 1000 * 10, 100);
-	doMultiThreadingExecuteEventQueue<PoliciesMultiThreading>("Mutex", 16, 16, 1000 * 1000 * 10, 100);
+	doMultiThreadingExecuteEventQueue<B4PoliciesMultiThreading>("Mutex", 1, 1, 1000 * 1000 * 10, 100);
+	doMultiThreadingExecuteEventQueue<B4PoliciesMultiThreading>("Mutex", 1, 3, 1000 * 1000 * 10, 100);
+	doMultiThreadingExecuteEventQueue<B4PoliciesMultiThreading>("Mutex", 2, 2, 1000 * 1000 * 10, 100);
+	doMultiThreadingExecuteEventQueue<B4PoliciesMultiThreading>("Mutex", 4, 4, 1000 * 1000 * 10, 100);
+	doMultiThreadingExecuteEventQueue<B4PoliciesMultiThreading>("Mutex", 16, 16, 1000 * 1000 * 10, 100);
 }
+
+struct B5PoliciesMultiThreading {
+	using Threading = eventpp::GeneralThreading<eventpp::SpinLock>;
+};
 
 TEST_CASE("b5, EventQueue, multi threads, spinlock")
 {
-	struct PoliciesMultiThreading {
-		using Threading = eventpp::GeneralThreading<eventpp::SpinLock>;
-	};
-
-	doMultiThreadingExecuteEventQueue<PoliciesMultiThreading>("Spinlock", 1, 1, 1000 * 1000 * 10, 100);
-	doMultiThreadingExecuteEventQueue<PoliciesMultiThreading>("Spinlock", 1, 3, 1000 * 1000 * 10, 100);
-	doMultiThreadingExecuteEventQueue<PoliciesMultiThreading>("Spinlock", 2, 2, 1000 * 1000 * 10, 100);
-	doMultiThreadingExecuteEventQueue<PoliciesMultiThreading>("Spinlock", 4, 4, 1000 * 1000 * 10, 100);
-	doMultiThreadingExecuteEventQueue<PoliciesMultiThreading>("Spinlock", 16, 16, 1000 * 1000 * 10, 100);
+	doMultiThreadingExecuteEventQueue<B5PoliciesMultiThreading>("Spinlock", 1, 1, 1000 * 1000 * 10, 100);
+	doMultiThreadingExecuteEventQueue<B5PoliciesMultiThreading>("Spinlock", 1, 3, 1000 * 1000 * 10, 100);
+	doMultiThreadingExecuteEventQueue<B5PoliciesMultiThreading>("Spinlock", 2, 2, 1000 * 1000 * 10, 100);
+	doMultiThreadingExecuteEventQueue<B5PoliciesMultiThreading>("Spinlock", 4, 4, 1000 * 1000 * 10, 100);
+	doMultiThreadingExecuteEventQueue<B5PoliciesMultiThreading>("Spinlock", 16, 16, 1000 * 1000 * 10, 100);
 }
 

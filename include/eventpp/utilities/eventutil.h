@@ -85,7 +85,7 @@ bool hasListener(
 	dispatcher.forEachIf(
 		event,
 		[&found, &listener](
-			const typename DispatcherType::Handle & handle,
+			const typename DispatcherType::Handle & /*handle*/,
 			const typename DispatcherType::Callback & item
 			) -> bool {
 			if(item == listener) {
@@ -111,8 +111,8 @@ bool hasAnyListener(
 	dispatcher.forEachIf(
 		event,
 		[&found](
-			const typename DispatcherType::Handle & handle,
-			const typename DispatcherType::Callback & item
+			const typename DispatcherType::Handle & /*handle*/,
+			const typename DispatcherType::Callback & /*item*/
 			) -> bool {
 		found = true;
 		return false;
@@ -131,7 +131,7 @@ bool hasListener(
 	bool found = false;
 	callbackList.forEachIf(
 		[&found, &callback](
-			const typename CallbackListType::Handle & handle,
+			const typename CallbackListType::Handle & /*handle*/,
 			const typename CallbackListType::Callback & item
 			) -> bool {
 			if(item == callback) {
@@ -155,8 +155,8 @@ bool hasAnyListener(
 	bool found = false;
 	callbackList.forEachIf(
 		[&found](
-			const typename CallbackListType::Handle & handle,
-			const typename CallbackListType::Callback & item
+			const typename CallbackListType::Handle & /*handle*/,
+			const typename CallbackListType::Callback & /*item*/
 			) -> bool {
 			found = true;
 			return false;

@@ -418,7 +418,7 @@ protected:
 	}
 	
 	template <typename F>
-	bool doInvokeFuncWithQueuedEventHelper(F && func, const typename super::Event & e, Args ...args) const
+	bool doInvokeFuncWithQueuedEventHelper(F && func, const typename super::Event & /*e*/, Args ...args) const
 	{
 		return func(std::forward<Args>(args)...);
 	}
