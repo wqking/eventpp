@@ -58,10 +58,10 @@ TEST_CASE("HeterCallbackList tutorial 2, for each")
 	callbackList.append([]() {
 		std::cout << "Got callback void() again." << std::endl;
 	});
-	callbackList.append([](int a) {
+	callbackList.append([](int /*a*/) {
 		std::cout << "Got callback void(int a)." << std::endl;
 	});
-	callbackList.append([](int a) {
+	callbackList.append([](int /*a*/) {
 		std::cout << "Got callback void(int a) again." << std::endl;
 	});
 

@@ -166,7 +166,7 @@ TEST_CASE("CallbackList, forEach")
 	});
 
 	i = 1;
-	callbackList.forEach([&i, &callbackList](const CL::Handle & handle, auto callback) {
+	callbackList.forEach([&i, &callbackList](const CL::Handle & /*handle*/, auto callback) {
 		REQUIRE(callback() == i);
 		++i;
 	});

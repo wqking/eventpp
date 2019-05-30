@@ -257,7 +257,7 @@ private:
 	}
 
 	template <typename RT, int PrototypeIndex, typename Func, typename H, typename CL>
-	auto doForEachInvoke(Func && func, const H & handle, CL && callback) const
+	auto doForEachInvoke(Func && func, const H & /*handle*/, CL && callback) const
 		-> typename std::enable_if<CanInvoke<Func, CL>::value, RT>::type
 	{
 		return func(callback);

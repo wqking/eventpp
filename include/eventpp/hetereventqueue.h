@@ -352,7 +352,7 @@ private:
 	}
 
 	template <typename PrototypeInfo, typename F>
-	auto doProcessIf(F && func)
+	auto doProcessIf(F && /*func*/)
 		-> typename std::enable_if<(PrototypeInfo::index < 0), bool>::type
 	{
 		return false;
