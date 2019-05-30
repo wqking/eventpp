@@ -14,6 +14,7 @@
 #include "test.h"
 #include "eventpp/utilities/counterremover.h"
 #include "eventpp/eventdispatcher.h"
+#include "eventpp/hetereventdispatcher.h"
 
 TEST_CASE("CounterRemover, EventDispatcher")
 {
@@ -71,6 +72,77 @@ TEST_CASE("CounterRemover, CallbackList")
 		++dataList[3];
 	}, handle, 3);
 	
+	REQUIRE(dataList == std::vector<int> { 0, 0, 0, 0 });
+
+	callbackList();
+	REQUIRE(dataList == std::vector<int> { 1, 1, 1, 1 });
+
+	callbackList();
+	REQUIRE(dataList == std::vector<int> { 2, 1, 2, 2 });
+
+	callbackList();
+	REQUIRE(dataList == std::vector<int> { 3, 1, 2, 3 });
+
+	callbackList();
+	REQUIRE(dataList == std::vector<int> { 4, 1, 2, 3 });
+}
+
+TEST_CASE("CounterRemover, HeterEventDispatcher")
+{
+	eventpp::HeterEventDispatcher<int, eventpp::HeterTuple<void ()> > dispatcher;
+	constexpr int event = 3;
+
+	std::vector<int> dataList(4);
+
+	dispatcher.appendListener(event, [&dataList]() {
+		++dataList[0];
+	});
+
+	eventpp::counterRemover(dispatcher).prependListener(event, [&dataList]() {
+		++dataList[1];
+	});
+	auto handle = eventpp::counterRemover(dispatcher).appendListener(event, [&dataList]() {
+		++dataList[2];
+	}, 2);
+	eventpp::counterRemover(dispatcher).insertListener(event, [&dataList]() {
+		++dataList[3];
+	}, handle, 3);
+
+	REQUIRE(dataList == std::vector<int> { 0, 0, 0, 0 });
+
+	dispatcher.dispatch(event);
+	REQUIRE(dataList == std::vector<int> { 1, 1, 1, 1 });
+
+	dispatcher.dispatch(event);
+	REQUIRE(dataList == std::vector<int> { 2, 1, 2, 2 });
+
+	dispatcher.dispatch(event);
+	REQUIRE(dataList == std::vector<int> { 3, 1, 2, 3 });
+
+	dispatcher.dispatch(event);
+	REQUIRE(dataList == std::vector<int> { 4, 1, 2, 3 });
+}
+
+TEST_CASE("CounterRemover, HeterCallbackList")
+{
+	eventpp::HeterCallbackList<eventpp::HeterTuple<void ()> > callbackList;
+
+	std::vector<int> dataList(4);
+
+	callbackList.append([&dataList]() {
+		++dataList[0];
+	});
+
+	eventpp::counterRemover(callbackList).prepend([&dataList]() {
+		++dataList[1];
+	});
+	auto handle = eventpp::counterRemover(callbackList).append([&dataList]() {
+		++dataList[2];
+	}, 2);
+	eventpp::counterRemover(callbackList).insert([&dataList]() {
+		++dataList[3];
+	}, handle, 3);
+
 	REQUIRE(dataList == std::vector<int> { 0, 0, 0, 0 });
 
 	callbackList();

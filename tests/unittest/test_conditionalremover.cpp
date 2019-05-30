@@ -13,10 +13,10 @@
 
 #include "test.h"
 #include "eventpp/utilities/conditionalremover.h"
-#include "eventpp/eventdispatcher.h"
 #include "eventpp/eventqueue.h"
+#include "eventpp/hetereventqueue.h"
 
-TEST_CASE("ConditionalRemover, EventDispatcher")
+TEST_CASE("ConditionalRemover, EventQueue")
 {
 	eventpp::EventQueue<int, void ()> dispatcher;
 	constexpr int event = 3;
@@ -112,6 +112,56 @@ TEST_CASE("ConditionalRemover, CallbackList")
 
 	++removeCounter;
 	callbackList();
+	REQUIRE(dataList == std::vector<int> { 5, 2, 3, 4 });
+}
+
+TEST_CASE("ConditionalRemover, HeterEventQueue")
+{
+	eventpp::HeterEventQueue<int, eventpp::HeterTuple<void ()> > dispatcher;
+	constexpr int event = 3;
+
+	std::vector<int> dataList(4);
+
+	dispatcher.appendListener(event, [&dataList]() {
+		++dataList[0];
+	});
+
+	int removeCounter = 0;
+	eventpp::conditionalRemover(dispatcher).prependListener(event, [&dataList]() {
+		++dataList[1];
+	}, [&removeCounter]() -> bool {
+		return removeCounter == 1;
+	});
+	auto handle = eventpp::conditionalRemover(dispatcher).appendListener(event, [&dataList]() {
+		++dataList[2];
+	}, [&removeCounter]() -> bool {
+		return removeCounter == 2;
+	});
+	eventpp::conditionalRemover(dispatcher).insertListener(event, [&dataList]() {
+		++dataList[3];
+	}, handle, [&removeCounter]() -> bool {
+		return removeCounter == 3;
+	});
+
+	REQUIRE(dataList == std::vector<int> { 0, 0, 0, 0 });
+
+	dispatcher.dispatch(event);
+	REQUIRE(dataList == std::vector<int> { 1, 1, 1, 1 });
+
+	++removeCounter;
+	dispatcher.dispatch(event);
+	REQUIRE(dataList == std::vector<int> { 2, 2, 2, 2 });
+
+	++removeCounter;
+	dispatcher.dispatch(event);
+	REQUIRE(dataList == std::vector<int> { 3, 2, 3, 3 });
+
+	++removeCounter;
+	dispatcher.dispatch(event);
+	REQUIRE(dataList == std::vector<int> { 4, 2, 3, 4 });
+
+	++removeCounter;
+	dispatcher.dispatch(event);
 	REQUIRE(dataList == std::vector<int> { 5, 2, 3, 4 });
 }
 

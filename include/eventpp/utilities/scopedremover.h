@@ -76,9 +76,10 @@ public:
 		}
 	}
 	
+	template <typename Callback>
 	typename DispatcherType::Handle appendListener(
 			const typename DispatcherType::Event & event,
-			const typename DispatcherType::Callback & listener
+			const Callback & listener
 		)
 	{
 		Item item {
@@ -94,9 +95,10 @@ public:
 		return item.handle;
 	}
 
+	template <typename Callback>
 	typename DispatcherType::Handle prependListener(
 			const typename DispatcherType::Event & event,
-			const typename DispatcherType::Callback & listener
+			const Callback & listener
 		)
 	{
 		Item item {
@@ -112,9 +114,10 @@ public:
 		return item.handle;
 	}
 
+	template <typename Callback>
 	typename DispatcherType::Handle insertListener(
 			const typename DispatcherType::Event & event,
-			const typename DispatcherType::Callback & listener,
+			const Callback & listener,
 			const typename DispatcherType::Handle & before
 		)
 	{
@@ -183,8 +186,9 @@ public:
 		}
 	}
 	
+	template <typename Callback>
 	typename CallbackListType::Handle append(
-			const typename CallbackListType::Callback & callback
+			const Callback & callback
 		)
 	{
 		Item item {
@@ -194,8 +198,9 @@ public:
 		return item.handle;
 	}
 
+	template <typename Callback>
 	typename CallbackListType::Handle prepend(
-			const typename CallbackListType::Callback & callback
+			const Callback & callback
 		)
 	{
 		Item item {
@@ -205,8 +210,9 @@ public:
 		return item.handle;
 	}
 
+	template <typename Callback>
 	typename CallbackListType::Handle insert(
-			const typename CallbackListType::Callback & callback,
+			const Callback & callback,
 			const typename CallbackListType::Handle & before
 		)
 	{
