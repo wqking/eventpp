@@ -38,7 +38,7 @@ private:
 			int triggerCount;
 			DispatcherType & dispatcher;
 			typename DispatcherType::Event event;
-			typename Callback listener;
+			Callback listener;
 			typename DispatcherType::Handle handle;
 		};
 
@@ -120,7 +120,7 @@ private:
 		{
 			int triggerCount;
 			CallbackListType & callbackList;
-			typename Callback listener;
+			Callback listener;
 			typename CallbackListType::Handle handle;
 		};
 

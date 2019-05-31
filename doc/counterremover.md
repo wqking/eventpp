@@ -34,7 +34,7 @@ template <typename DispatcherType>
 class CounterRemover;
 ```
 
-`DispatcherType` can be CallbackList, EventDispatcher, or EventQueue.
+`DispatcherType` can be CallbackList, EventDispatcher, EventQueue, HeterCallbackList, HeterEventDispatcher, or HeterEventQueue.
 
 <a id="a3_3"></a>
 ### Member functions
