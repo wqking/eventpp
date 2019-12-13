@@ -1,5 +1,21 @@
 # Policies
 
+<!--begintoc-->
+## Table Of Contents
+
+* [Introduction](#a2_1)
+* [Policies](#a2_2)
+  * [Function getEvent](#a3_1)
+  * [Function canContinueInvoking](#a3_2)
+  * [Type Mixins](#a3_3)
+  * [Type Callback](#a3_4)
+  * [Type Threading](#a3_5)
+* [Type ArgumentPassingMode](#a2_3)
+  * [Template Map](#a3_6)
+* [How to use policies](#a2_4)
+<!--endtoc-->
+
+<a id="a2_1"></a>
 ## Introduction
 
 eventpp uses policy based design to configure and extend each components' behavior. The last template parameter in EventDispatcher, EventQueue, and CallbackList is the policies class. All those three classes have default policies class named `DefaultPolicies`.  
@@ -7,8 +23,10 @@ A policy is either a type or a static function member in the policies class. All
 All policies are optional. If any policy is omitted, the default value is used.  In fact `DefaultPolicies` is just an empty struct.  
 The same policy mechanism applies to all three classes, EventDispatcher, EventQueue, and CallbackList, though not all classes requires the same policy.
 
+<a id="a2_2"></a>
 ## Policies
 
+<a id="a3_1"></a>
 ### Function getEvent
 
 **Prototype**: `static EventKey getEvent(const Args &...)`. The function receives same arguments as `EventDispatcher::dispatch` and `EventQueue::enqueue`, and must return an event type.  
@@ -63,6 +81,7 @@ dispatcher.appendListener(3, [](const MyEvent & e, bool b) {
 dispatcher.dispatch(MyEvent { 3, "Hello world", 38 }, true);
 ```
 
+<a id="a3_2"></a>
 ### Function canContinueInvoking
 
 **Prototype**: `static bool canContinueInvoking(const Args &...)`. The function receives same arguments as `EventDispatcher::dispatch` and `EventQueue::enqueue`, and must return true if the event dispatching or callback list invoking can continue, false if the dispatching should stop.  
@@ -107,6 +126,7 @@ dispatcher.appendListener(3, [](const MyEvent & e) {
 dispatcher.dispatch(MyEvent(3));
 ```
 
+<a id="a3_3"></a>
 ### Type Mixins
 
 **Default value**: `using Mixins = eventpp::MixinList<>`. No mixins are enabled.  
@@ -114,6 +134,7 @@ dispatcher.dispatch(MyEvent(3));
 
 A mixin is used to inject code in the EventDispatcher/EventQueue inheritance hierarchy to extend the functionalities. For more details, please read the [document of mixins](mixins.md).
 
+<a id="a3_4"></a>
 ### Type Callback
 
 **Default value**: `using Callback = std::function<Parameters of callback>`.  
@@ -121,6 +142,7 @@ A mixin is used to inject code in the EventDispatcher/EventQueue inheritance hie
 
 `Callback` is the underlying storage type to hold the callback. Default is `std::function`.  
 
+<a id="a3_5"></a>
 ### Type Threading
 
 **Default value**: `using Threading = eventpp::MultipleThreading`.  
@@ -196,6 +218,7 @@ eventpp::EventDispatcher<int, void (), MyEventPolicies> dispatcher;
 eventpp::CallbackList<void (), MyEventPolicies> callbackList;
 ```
 
+<a id="a2_3"></a>
 ## Type ArgumentPassingMode
 
 **Default value**: `using ArgumentPassingMode = ArgumentPassingAutoDetect`.  
@@ -287,6 +310,7 @@ eventpp::EventDispatcher<
 dispatcher.dispatch(3, 8, "hello"); // Compile OK
 ```
 
+<a id="a3_6"></a>
 ### Template Map
 
 **Prototype**:  
@@ -302,6 +326,7 @@ using Map = // std::map <Key, T> or other map type
 `Map` must support operations `[]`, `find()`, and `end()`.  
 If `Map` is not specified, eventpp will auto determine the type. If the event type supports `std::hash`, `std::unordered_map` is used, otherwise, `std::map` is used.
 
+<a id="a2_4"></a>
 ## How to use policies
 
 To use policies, declare a struct, define the policies in it, and pass the struct to CallbackList, EventDispatcher, or EventQueue.  

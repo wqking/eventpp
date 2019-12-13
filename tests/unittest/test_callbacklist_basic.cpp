@@ -150,6 +150,59 @@ TEST_CASE("CallbackList, no memory leak after all callbacks are removed")
 	REQUIRE(checkAllWeakPtrAreFreed(nodeList));
 }
 
+TEST_CASE("CallbackList, forEach")
+{
+	using CL = eventpp::CallbackList<int()>;
+	CL callbackList;
+
+	callbackList.append([]() { return 1; });
+	callbackList.append([]() { return 2; });
+	callbackList.append([]() { return 3; });
+
+	int i = 1;
+	callbackList.forEach([&i](auto callback) {
+		REQUIRE(callback() == i);
+		++i;
+	});
+
+	i = 1;
+	callbackList.forEach([&i, &callbackList](const CL::Handle & /*handle*/, auto callback) {
+		REQUIRE(callback() == i);
+		++i;
+	});
+}
+
+TEST_CASE("CallbackList, forEachIf")
+{
+	using CL = eventpp::CallbackList<void ()>;
+	CL callbackList;
+
+	std::vector<int> dataList(3);
+
+	callbackList.append([&dataList]() {
+		dataList[0] += 1;
+	});
+	callbackList.append([&dataList]() {
+		dataList[1] += 2;
+	});
+	callbackList.append([&dataList]() {
+		dataList[2] += 3;
+	});
+
+	REQUIRE(dataList == std::vector<int>{ 0, 0, 0 });
+
+	int i = 0;
+	bool result = callbackList.forEachIf([&i](const std::function<void ()> & callback) -> bool {
+		callback();
+		++i;
+
+		return i != 2;
+	});
+
+	REQUIRE(! result);
+	REQUIRE(dataList == std::vector<int>{ 1, 2, 0 });
+}
+
 TEST_CASE("CallbackList, forEach and forEachIf")
 {
 	using CL = eventpp::CallbackList<void()>;
@@ -394,4 +447,31 @@ TEST_CASE("CallbackList, remove")
 	}
 }
 
+TEST_CASE("CallbackList, prototype convert")
+{
+	struct MyClass
+	{
+		MyClass(int) {}
+	};
+
+	using CL = eventpp::CallbackList<void (int)>;
+	CL callbackList;
+
+	std::vector<int> dataList(2);
+
+	callbackList.append([&dataList](int) {
+		++dataList[0];
+	});
+	callbackList.append([&dataList](const MyClass &) {
+		++dataList[1];
+	});
+
+	REQUIRE(dataList == std::vector<int>{ 0, 0 });
+
+	callbackList((int)5);
+	REQUIRE(dataList == std::vector<int>{ 1, 1 });
+
+	callbackList((char)5);
+	REQUIRE(dataList == std::vector<int>{ 2, 2 });
+}
 

@@ -14,6 +14,8 @@
 #ifndef EVENTOPTIONS_H_730367862613
 #define EVENTOPTIONS_H_730367862613
 
+#include "internal/typeutil_i.h"
+
 #include <mutex>
 #include <atomic>
 #include <condition_variable>
@@ -22,9 +24,15 @@
 
 namespace eventpp {
 
-struct TagCallbackList {};
-struct TagEventDispatcher {};
-struct TagEventQueue {};
+struct TagHomo {};
+struct TagCallbackList : public TagHomo {};
+struct TagEventDispatcher : public TagHomo {};
+struct TagEventQueue : public TagHomo {};
+
+struct TagHeter {};
+struct TagHeterCallbackList : public TagHeter {};
+struct TagHeterEventDispatcher : public TagHeter {};
+struct TagHeterEventQueue : public TagHeter {};
 
 struct SpinLock
 {
@@ -155,27 +163,9 @@ struct ArgumentPassingExcludeEvent
 
 struct DefaultPolicies
 {
-	/* default types for CallbackList
-	using Callback = std::function<blah, blah>;
-	using Threading = MultipleThreading;
-	*/
-
-	/* default types/implements for EventDispatch and EventQueue
-	template <typename U, typename ...Args>
-	static E getEvent(U && e, const Args &...) {
-		return e;
-	}
-
-	using Callback = std::function<blah, blah>;
-	using Threading = MultipleThreading;
-	using ArgumentPassingMode = ArgumentPassingAutoDetect;
-
-	template <typename Key, typename T>
-	using Map = std::map <Key, T>;
-	*/
 };
 
-template <template <typename> class ...Args>
+template <template <typename> class ...Mixins>
 struct MixinList
 {
 };

@@ -1,11 +1,7 @@
 # Tutorials of EventQueue
 
-## Table Of Contents
+<!--toc-->
 
-- [Tutorial 1 -- Basic usage](#tutorial1)
-- [Tutorial 2 -- multiple threading](#tutorial2)
-
-<a name="tutorial1"></a>
 ### Tutorial 1 -- Basic usage
 
 **Code**  
@@ -46,7 +42,6 @@ A typical use case is in a GUI application, each components call `EventQueue<>::
 `EventQueue` supports non-copyable object as the event arguments, such as the unique pointer in the tutorial.
 
 
-<a name="tutorial2"></a>
 ### Tutorial 2 -- multiple threading
 
 **Code**  

@@ -17,6 +17,7 @@
 #include <thread>
 #include <numeric>
 #include <random>
+#include <algorithm>
 
 TEST_CASE("EventQueue, multi threading, int, void (int)")
 {
@@ -102,13 +103,13 @@ TEST_CASE("EventQueue, multi threading, one thread waits")
 		queue.enqueue(otherEvent, 1);
 		waitUntilQueueEmpty();
 		REQUIRE(threadProcessCount.load() == 1);
-		REQUIRE(queue.empty());
+		REQUIRE(queue.emptyQueue());
 		REQUIRE(dataList == std::vector<int>{ 0, 2, 0, 0, 0 });
 
 		queue.enqueue(otherEvent, 3);
 		waitUntilQueueEmpty();
 		REQUIRE(threadProcessCount.load() == 2);
-		REQUIRE(queue.empty());
+		REQUIRE(queue.emptyQueue());
 		REQUIRE(dataList == std::vector<int>{ 0, 2, 0, 4, 0 });
 	}
 
@@ -116,7 +117,7 @@ TEST_CASE("EventQueue, multi threading, one thread waits")
 		queue.enqueue(otherEvent, 1);
 		std::this_thread::sleep_for(std::chrono::milliseconds(10));
 		REQUIRE(threadProcessCount.load() == 1);
-		REQUIRE(queue.empty());
+		REQUIRE(queue.emptyQueue());
 
 		queue.enqueue(otherEvent, 3);
 		waitUntilQueueEmpty();
@@ -132,12 +133,12 @@ TEST_CASE("EventQueue, multi threading, one thread waits")
 			queue.enqueue(otherEvent, 2);
 			std::this_thread::sleep_for(std::chrono::milliseconds(10));
 			REQUIRE(threadProcessCount.load() == 0);
-			REQUIRE(! queue.empty());
+			REQUIRE(! queue.emptyQueue());
 
 			queue.enqueue(otherEvent, 4);
 			std::this_thread::sleep_for(std::chrono::milliseconds(10));
 			REQUIRE(threadProcessCount.load() == 0);
-			REQUIRE(! queue.empty());
+			REQUIRE(! queue.emptyQueue());
 		}
 
 		waitUntilQueueEmpty();

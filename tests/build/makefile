@@ -29,6 +29,7 @@ none: needcmake
 	$(ECHO) "  mingw_debug  Generate MinGW makefile and then use mingw32-make to build (debug version)."
 	$(ECHO) "  msys         Generate MSys makefile and then use make to build (release version)."
 	$(ECHO) "  nmake        Generate Microsoft VC makefile and then use nmake to build."
+	$(ECHO) "  vc19         Generate project files for Microsoft VC 2019. No auto build. You need to open the project in VC IDE then build."
 	$(ECHO) "  vc17         Generate project files for Microsoft VC 2017. No auto build. You need to open the project in VC IDE then build."
 	$(ECHO) "  vc15         Generate project files for Microsoft VC 2015. No auto build. You need to open the project in VC IDE then build."
 	$(ECHO) "  auto         Auto detect the compiler and make environment and then use make to build. NOT recommend."
@@ -78,6 +79,11 @@ linux_debug: needcmake
 	$(MK_CACHE)_linux_debug
 	$(CH_DIR) $(CACHE_DIR)_linux_debug $(CMAKE) -DCMAKE_BUILD_TYPE=Debug -G"Unix Makefiles"
 	$(EXEC_BUILD)_linux_debug make $(TARGET)
+
+vc19: needcmake
+	$(MK_DIR) $(PROJECT_PREFIX)_vc19
+	$(CH_DIR) $(PROJECT_PREFIX)_vc19 $(CMAKE) -G "Visual Studio 16 2019" -A x64
+	$(ECHO) Please open the solution $(PROJECT).sln in $(PROJECT_PREFIX)_vc19 in VC IDE.
 
 vc17: needcmake
 	$(MK_DIR) $(PROJECT_PREFIX)_vc17

@@ -1,5 +1,19 @@
 # Mixins
 
+<!--begintoc-->
+## Table Of Contents
+
+* [Introduction](#a2_1)
+* [Define a mixin](#a2_2)
+* [Inject(enable) mixins to EventDispatcher](#a2_3)
+* [Optional interceptor points](#a2_4)
+* [MixinFilter](#a2_5)
+  * [Public type](#a3_1)
+  * [Functions](#a3_2)
+  * [Sample code for MixinFilter](#a3_3)
+<!--endtoc-->
+
+<a id="a2_1"></a>
 ## Introduction
 
 A mixin is used to inject code in the EventDispatcher/EventQueue inheritance hierarchy to extend the functionalities. In this document we will use EventDispatcher as the example, the usage for EventQueue is exactly the same.  
@@ -15,6 +29,7 @@ EventDispatcher <- MixinA <- MixinB <- EventDispatcherBase
 ```
 The mixins can use all public and protected members (types, functions and data) in EventDispatcherBase. All public members in the mixins are visible and usable by the user.
 
+<a id="a2_2"></a>
 ## Define a mixin
 
 A mixin is a template class with one template argument. The mixin must inherit from it's template argument.  
@@ -26,6 +41,7 @@ class MyMixin : public Base
 };
 ```
 
+<a id="a2_3"></a>
 ## Inject(enable) mixins to EventDispatcher
 
 To enable mixins, add them to the `Mixins` type in the policies class. For example, to enable `MixinFilter`, define the dispatcher as,   
@@ -42,6 +58,7 @@ EventDispatcher <- MixinA <- MixinB <- MixinC <- EventDispatcherBase
 ```
 The front mixin is the lowest in the hierarchy.
 
+<a id="a2_4"></a>
 ## Optional interceptor points
 
 A mixin can have special named functions that are called at certain point. The special functions must be public.  
@@ -54,6 +71,7 @@ bool mixinBeforeDispatch(Args && ...args) const;
 The function returns `true` to continue the dispatch, `false` will stop any further dispatching.  
 For multiple mixins, this function is called in the order of they appearing in MixinList in the policies class.
 
+<a id="a2_5"></a>
 ## MixinFilter
 
 MixinFilter allows all events are filtered or modified before dispatching.
@@ -77,10 +95,12 @@ Event filter is a powerful and useful technology, below is some sample use cases
 
 2, Setup catch-all event listener. For example, in a phone book system, the system sends events based on the actions, such as adding a phone number, remove a phone number, look up a phone number, etc. A module may be only interested in special area code of a phone number, not the actions. One approach is the module can listen to all possible events (add, remove, look up), but this is very fragile -- how about a new action event is added and the module forgets to listen on it? The better approach is the module add a filter and check the area code in the filter.
 
+<a id="a3_1"></a>
 ### Public type
 
 `FilterHandle`: the handle type returned by appendFilter. A filter handle can be used to remove a filter. To check if a `FilterHandle` is empty, convert it to boolean, *false* is empty. `FilterHandle` is copyable.  
 
+<a id="a3_2"></a>
 ### Functions
 
 ```c++
@@ -95,6 +115,7 @@ bool removeFilter(const FilterHandle & filterHandle);
 Remove a filter from the dispatcher.  
 Return true if the filter is removed successfully.
 
+<a id="a3_3"></a>
 ### Sample code for MixinFilter
 
 **Code**  

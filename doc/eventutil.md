@@ -1,6 +1,6 @@
 # Utilities reference
 
-**Header**
+## Header
 
 eventpp/eventutil.h
 

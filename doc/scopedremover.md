@@ -1,16 +1,31 @@
 # Class ScopedRemover reference
 
+<!--begintoc-->
+## Table Of Contents
+
+* [Description](#a2_1)
+* [API reference](#a2_2)
+  * [Header](#a3_1)
+  * [Template parameters](#a3_2)
+  * [Member functions](#a3_3)
+  * [Sample code](#a3_4)
+  * [Automatic disconnection](#a3_5)
+<!--endtoc-->
+
+<a id="a2_1"></a>
 ## Description
 
 ScopedRemover is a utility class that automatically removes listeners when ScopedRemover object goes out of scope.  
 
-<a name="apis"></a>
+<a id="a2_2"></a>
 ## API reference
 
+<a id="a3_1"></a>
 ### Header
 
 eventpp/utilities/scopedremover.h
 
+<a id="a3_2"></a>
 ### Template parameters
 
 ```c++
@@ -18,8 +33,9 @@ template <typename DispatcherType>
 class ScopedRemover;
 ```
 
-`DispatcherType` can be CallbackList, EventDispatcher, or EventQueue.
+`DispatcherType` can be CallbackList, EventDispatcher, EventQueue, HeterCallbackList, HeterEventDispatcher, or HeterEventQueue.
 
+<a id="a3_3"></a>
 ### Member functions
 
 ```c++
@@ -76,6 +92,7 @@ The function `setDispatcher()` and `setCallbackList` sets the dispatcher or call
 
 The other member functions that have the same names with the corresponding underlying class (CallbackList, EventDispatcher, or EventQueue). Those functions add listener to the dispatcher.  
 
+<a id="a3_4"></a>
 ### Sample code
 
 ```c++
@@ -129,6 +146,7 @@ dispatcher.dispatch(event);
 
 ```
 
+<a id="a3_5"></a>
 ### Automatic disconnection
 
 ScopedRemover can be used to auto disconnect listeners when the object involved in the listeners is destroyed. For example, pseudo code,  
@@ -170,4 +188,3 @@ class MyClass
 ```
 
 In above code, when the object of MyClass is destroyed, `myListener` is automatically removed from `someDispatcher`, `someDispatcher` will not invoke on any dangling pointer.
-

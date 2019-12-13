@@ -1,3 +1,5 @@
+// Don't include this header, include eventpolicies.h instead
+
 namespace internal_ {
 
 template <typename T>
@@ -8,9 +10,8 @@ struct HasTypeArgumentPassingMode
 
 	enum { value = !! decltype(test<T>(0))() };
 };
-template <typename T, bool> struct SelectArgumentPassingMode;
-template <typename T> struct SelectArgumentPassingMode <T, true> { using Type = typename T::ArgumentPassingMode; };
-template <typename T> struct SelectArgumentPassingMode <T, false> { using Type = ArgumentPassingAutoDetect; };
+template <typename T, bool, typename Default> struct SelectArgumentPassingMode { using Type = typename T::ArgumentPassingMode; };
+template <typename T, typename Default> struct SelectArgumentPassingMode <T, false, Default> { using Type = Default; };
 
 template <typename T>
 struct HasTypeThreading
@@ -20,8 +21,7 @@ struct HasTypeThreading
 
 	enum { value = !! decltype(test<T>(0))() };
 };
-template <typename T, bool> struct SelectThreading;
-template <typename T> struct SelectThreading <T, true> { using Type = typename T::Threading; };
+template <typename T, bool> struct SelectThreading { using Type = typename T::Threading; };
 template <typename T> struct SelectThreading <T, false> { using Type = MultipleThreading; };
 
 template <typename T>
@@ -32,8 +32,7 @@ struct HasTypeCallback
 
 	enum { value = !! decltype(test<T>(0))() };
 };
-template <typename T, bool, typename D> struct SelectCallback;
-template <typename T, typename D> struct SelectCallback<T, true, D> { using Type = typename T::Callback; };
+template <typename T, bool, typename D> struct SelectCallback { using Type = typename T::Callback; };
 template <typename T, typename D> struct SelectCallback<T, false, D> { using Type = D; };
 
 template <typename T, typename ...Args>
@@ -52,14 +51,13 @@ struct DefaultGetEvent
 		return e;
 	}
 };
-template <typename T, typename Key, bool> struct SelectGetEvent;
-template <typename T, typename Key> struct SelectGetEvent<T, Key, true> { using Type = T; };
+template <typename T, typename Key, bool> struct SelectGetEvent { using Type = T; };
 template <typename T, typename Key> struct SelectGetEvent<T, Key, false> { using Type = DefaultGetEvent<Key>; };
 
-template <typename T>
+template <typename T, typename ...Args>
 struct HasFunctionCanContinueInvoking
 {
-	template <typename C> static std::true_type test(decltype(&C::canContinueInvoking) *) ;
+	template <typename C> static std::true_type test(decltype(C::canContinueInvoking(std::declval<Args>()...)) *) ;
 	template <typename C> static std::false_type test(...);    
 
 	enum { value = !! decltype(test<T>(0))() };
@@ -71,8 +69,7 @@ struct DefaultCanContinueInvoking
 		return true;
 	}
 };
-template <typename T, bool> struct SelectCanContinueInvoking;
-template <typename T> struct SelectCanContinueInvoking<T, true> { using Type = T; };
+template <typename T, bool> struct SelectCanContinueInvoking { using Type = T; };
 template <typename T> struct SelectCanContinueInvoking<T, false> { using Type = DefaultCanContinueInvoking; };
 
 template <typename T>
@@ -93,9 +90,7 @@ public:
 	enum { value = !! decltype(test<T>(0))() };
 };
 template <typename Key, typename Value, typename T, bool>
-struct SelectMap;
-template <typename Key, typename Value, typename T>
-struct SelectMap<Key, Value, T, true>
+struct SelectMap
 {
 	using Type = typename T::template Map<Key, Value>;
 };
@@ -117,8 +112,7 @@ struct HasTypeMixins
 
 	enum { value = !! decltype(test<T>(0))() };
 };
-template <typename T, bool> struct SelectMixins;
-template <typename T> struct SelectMixins <T, true> { using Type = typename T::Mixins; };
+template <typename T, bool> struct SelectMixins { using Type = typename T::Mixins; };
 template <typename T> struct SelectMixins <T, false> { using Type = MixinList<>; };
 
 
@@ -175,5 +169,6 @@ struct HasFunctionMixinBeforeDispatch
 
 	enum { value = !! decltype(test<T>(0))() };
 };
+
 
 } //namespace internal_

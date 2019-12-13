@@ -30,7 +30,7 @@ class ConditionalRemover <
 	>
 {
 private:
-	template <typename Condition>
+	template <typename Callback, typename Condition>
 	struct ItemByCondition
 	{
 		struct Data
@@ -38,7 +38,7 @@ private:
 			Condition shouldRemove;
 			DispatcherType & dispatcher;
 			typename DispatcherType::Event event;
-			typename DispatcherType::Callback listener;
+			Callback listener;
 			typename DispatcherType::Handle handle;
 		};
 
@@ -59,14 +59,14 @@ public:
 	{
 	}
 	
-	template <typename Condition>
+	template <typename Callback, typename Condition>
 	typename DispatcherType::Handle appendListener(
 			const typename DispatcherType::Event & event,
-			const typename DispatcherType::Callback & listener,
+			const Callback & listener,
 			const Condition & condition
 		)
 	{
-		using Wrapper = ItemByCondition<Condition>;
+		using Wrapper = ItemByCondition<Callback, Condition>;
 		auto data = std::make_shared<typename Wrapper::Data>(typename Wrapper::Data {
 			condition, dispatcher, event, listener, typename DispatcherType::Handle()
 		});
@@ -74,14 +74,14 @@ public:
 		return data->handle;
 	}
 
-	template <typename Condition>
+	template <typename Callback, typename Condition>
 	typename DispatcherType::Handle prependListener(
 			const typename DispatcherType::Event & event,
-			const typename DispatcherType::Callback & listener,
+			const Callback & listener,
 			const Condition & condition
 		)
 	{
-		using Wrapper = ItemByCondition<Condition>;
+		using Wrapper = ItemByCondition<Callback, Condition>;
 		auto data = std::make_shared<typename Wrapper::Data>(typename Wrapper::Data {
 			condition, dispatcher, event, listener, typename DispatcherType::Handle()
 		});
@@ -89,15 +89,15 @@ public:
 		return data->handle;
 	}
 
-	template <typename Condition>
+	template <typename Callback, typename Condition>
 	typename DispatcherType::Handle insertListener(
 			const typename DispatcherType::Event & event,
-			const typename DispatcherType::Callback & listener,
+			const Callback & listener,
 			const typename DispatcherType::Handle & before,
 			const Condition & condition
 		)
 	{
-		using Wrapper = ItemByCondition<Condition>;
+		using Wrapper = ItemByCondition<Callback, Condition>;
 		auto data = std::make_shared<typename Wrapper::Data>(typename Wrapper::Data {
 			condition, dispatcher, event, listener, typename DispatcherType::Handle()
 		});
@@ -116,14 +116,14 @@ class ConditionalRemover <
 	>
 {
 private:
-	template <typename Condition>
+	template <typename Callback, typename Condition>
 	struct ItemByCondition
 	{
 		struct Data
 		{
 			Condition shouldRemove;
 			CallbackListType & callbackList;
-			typename CallbackListType::Callback listener;
+			Callback listener;
 			typename CallbackListType::Handle handle;
 		};
 
@@ -144,13 +144,13 @@ public:
 	{
 	}
 	
-	template <typename Condition>
+	template <typename Callback, typename Condition>
 	typename CallbackListType::Handle append(
-			const typename CallbackListType::Callback & listener,
+			const Callback & listener,
 			const Condition & condition
 		)
 	{
-		using Wrapper = ItemByCondition<Condition>;
+		using Wrapper = ItemByCondition<Callback, Condition>;
 		auto data = std::make_shared<typename Wrapper::Data>(typename Wrapper::Data {
 			condition, callbackList, listener, typename CallbackListType::Handle()
 		});
@@ -158,13 +158,13 @@ public:
 		return data->handle;
 	}
 
-	template <typename Condition>
+	template <typename Callback, typename Condition>
 	typename CallbackListType::Handle prepend(
-			const typename CallbackListType::Callback & listener,
+			const Callback & listener,
 			const Condition & condition
 		)
 	{
-		using Wrapper = ItemByCondition<Condition>;
+		using Wrapper = ItemByCondition<Callback, Condition>;
 		auto data = std::make_shared<typename Wrapper::Data>(typename Wrapper::Data {
 			condition, callbackList, listener, typename CallbackListType::Handle()
 		});
@@ -172,14 +172,14 @@ public:
 		return data->handle;
 	}
 
-	template <typename Condition>
+	template <typename Callback, typename Condition>
 	typename CallbackListType::Handle insert(
-			const typename CallbackListType::Callback & listener,
+			const Callback & listener,
 			const typename CallbackListType::Handle & before,
 			const Condition & condition
 		)
 	{
-		using Wrapper = ItemByCondition<Condition>;
+		using Wrapper = ItemByCondition<Callback, Condition>;
 		auto data = std::make_shared<typename Wrapper::Data>(typename Wrapper::Data {
 			condition, callbackList, listener, typename CallbackListType::Handle()
 		});

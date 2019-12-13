@@ -15,6 +15,7 @@
 #define CALLBACKLIST_H_588722158669
 
 #include "eventpolicies.h"
+#include "internal/typeutil_i.h"
 
 #include <atomic>
 #include <condition_variable>
@@ -22,25 +23,10 @@
 #include <memory>
 #include <mutex>
 #include <utility>
-#include <vector>
 
 namespace eventpp {
 
 namespace internal_ {
-
-template <typename F, typename ...A>
-struct CanInvoke
-{
-	template <typename U, typename ...X>
-	static auto invoke(int) -> decltype(std::declval<U>()(std::declval<X>()...), std::true_type());
-
-	template <typename U, typename ...X>
-	static auto invoke(...) -> std::false_type;
-
-	enum {
-		value = !! decltype(invoke<F, A...>(0))()
-	};
-};
 
 template <
 	typename Prototype,
@@ -69,7 +55,7 @@ private:
 	>::Type;
 
 	using CanContinueInvoking = typename SelectCanContinueInvoking<
-		Policies, HasFunctionCanContinueInvoking<Policies>::value
+		Policies, HasFunctionCanContinueInvoking<Policies, Args...>::value
 	>::Type;
 
 	struct Node;
@@ -250,7 +236,7 @@ public:
 		return append(callback);
 	}
 
-	bool remove(const Handle handle)
+	bool remove(const Handle & handle)
 	{
 		std::lock_guard<Mutex> lockGuard(mutex);
 		auto node = handle.lock();
@@ -321,13 +307,6 @@ private:
 		-> typename std::enable_if<CanInvoke<Func, Handle, Callback &>::value, RT>::type
 	{
 		return func(Handle(node), node->callback);
-	}
-
-	template <typename RT, typename Func>
-	auto doForEachInvoke(Func && func, NodePtr & node) const
-		-> typename std::enable_if<CanInvoke<Func, Handle>::value, RT>::type
-	{
-		return func(Handle(node));
 	}
 
 	template <typename RT, typename Func>

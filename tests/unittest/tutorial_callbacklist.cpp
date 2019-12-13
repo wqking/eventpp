@@ -118,11 +118,6 @@ TEST_CASE("CallbackList tutorial 4, for each")
 		++index;
 	});
 
-	// The forEach callback prototype can also be void(const CallbackList::Handle & handle)
-	callbackList.forEach([&callbackList, &index](const CL::Handle & /*handle*/) {
-		std::cout << "forEach(Handle), invoked" << std::endl;
-	});
-
 	// The forEach callback prototype can also be void(const CallbackList::Callback & callback)
 	callbackList.forEach([&callbackList, &index](const CL::Callback & /*callback*/) {
 		std::cout << "forEach(Callback), invoked" << std::endl;

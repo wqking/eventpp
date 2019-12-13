@@ -11,10 +11,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef MIXINFILTER_H_713231680355
-#define MIXINFILTER_H_713231680355
+#ifndef MIXINHETERFILTER_H_990158796753
+#define MIXINHETERFILTER_H_990158796753
 
-#include "../callbacklist.h"
+#include "../hetercallbacklist.h"
 #include "../internal/typeutil_i.h"
 
 #include <functional>
@@ -23,27 +23,27 @@
 namespace eventpp {
 
 template <typename Base>
-class MixinFilter : public Base
+class MixinHeterFilter : public Base
 {
 private:
 	using super = Base;
 
-	using BoolReferencePrototype = typename internal_::ReplaceReturnType<
-		typename internal_::TransformArguments<
-			typename super::Prototype,
+	using BoolReferencePrototypeList = typename internal_::ReplaceReturnTypeList<
+		typename internal_::TransformArgumentsList<
+			typename super::PrototypeList,
 			std::add_lvalue_reference
 		>::Type,
 		bool
 	>::Type;
 
-	using Filter = std::function<BoolReferencePrototype>;
-	using FilterList = CallbackList<BoolReferencePrototype>;
+	using FilterList = HeterCallbackList<BoolReferencePrototypeList>;
 
 public:
 	using FilterHandle = typename FilterList::Handle;
 
 public:
-	FilterHandle appendFilter(const Filter & filter)
+	template <typename Callback>
+	FilterHandle appendFilter(const Callback & filter)
 	{
 		return filterList.append(filter);
 	}
@@ -55,13 +55,11 @@ public:
 
 	template <typename ...Args>
 	bool mixinBeforeDispatch(Args && ...args) const {
-		if(! filterList.empty()) {
-			if(! filterList.forEachIf([&args...](typename FilterList::Callback & callback) {
-					return callback(args...);
-				})
+		if(! filterList.template forEachIf<void (Args...)>([&args...](const typename std::function<bool (Args...)> & callback) -> bool {
+			return callback(std::forward<Args>(args)...);
+		})
 			) {
-				return false;
-			}
+			return false;
 		}
 
 		return true;
