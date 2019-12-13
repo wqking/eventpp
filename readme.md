@@ -126,6 +126,7 @@ The library itself is header only and doesn't need building.
 The unit tests require CMake to build, and there is a makefile to ease the building.  
 Note the unit tests require C++14 (generic lambda), the library itself only requires C++11.  
 Go to folder `tests/build`, then run `make` with different target.
+- `make vc19` #generate solution files for Microsoft Visual Studio 2019, then open eventpptest.sln in folder project_vc19
 - `make vc17` #generate solution files for Microsoft Visual Studio 2017, then open eventpptest.sln in folder project_vc17
 - `make vc15` #generate solution files for Microsoft Visual Studio 2015, then open eventpptest.sln in folder project_vc15
 - `make mingw` #build using MinGW
@@ -136,3 +137,11 @@ Go to folder `tests/build`, then run `make` with different target.
 I (wqking) am a big fan of observer pattern (publish/subscribe pattern), and I used this pattern extensively in my code. I either used GCallbackList in my [cpgf library](https://github.com/cpgf/cpgf) which is too simple and unsafe (not support multi-threading or nested events), or repeated coding event dispatching mechanism such as I did in my [Gincu game engine](https://github.com/wqking/gincu) (the latest version has be rewritten to use eventpp). Both or these methods are neither fun nor robust.  
 Thanking to C++11, now it's quite easy to write a reusable event library with beautiful syntax (it's a nightmare to simulate the variadic template in C++03), so here is `eventpp`.
 
+## Change log
+
+**Version 0.1.1**  
+Added HeterCallbackList, HeterEventDispatcher, and HeterEventQueue.
+
+**Version 0.1.0**  
+First version.  
+Added CallbackList, EventDispatcher, EventQueue, CounterRemover, ConditionalRemover, ScopedRemover, and utilities.
