@@ -92,7 +92,7 @@ struct SingleThreading
 		{
 		}
 
-		void store(T desired, std::memory_order order = std::memory_order_seq_cst) noexcept
+		void store(T desired, std::memory_order /*order*/ = std::memory_order_seq_cst) noexcept
 		{
 			value = desired;
 		}
@@ -122,14 +122,14 @@ struct SingleThreading
 		}
 		
 		template <class Predicate>
-		void wait(std::unique_lock<std::mutex>& lock, Predicate pred)
+		void wait(std::unique_lock<std::mutex> & /*lock*/, Predicate /*pred*/)
 		{
 		}
 		
 		template <class Rep, class Period, class Predicate>
-		bool wait_for(std::unique_lock<std::mutex> & lock,
-				const std::chrono::duration<Rep, Period> & rel_time,
-				Predicate pred
+		bool wait_for(std::unique_lock<std::mutex> & /*lock*/,
+				const std::chrono::duration<Rep, Period> & /*rel_time*/,
+				Predicate /*pred*/
 			)
 		{
 			return true;

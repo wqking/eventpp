@@ -11,7 +11,7 @@ include_directories(../include)
 if(MSVC)
 	add_definitions(/W4)
 else()
-	add_definitions(-Wall -Wextra)
+	add_definitions(-Wall -Wextra -Wpedantic)
 endif()
 
 add_subdirectory(unittest)
