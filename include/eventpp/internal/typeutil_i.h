@@ -59,7 +59,7 @@ template <int M>
 struct IntToConstantHelper <M, M>
 {
 	template <typename C, typename ...Args>
-	static auto find(const int index, C && c, Args && ...args)
+	static auto find(const int /*index*/, C && c, Args && ...args)
 		-> decltype(std::declval<C>().template operator()<0>(std::declval<Args>()...))
 	{
 		return decltype(c.template operator()<0>(std::forward<Args>(args)...))();
