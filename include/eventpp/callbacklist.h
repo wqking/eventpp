@@ -15,31 +15,18 @@
 #define CALLBACKLIST_H_588722158669
 
 #include "eventpolicies.h"
+#include "internal/typeutil_i.h"
 
+#include <atomic>
+#include <condition_variable>
 #include <functional>
 #include <memory>
 #include <mutex>
-#include <atomic>
-#include <condition_variable>
 #include <utility>
 
 namespace eventpp {
 
 namespace internal_ {
-
-template <typename F, typename ...A>
-struct CanInvoke
-{
-	template <typename U, typename ...X>
-	static auto invoke(int) -> decltype(std::declval<U>()(std::declval<X>()...), std::true_type());
-
-	template <typename U, typename ...X>
-	static auto invoke(...) -> std::false_type;
-
-	enum {
-		value = !! decltype(invoke<F, A...>(0))()
-	};
-};
 
 template <
 	typename Prototype,
@@ -61,7 +48,6 @@ private:
 
 	using Threading = typename SelectThreading<Policies, HasTypeThreading<Policies>::value>::Type;
 
-	using Mutex = typename Threading::Mutex;
 	using Callback_ = typename SelectCallback<
 		Policies,
 		HasTypeCallback<Policies>::value,
@@ -69,7 +55,7 @@ private:
 	>::Type;
 
 	using CanContinueInvoking = typename SelectCanContinueInvoking<
-		Policies, HasFunctionCanContinueInvoking<Policies>::value
+		Policies, HasFunctionCanContinueInvoking<Policies, Args...>::value
 	>::Type;
 
 	struct Node;
@@ -111,9 +97,10 @@ private:
 public:
 	using Callback = Callback_;
 	using Handle = Handle_;
+	using Mutex = typename Threading::Mutex;
 
 public:
-	CallbackListBase()
+	CallbackListBase() noexcept
 		:
 			head(),
 			tail(),
@@ -122,12 +109,38 @@ public:
 	{
 	}
 
-	CallbackListBase(CallbackListBase &&) = delete;
-	CallbackListBase(const CallbackListBase &) = delete;
-	CallbackListBase & operator = (const CallbackListBase &) = delete;
-
-	~CallbackListBase()
+	CallbackListBase(const CallbackListBase & other)
+		: CallbackListBase()
 	{
+		cloneFrom(other.head);
+	}
+
+	CallbackListBase(CallbackListBase && other) noexcept
+		: CallbackListBase()
+	{
+		swap(other);
+	}
+
+	// If we use pass by value idiom and omit the 'this' check,
+	// when assigning to self there is a deep copy which is inefficient.
+	CallbackListBase & operator = (const CallbackListBase & other) {
+		if(this != &other) {
+			CallbackListBase copied(other);
+			swap(copied);
+		}
+		return *this;
+	}
+
+	CallbackListBase & operator = (CallbackListBase && other) noexcept {
+		if(this != &other) {
+			head = std::move(other.head);
+			tail = std::move(other.tail);
+			currentCounter = other.currentCounter.load();
+		}
+		return *this;
+	}
+
+	~CallbackListBase()	{
 		// Don't lock mutex here since it may throw exception
 
 		NodePtr node = head;
@@ -139,6 +152,21 @@ public:
 			node = next;
 		}
 		node.reset();
+	}
+	
+	void swap(CallbackListBase & other) noexcept {
+		using std::swap;
+		
+		swap(head, other.head);
+		swap(tail, other.tail);
+
+		const auto value = currentCounter.load();
+		currentCounter.exchange(other.currentCounter.load());
+		other.currentCounter.exchange(value);
+	}
+	
+	friend void swap(CallbackListBase & first, CallbackListBase & second) noexcept {
+		first.swap(second);
 	}
 
 	bool empty() const {
@@ -156,7 +184,7 @@ public:
 
 	Handle append(const Callback & callback)
 	{
-		NodePtr node(std::make_shared<Node>(callback, getNextCounter()));
+		NodePtr node(doAllocateNode(callback));
 
 		std::lock_guard<Mutex> lockGuard(mutex);
 
@@ -175,7 +203,7 @@ public:
 
 	Handle prepend(const Callback & callback)
 	{
-		NodePtr node(std::make_shared<Node>(callback, getNextCounter()));
+		NodePtr node(doAllocateNode(callback));
 
 		std::lock_guard<Mutex> lockGuard(mutex);
 
@@ -192,11 +220,11 @@ public:
 		return Handle(node);
 	}
 
-	Handle insert(const Callback & callback, const Handle before)
+	Handle insert(const Callback & callback, const Handle & before)
 	{
 		NodePtr beforeNode = before.lock();
 		if(beforeNode) {
-			NodePtr node(std::make_shared<Node>(callback, getNextCounter()));
+			NodePtr node(doAllocateNode(callback));
 
 			std::lock_guard<Mutex> lockGuard(mutex);
 
@@ -208,12 +236,12 @@ public:
 		return append(callback);
 	}
 
-	bool remove(const Handle handle)
+	bool remove(const Handle & handle)
 	{
 		std::lock_guard<Mutex> lockGuard(mutex);
 		auto node = handle.lock();
 		if(node) {
-			doRemoveNode(node);
+			doFreeNode(node);
 			return true;
 		}
 
@@ -283,19 +311,31 @@ private:
 
 	template <typename RT, typename Func>
 	auto doForEachInvoke(Func && func, NodePtr & node) const
-		-> typename std::enable_if<CanInvoke<Func, Handle>::value, RT>::type
-	{
-		return func(Handle(node));
-	}
-
-	template <typename RT, typename Func>
-	auto doForEachInvoke(Func && func, NodePtr & node) const
 		-> typename std::enable_if<CanInvoke<Func, Callback &>::value, RT>::type
 	{
 		return func(node->callback);
 	}
 
-	void doRemoveNode(NodePtr & node)
+	void doInsert(NodePtr & node, NodePtr & beforeNode)
+	{
+		node->previous = beforeNode->previous;
+		node->next = beforeNode;
+		if(beforeNode->previous) {
+			beforeNode->previous->next = node;
+		}
+		beforeNode->previous = node;
+
+		if(beforeNode == head) {
+			head = node;
+		}
+	}
+	
+	NodePtr doAllocateNode(const Callback & callback)
+	{
+		return std::make_shared<Node>(callback, getNextCounter());
+	}
+	
+	void doFreeNode(NodePtr & node)
 	{
 		if(node->next) {
 			node->next->previous = node->previous;
@@ -318,20 +358,6 @@ private:
 		// because node may be still used in a loop.
 	}
 
-	void doInsert(NodePtr & node, NodePtr & beforeNode)
-	{
-		node->previous = beforeNode->previous;
-		node->next = beforeNode;
-		if(beforeNode->previous) {
-			beforeNode->previous->next = node;
-		}
-		beforeNode->previous = node;
-
-		if(beforeNode == head) {
-			head = node;
-		}
-	}
-
 	Counter getNextCounter()
 	{
 		Counter result = ++currentCounter;;
@@ -349,6 +375,30 @@ private:
 
 		return result;
 	}
+	
+	void cloneFrom(const NodePtr & fromHead) {
+		NodePtr fromNode(fromHead);
+		NodePtr node;
+		const Counter counter = getNextCounter();
+		while(fromNode) {
+			const NodePtr nextNode(std::make_shared<Node>(fromNode->callback, counter));
+
+			nextNode->previous = node;
+
+			if(node) {
+				node->next = nextNode;
+			}
+			else {
+				node = nextNode;
+				head = node;
+			}
+		
+			node = nextNode;
+			fromNode = fromNode->next;
+		}
+
+		tail = node;
+	}
 
 private:
 	NodePtr head;
@@ -363,11 +413,16 @@ private:
 
 
 template <
-	typename Prototype,
-	typename Policies = DefaultPolicies
+	typename Prototype_,
+	typename Policies_ = DefaultPolicies
 >
-class CallbackList : public internal_::CallbackListBase<Prototype, Policies>
+class CallbackList : public internal_::CallbackListBase<Prototype_, Policies_>, public TagCallbackList
 {
+private:
+	using super = internal_::CallbackListBase<Prototype_, Policies_>;
+	
+public:
+	using super::super;
 };
 
 

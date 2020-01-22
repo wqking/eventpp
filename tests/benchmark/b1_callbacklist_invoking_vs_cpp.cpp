@@ -14,60 +14,6 @@
 #include "test.h"
 #include "eventpp/callbacklist.h"
 
-#include <chrono>
-#include <map>
-#include <unordered_map>
-#include <random>
-#include <string>
-#include <iostream>
-
-// To enable benchmark, change below line to #if 1
-#if 0
-
-namespace {
-
-template <typename F>
-uint64_t measureElapsedTime(F f)
-{
-	std::chrono::steady_clock::time_point t = std::chrono::steady_clock::now();
-	f();
-	return std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - t).count();
-}
-
-int getRandomeInt()
-{
-	static std::random_device rd;
-	static std::mt19937 engine(rd());
-	static std::uniform_int_distribution<> dist;
-	return dist(engine);
-}
-
-int getRandomeInt(const int max)
-{
-	return getRandomeInt() % max;
-}
-
-int getRandomeInt(const int min, const int max)
-{
-	if(min >= max) {
-		return min;
-	}
-	return min + getRandomeInt() % (max - min);
-}
-
-std::string generateRandomString(const int length){
-	static std::string possibleCharacters = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
-	std::string result(length, 0);
-	for(int i = 0; i < length; i++){
-		result[i] = possibleCharacters[getRandomeInt((int)possibleCharacters.size())];
-	}
-	return result;
-}
-
-} //unnamed namespace
-
-namespace {
-
 #if defined(_MSC_VER)
 #define NON_INLINE __declspec(noinline)
 #else
@@ -114,20 +60,21 @@ struct FunctionObject
 		globalValue += a + b;
 	}
 };
-
 #undef NON_INLINE
 
-} //unnamed namespace
 
-TEST_CASE("benchmark, CallbackList invoking vs C++ invoking")
+TEST_CASE("b1, CallbackList invoking vs C++ invoking")
 {
-	constexpr int iterateCount = 1000 * 1000 * 100;
+	constexpr int iterateCount = 1000 * 1000 * 10;
+	constexpr int callbackCount = 10;
 
 	{
 		FunctionObject funcObject;
-		const uint64_t cppTime = measureElapsedTime([iterateCount, &funcObject]() {
+		const uint64_t cppTime = measureElapsedTime([iterateCount, callbackCount, &funcObject]() {
 			for(int i = 0; i < iterateCount; ++i) {
-				globalFunction(i, i);
+				for(int c = 0; c < callbackCount; ++c) {
+					globalFunction(i, i);
+				}
 			}
 		});
 
@@ -135,7 +82,9 @@ TEST_CASE("benchmark, CallbackList invoking vs C++ invoking")
 			using Threading = eventpp::SingleThreading;
 		};
 		eventpp::CallbackList<void (int, int), SingleThreadingPolicies> callbackListSingleThreading;
-		callbackListSingleThreading.append(&globalFunction);
+		for(int c = 0; c < callbackCount; ++c) {
+			callbackListSingleThreading.append(&globalFunction);
+		}
 		const uint64_t callbackListSingleThreadingTime = measureElapsedTime([iterateCount, &callbackListSingleThreading]() {
 			for(int i = 0; i < iterateCount; ++i) {
 				callbackListSingleThreading(i, i);
@@ -146,7 +95,9 @@ TEST_CASE("benchmark, CallbackList invoking vs C++ invoking")
 			using Threading = eventpp::MultipleThreading;
 		};
 		eventpp::CallbackList<void (int, int), MultiThreadingPolicies> callbackListMultiThreading;
-		callbackListMultiThreading.append(&globalFunction);
+		for(int c = 0; c < callbackCount; ++c) {
+			callbackListMultiThreading.append(&globalFunction);
+		}
 		const uint64_t callbackListMultiThreadingTime = measureElapsedTime([iterateCount, &callbackListMultiThreading]() {
 			for(int i = 0; i < iterateCount; ++i) {
 				callbackListMultiThreading(i, i);
@@ -158,9 +109,11 @@ TEST_CASE("benchmark, CallbackList invoking vs C++ invoking")
 
 	{
 		FunctionObject funcObject;
-		const uint64_t cppTime = measureElapsedTime([iterateCount, &funcObject]() {
+		const uint64_t cppTime = measureElapsedTime([iterateCount, callbackCount, &funcObject]() {
 			for(int i = 0; i < iterateCount; ++i) {
-				nonInlineGlobalFunction(i, i);
+				for(int c = 0; c < callbackCount; ++c) {
+					nonInlineGlobalFunction(i, i);
+				}
 			}
 		});
 
@@ -168,7 +121,9 @@ TEST_CASE("benchmark, CallbackList invoking vs C++ invoking")
 			using Threading = eventpp::SingleThreading;
 		};
 		eventpp::CallbackList<void (int, int), SingleThreadingPolicies> callbackListSingleThreading;
-		callbackListSingleThreading.append(&nonInlineGlobalFunction);
+		for(int c = 0; c < callbackCount; ++c) {
+			callbackListSingleThreading.append(&nonInlineGlobalFunction);
+		}
 		const uint64_t callbackListSingleThreadingTime = measureElapsedTime([iterateCount, &callbackListSingleThreading]() {
 			for(int i = 0; i < iterateCount; ++i) {
 				callbackListSingleThreading(i, i);
@@ -179,7 +134,9 @@ TEST_CASE("benchmark, CallbackList invoking vs C++ invoking")
 			using Threading = eventpp::MultipleThreading;
 		};
 		eventpp::CallbackList<void (int, int), MultiThreadingPolicies> callbackListMultiThreading;
-		callbackListMultiThreading.append(&nonInlineGlobalFunction);
+		for(int c = 0; c < callbackCount; ++c) {
+			callbackListMultiThreading.append(&nonInlineGlobalFunction);
+		}
 		const uint64_t callbackListMultiThreadingTime = measureElapsedTime([iterateCount, &callbackListMultiThreading]() {
 			for(int i = 0; i < iterateCount; ++i) {
 				callbackListMultiThreading(i, i);
@@ -191,9 +148,11 @@ TEST_CASE("benchmark, CallbackList invoking vs C++ invoking")
 
 	{
 		FunctionObject funcObject;
-		const uint64_t cppTime = measureElapsedTime([iterateCount, &funcObject]() {
+		const uint64_t cppTime = measureElapsedTime([iterateCount, callbackCount, &funcObject]() {
 			for(int i = 0; i < iterateCount; ++i) {
-				funcObject(i, i);
+				for(int c = 0; c < callbackCount; ++c) {
+					funcObject(i, i);
+				}
 			}
 		});
 
@@ -201,7 +160,9 @@ TEST_CASE("benchmark, CallbackList invoking vs C++ invoking")
 			using Threading = eventpp::SingleThreading;
 		};
 		eventpp::CallbackList<void (int, int), SingleThreadingPolicies> callbackListSingleThreading;
-		callbackListSingleThreading.append(funcObject);
+		for(int c = 0; c < callbackCount; ++c) {
+			callbackListSingleThreading.append(funcObject);
+		}
 		const uint64_t callbackListSingleThreadingTime = measureElapsedTime([iterateCount, &callbackListSingleThreading]() {
 			for(int i = 0; i < iterateCount; ++i) {
 				callbackListSingleThreading(i, i);
@@ -212,7 +173,9 @@ TEST_CASE("benchmark, CallbackList invoking vs C++ invoking")
 			using Threading = eventpp::MultipleThreading;
 		};
 		eventpp::CallbackList<void (int, int), MultiThreadingPolicies> callbackListMultiThreading;
-		callbackListMultiThreading.append(funcObject);
+		for(int c = 0; c < callbackCount; ++c) {
+			callbackListMultiThreading.append(funcObject);
+		}
 		const uint64_t callbackListMultiThreadingTime = measureElapsedTime([iterateCount, &callbackListMultiThreading]() {
 			for(int i = 0; i < iterateCount; ++i) {
 				callbackListMultiThreading(i, i);
@@ -224,9 +187,11 @@ TEST_CASE("benchmark, CallbackList invoking vs C++ invoking")
 
 	{
 		FunctionObject funcObject;
-		const uint64_t cppTime = measureElapsedTime([iterateCount, &funcObject]() {
+		const uint64_t cppTime = measureElapsedTime([iterateCount, callbackCount, &funcObject]() {
 			for(int i = 0; i < iterateCount; ++i) {
-				funcObject.virFunc(i, i);
+				for(int c = 0; c < callbackCount; ++c) {
+					funcObject.virFunc(i, i);
+				}
 			}
 		});
 
@@ -234,7 +199,9 @@ TEST_CASE("benchmark, CallbackList invoking vs C++ invoking")
 			using Threading = eventpp::SingleThreading;
 		};
 		eventpp::CallbackList<void (int, int), SingleThreadingPolicies> callbackListSingleThreading;
-		callbackListSingleThreading.append(std::bind(&FunctionObject::virFunc, &funcObject, std::placeholders::_1, std::placeholders::_2));
+		for(int c = 0; c < callbackCount; ++c) {
+			callbackListSingleThreading.append(std::bind(&FunctionObject::virFunc, &funcObject, std::placeholders::_1, std::placeholders::_2));
+		}
 		const uint64_t callbackListSingleThreadingTime = measureElapsedTime([iterateCount, &callbackListSingleThreading]() {
 			for(int i = 0; i < iterateCount; ++i) {
 				callbackListSingleThreading(i, i);
@@ -245,7 +212,9 @@ TEST_CASE("benchmark, CallbackList invoking vs C++ invoking")
 			using Threading = eventpp::MultipleThreading;
 		};
 		eventpp::CallbackList<void (int, int), MultiThreadingPolicies> callbackListMultiThreading;
-		callbackListMultiThreading.append(std::bind(&FunctionObject::virFunc, &funcObject, std::placeholders::_1, std::placeholders::_2));
+		for(int c = 0; c < callbackCount; ++c) {
+			callbackListMultiThreading.append(std::bind(&FunctionObject::virFunc, &funcObject, std::placeholders::_1, std::placeholders::_2));
+		}
 		const uint64_t callbackListMultiThreadingTime = measureElapsedTime([iterateCount, &callbackListMultiThreading]() {
 			for(int i = 0; i < iterateCount; ++i) {
 				callbackListMultiThreading(i, i);
@@ -257,9 +226,11 @@ TEST_CASE("benchmark, CallbackList invoking vs C++ invoking")
 
 	{
 		FunctionObject funcObject;
-		const uint64_t cppTime = measureElapsedTime([iterateCount, &funcObject]() {
+		const uint64_t cppTime = measureElapsedTime([iterateCount, callbackCount, &funcObject]() {
 			for(int i = 0; i < iterateCount; ++i) {
-				funcObject.nonVirFunc(i, i);
+				for(int c = 0; c < callbackCount; ++c) {
+					funcObject.nonVirFunc(i, i);
+				}
 			}
 		});
 
@@ -267,7 +238,9 @@ TEST_CASE("benchmark, CallbackList invoking vs C++ invoking")
 			using Threading = eventpp::SingleThreading;
 		};
 		eventpp::CallbackList<void (int, int), SingleThreadingPolicies> callbackListSingleThreading;
-		callbackListSingleThreading.append(std::bind(&FunctionObject::nonVirFunc, &funcObject, std::placeholders::_1, std::placeholders::_2));
+		for(int c = 0; c < callbackCount; ++c) {
+			callbackListSingleThreading.append(std::bind(&FunctionObject::nonVirFunc, &funcObject, std::placeholders::_1, std::placeholders::_2));
+		}
 		const uint64_t callbackListSingleThreadingTime = measureElapsedTime([iterateCount, &callbackListSingleThreading]() {
 			for(int i = 0; i < iterateCount; ++i) {
 				callbackListSingleThreading(i, i);
@@ -278,7 +251,9 @@ TEST_CASE("benchmark, CallbackList invoking vs C++ invoking")
 			using Threading = eventpp::MultipleThreading;
 		};
 		eventpp::CallbackList<void (int, int), MultiThreadingPolicies> callbackListMultiThreading;
-		callbackListMultiThreading.append(std::bind(&FunctionObject::nonVirFunc, &funcObject, std::placeholders::_1, std::placeholders::_2));
+		for(int c = 0; c < callbackCount; ++c) {
+			callbackListMultiThreading.append(std::bind(&FunctionObject::nonVirFunc, &funcObject, std::placeholders::_1, std::placeholders::_2));
+		}
 		const uint64_t callbackListMultiThreadingTime = measureElapsedTime([iterateCount, &callbackListMultiThreading]() {
 			for(int i = 0; i < iterateCount; ++i) {
 				callbackListMultiThreading(i, i);
@@ -290,9 +265,11 @@ TEST_CASE("benchmark, CallbackList invoking vs C++ invoking")
 
 	{
 		FunctionObject funcObject;
-		const uint64_t cppTime = measureElapsedTime([iterateCount, &funcObject]() {
+		const uint64_t cppTime = measureElapsedTime([iterateCount, callbackCount, &funcObject]() {
 			for(int i = 0; i < iterateCount; ++i) {
-				funcObject.nonInlineVirFunc(i, i);
+				for(int c = 0; c < callbackCount; ++c) {
+					funcObject.nonInlineVirFunc(i, i);
+				}
 			}
 		});
 
@@ -300,7 +277,9 @@ TEST_CASE("benchmark, CallbackList invoking vs C++ invoking")
 			using Threading = eventpp::SingleThreading;
 		};
 		eventpp::CallbackList<void (int, int), SingleThreadingPolicies> callbackListSingleThreading;
-		callbackListSingleThreading.append(std::bind(&FunctionObject::nonInlineVirFunc, &funcObject, std::placeholders::_1, std::placeholders::_2));
+		for(int c = 0; c < callbackCount; ++c) {
+			callbackListSingleThreading.append(std::bind(&FunctionObject::nonInlineVirFunc, &funcObject, std::placeholders::_1, std::placeholders::_2));
+		}
 		const uint64_t callbackListSingleThreadingTime = measureElapsedTime([iterateCount, &callbackListSingleThreading]() {
 			for(int i = 0; i < iterateCount; ++i) {
 				callbackListSingleThreading(i, i);
@@ -311,7 +290,9 @@ TEST_CASE("benchmark, CallbackList invoking vs C++ invoking")
 			using Threading = eventpp::MultipleThreading;
 		};
 		eventpp::CallbackList<void (int, int), MultiThreadingPolicies> callbackListMultiThreading;
-		callbackListMultiThreading.append(std::bind(&FunctionObject::nonInlineVirFunc, &funcObject, std::placeholders::_1, std::placeholders::_2));
+		for(int c = 0; c < callbackCount; ++c) {
+			callbackListMultiThreading.append(std::bind(&FunctionObject::nonInlineVirFunc, &funcObject, std::placeholders::_1, std::placeholders::_2));
+		}
 		const uint64_t callbackListMultiThreadingTime = measureElapsedTime([iterateCount, &callbackListMultiThreading]() {
 			for(int i = 0; i < iterateCount; ++i) {
 				callbackListMultiThreading(i, i);
@@ -323,9 +304,11 @@ TEST_CASE("benchmark, CallbackList invoking vs C++ invoking")
 
 	{
 		FunctionObject funcObject;
-		const uint64_t cppTime = measureElapsedTime([iterateCount, &funcObject]() {
+		const uint64_t cppTime = measureElapsedTime([iterateCount, callbackCount, &funcObject]() {
 			for(int i = 0; i < iterateCount; ++i) {
-				funcObject.nonInlineNonVirFunc(i, i);
+				for(int c = 0; c < callbackCount; ++c) {
+					funcObject.nonInlineNonVirFunc(i, i);
+				}
 			}
 		});
 
@@ -333,7 +316,9 @@ TEST_CASE("benchmark, CallbackList invoking vs C++ invoking")
 			using Threading = eventpp::SingleThreading;
 		};
 		eventpp::CallbackList<void (int, int), SingleThreadingPolicies> callbackListSingleThreading;
-		callbackListSingleThreading.append(std::bind(&FunctionObject::nonInlineNonVirFunc, &funcObject, std::placeholders::_1, std::placeholders::_2));
+		for(int c = 0; c < callbackCount; ++c) {
+			callbackListSingleThreading.append(std::bind(&FunctionObject::nonInlineNonVirFunc, &funcObject, std::placeholders::_1, std::placeholders::_2));
+		}
 		const uint64_t callbackListSingleThreadingTime = measureElapsedTime([iterateCount, &callbackListSingleThreading]() {
 			for(int i = 0; i < iterateCount; ++i) {
 				callbackListSingleThreading(i, i);
@@ -344,7 +329,9 @@ TEST_CASE("benchmark, CallbackList invoking vs C++ invoking")
 			using Threading = eventpp::MultipleThreading;
 		};
 		eventpp::CallbackList<void (int, int), MultiThreadingPolicies> callbackListMultiThreading;
-		callbackListMultiThreading.append(std::bind(&FunctionObject::nonInlineNonVirFunc, &funcObject, std::placeholders::_1, std::placeholders::_2));
+		for(int c = 0; c < callbackCount; ++c) {
+			callbackListMultiThreading.append(std::bind(&FunctionObject::nonInlineNonVirFunc, &funcObject, std::placeholders::_1, std::placeholders::_2));
+		}
 		const uint64_t callbackListMultiThreadingTime = measureElapsedTime([iterateCount, &callbackListMultiThreading]() {
 			for(int i = 0; i < iterateCount; ++i) {
 				callbackListMultiThreading(i, i);
@@ -406,55 +393,3 @@ TEST_CASE("benchmark, CallbackList invoking vs C++ invoking")
 	}
 }
 
-TEST_CASE("benchmark, std::map vs std::unordered_map")
-{
-	constexpr int stringCount = 1000 * 1000;
-	std::vector<std::string> stringList(stringCount);
-	for(auto & s : stringList) {
-		s = generateRandomString(getRandomeInt(3, 10));
-	}
-
-	constexpr int iterateCount = 1000 * 1000 * 1;
-
-	uint64_t mapInsertTime = 0;
-	uint64_t mapLookupTime = 0;
-	{
-		std::map<std::string, int> map;
-		mapInsertTime = measureElapsedTime([iterateCount, stringCount, &map, &stringList]() {
-			for(int i = 0; i < iterateCount; ++i) {
-				map[stringList[i % stringCount]] = i;
-			}
-		});
-		
-		mapLookupTime = measureElapsedTime([iterateCount, stringCount, &map, &stringList]() {
-			for(int i = iterateCount - 1; i >= 0; --i) {
-				if(map.find(stringList[i % stringCount]) == map.end()) {
-					stringList[i] = stringList[i];
-				}
-			}
-		});
-	}
-
-	uint64_t unorderedMapInsertTime = 0;
-	uint64_t unorderedMapLookupTime = 0;
-	{
-		std::unordered_map<size_t, int> map;
-		unorderedMapInsertTime = measureElapsedTime([iterateCount, stringCount, &map, &stringList]() {
-			for(int i = 0; i < iterateCount; ++i) {
-				map[std::hash<std::string>()(stringList[i % stringCount])] = i;
-			}
-		});
-
-		unorderedMapLookupTime = measureElapsedTime([iterateCount, stringCount, &map, &stringList]() {
-			for(int i = stringCount - 1; i >= 0; --i) {
-				if(map.find(std::hash<std::string>()(stringList[i])) == map.end()) {
-					stringList[i] = stringList[i];
-				}
-			}
-		});
-	}
-	std::cout << mapInsertTime << " " << mapLookupTime << std::endl;
-	std::cout << unorderedMapInsertTime << " " << unorderedMapLookupTime << std::endl;
-}
-
-#endif

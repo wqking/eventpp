@@ -11,31 +11,21 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef TYPEUTIL_H_879959971810
-#define TYPEUTIL_H_879959971810
+#ifndef TEST_H
+#define TEST_H
 
-namespace eventpp {
+#include "../catch.hpp"
 
-template <typename F, template <typename> class T>
-struct TransformArguments;
+#include <chrono>
+#include <iostream>
 
-template <template <typename> class T, typename RT, typename ...Args>
-struct TransformArguments <RT (Args...), T>
+template <typename F>
+uint64_t measureElapsedTime(F f)
 {
-	using Type = RT (typename T<Args>::type...);
-};
+	std::chrono::steady_clock::time_point t = std::chrono::steady_clock::now();
+	f();
+	return std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - t).count();
+}
 
-template <typename F, typename Replacement>
-struct ReplaceReturnType;
-
-template <typename Replacement, typename RT, typename ...Args>
-struct ReplaceReturnType <RT (Args...), Replacement>
-{
-	using Type = Replacement (Args...);
-};
-
-
-} //namespace eventpp
 
 #endif
-

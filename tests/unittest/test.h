@@ -14,7 +14,7 @@
 #ifndef TEST_H
 #define TEST_H
 
-#include "catch.hpp"
+#include "../catch.hpp"
 
 template <typename Callable, typename ReturnType = void>
 struct EraseArgs1
@@ -51,5 +51,24 @@ bool checkAllWeakPtrAreFreed(const T & nodeList)
 	return true;
 }
 
+// Can be converted from int implicitly
+struct FromInt
+{
+	FromInt() : value(0) {}
+	FromInt(const int value) : value(value) {}
+
+	int value;
+};
+
+// Can convert to int implicitly
+struct ToInt
+{
+	ToInt() : value(0) {}
+	explicit ToInt(const int value) : value(value) {}
+
+	operator int() const { return value; }
+
+	int value;
+};
 
 #endif

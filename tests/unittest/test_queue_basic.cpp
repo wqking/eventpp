@@ -14,14 +14,7 @@
 #include "test.h"
 #include "eventpp/eventqueue.h"
 
-#include <thread>
-#include <numeric>
-#include <algorithm>
-#include <random>
-#include <vector>
-#include <atomic>
-
-TEST_CASE("queue, std::string, void (const std::string &)")
+TEST_CASE("EventQueue, std::string, void (const std::string &)")
 {
 	eventpp::EventQueue<std::string, void (const std::string &)> queue;
 
@@ -44,7 +37,7 @@ TEST_CASE("queue, std::string, void (const std::string &)")
 	REQUIRE(b == 8);
 }
 
-TEST_CASE("queue, int, void ()")
+TEST_CASE("EventQueue, int, void ()")
 {
 	eventpp::EventQueue<int, void ()> queue;
 
@@ -68,7 +61,36 @@ TEST_CASE("queue, int, void ()")
 	REQUIRE(b == 8);
 }
 
-TEST_CASE("queue, int, void (const std::string &, int)")
+TEST_CASE("EventQueue, processOne, int, void ()")
+{
+	eventpp::EventQueue<int, void ()> queue;
+
+	int a = 1;
+	int b = 5;
+
+	queue.appendListener(3, [&a]() {
+		a += 1;
+	});
+	queue.appendListener(5, [&b]() {
+		b += 3;
+	});
+
+	REQUIRE(a == 1);
+	REQUIRE(b == 5);
+
+	queue.enqueue(3);
+	queue.enqueue(5);
+
+	queue.processOne();
+	REQUIRE(a == 2);
+	REQUIRE(b == 5);
+
+	queue.processOne();
+	REQUIRE(a == 2);
+	REQUIRE(b == 8);
+}
+
+TEST_CASE("EventQueue, int, void (const std::string &, int)")
 {
 	struct NonDefaultConstructible
 	{
@@ -120,7 +142,7 @@ TEST_CASE("queue, int, void (const std::string &, int)")
 	}
 }
 
-TEST_CASE("queue, customized event")
+TEST_CASE("EventQueue, customized event")
 {
 	struct MyEvent {
 		int type;
@@ -157,7 +179,7 @@ TEST_CASE("queue, customized event")
 	REQUIRE(b == "World very good38");
 }
 
-TEST_CASE("queue, no memory leak in queued arguments")
+TEST_CASE("EventQueue, no memory leak in queued arguments")
 {
 	using SP = std::shared_ptr<int>;
 	using WP = std::weak_ptr<int>;
@@ -189,7 +211,34 @@ TEST_CASE("queue, no memory leak in queued arguments")
 	}
 }
 
-TEST_CASE("queue, no memory leak or double free in queued arguments")
+TEST_CASE("EventQueue, no memory leak in queued arguments after queue is destroyed")
+{
+	using SP = std::shared_ptr<int>;
+	using WP = std::weak_ptr<int>;
+	using EQ = eventpp::EventQueue<int, void (SP)>;
+
+	std::vector<WP> wpList;
+
+	{
+		std::unique_ptr<EQ> queue(new EQ());
+
+		auto add = [&wpList, &queue](int n) {
+			SP sp(std::make_shared<int>(n));
+			queue->enqueue(n, sp);
+			wpList.push_back(WP(sp));
+		};
+
+		add(1);
+		add(2);
+		add(3);
+
+		REQUIRE(! checkAllWeakPtrAreFreed(wpList));
+	}
+
+	REQUIRE(checkAllWeakPtrAreFreed(wpList));
+}
+
+TEST_CASE("EventQueue, no memory leak or double free in queued arguments")
 {
 	struct Item {
 		Item(const int index, std::vector<int> * counterList)
@@ -253,7 +302,7 @@ TEST_CASE("queue, no memory leak or double free in queued arguments")
 	}
 }
 
-TEST_CASE("queue, non-copyable but movable unique_ptr")
+TEST_CASE("EventQueue, non-copyable but movable unique_ptr")
 {
 	using PTR = std::unique_ptr<int>;
 	using EQ = eventpp::EventQueue<int, void (const PTR &)>;
@@ -293,7 +342,7 @@ TEST_CASE("queue, non-copyable but movable unique_ptr")
 	}
 }
 
-TEST_CASE("queue, peekEvent/takeEvent/dispatch")
+TEST_CASE("EventQueue, peekEvent/takeEvent/dispatch")
 {
 	using SP = std::shared_ptr<int>;
 	using WP = std::weak_ptr<int>;
@@ -322,56 +371,56 @@ TEST_CASE("queue, peekEvent/takeEvent/dispatch")
 	SECTION("peek") {
 		EQ::QueuedEvent event;
 		REQUIRE(queue->peekEvent(&event));
-		REQUIRE(std::get<0>(event) == 3);
-		REQUIRE(*std::get<1>(event) == 0);
+		REQUIRE(event.event == 3);
+		REQUIRE(*std::get<0>(event.arguments) == 0);
 		REQUIRE(wpList[0].use_count() == 2);
 	}
 
 	SECTION("peek/peek") {
 		EQ::QueuedEvent event;
 		REQUIRE(queue->peekEvent(&event));
-		REQUIRE(std::get<0>(event) == 3);
-		REQUIRE(*std::get<1>(event) == 0);
+		REQUIRE(event.event == 3);
+		REQUIRE(*std::get<0>(event.arguments) == 0);
 		REQUIRE(wpList[0].use_count() == 2);
 
 		EQ::QueuedEvent event2;
 		REQUIRE(queue->peekEvent(&event2));
-		REQUIRE(std::get<0>(event2) == 3);
-		REQUIRE(*std::get<1>(event2) == 0);
+		REQUIRE(event2.event == 3);
+		REQUIRE(*std::get<0>(event2.arguments) == 0);
 		REQUIRE(wpList[0].use_count() == 3);
 	}
 
 	SECTION("peek/take") {
 		EQ::QueuedEvent event;
 		REQUIRE(queue->peekEvent(&event));
-		REQUIRE(std::get<0>(event) == 3);
-		REQUIRE(*std::get<1>(event) == 0);
+		REQUIRE(event.event == 3);
+		REQUIRE(*std::get<0>(event.arguments) == 0);
 		REQUIRE(wpList[0].use_count() == 2);
 
 		EQ::QueuedEvent event2;
 		REQUIRE(queue->takeEvent(&event2));
-		REQUIRE(std::get<0>(event2) == 3);
-		REQUIRE(*std::get<1>(event2) == 0);
+		REQUIRE(event2.event == 3);
+		REQUIRE(*std::get<0>(event2.arguments) == 0);
 		REQUIRE(wpList[0].use_count() == 2);
 	}
 
 	SECTION("peek/take/peek") {
 		EQ::QueuedEvent event;
 		REQUIRE(queue->peekEvent(&event));
-		REQUIRE(std::get<0>(event) == 3);
-		REQUIRE(*std::get<1>(event) == 0);
+		REQUIRE(event.event == 3);
+		REQUIRE(*std::get<0>(event.arguments) == 0);
 		REQUIRE(wpList[0].use_count() == 2);
 
 		EQ::QueuedEvent event2;
 		REQUIRE(queue->takeEvent(&event2));
-		REQUIRE(std::get<0>(event2) == 3);
-		REQUIRE(*std::get<1>(event2) == 0);
+		REQUIRE(event2.event == 3);
+		REQUIRE(*std::get<0>(event2.arguments) == 0);
 		REQUIRE(wpList[0].use_count() == 2);
 
 		EQ::QueuedEvent event3;
 		REQUIRE(queue->peekEvent(&event3));
-		REQUIRE(std::get<0>(event3) == 3);
-		REQUIRE(*std::get<1>(event3) == 1);
+		REQUIRE(event3.event == 3);
+		REQUIRE(*std::get<0>(event3.arguments) == 1);
 		REQUIRE(wpList[0].use_count() == 2);
 		REQUIRE(wpList[1].use_count() == 2);
 	}
@@ -379,16 +428,16 @@ TEST_CASE("queue, peekEvent/takeEvent/dispatch")
 	SECTION("peek/dispatch/peek/dispatch again") {
 		EQ::QueuedEvent event;
 		REQUIRE(queue->peekEvent(&event));
-		REQUIRE(std::get<0>(event) == 3);
-		REQUIRE(*std::get<1>(event) == 0);
+		REQUIRE(event.event == 3);
+		REQUIRE(*std::get<0>(event.arguments) == 0);
 		REQUIRE(wpList[0].use_count() == 2);
 
 		queue->dispatch(event);
 
 		EQ::QueuedEvent event2;
 		REQUIRE(queue->peekEvent(&event2));
-		REQUIRE(std::get<0>(event2) == 3);
-		REQUIRE(*std::get<1>(event2) == 0);
+		REQUIRE(event2.event == 3);
+		REQUIRE(*std::get<0>(event2.arguments) == 0);
 		REQUIRE(wpList[0].use_count() == 3);
 
 		REQUIRE(dataList == std::vector<int>{ 1, 0, 0 });
@@ -421,196 +470,94 @@ TEST_CASE("queue, peekEvent/takeEvent/dispatch")
 	}
 }
 
-TEST_CASE("queue multi threading, int, void (int)")
+TEST_CASE("EventQueue, clearEvents")
 {
-	using EQ = eventpp::EventQueue<int, void (int)>;
-	EQ queue;
+	eventpp::EventQueue<int, void ()> queue;
 
-	constexpr int threadCount = 256;
-	constexpr int dataCountPerThread = 1024 * 4;
-	constexpr int itemCount = threadCount * dataCountPerThread;
+	int a = 1;
+	int b = 5;
 
-	std::vector<int> eventList(itemCount);
-	std::iota(eventList.begin(), eventList.end(), 0);
-	std::shuffle(eventList.begin(), eventList.end(), std::mt19937(std::random_device()()));
+	queue.appendListener(3, [&a]() {
+		a += 1;
+	});
+	queue.appendListener(3, [&b]() {
+		b += 3;
+	});
 
-	std::vector<int> dataList(itemCount);
+	REQUIRE(a == 1);
+	REQUIRE(b == 5);
 
-	for(int i = 0; i < itemCount; ++i) {
-		queue.appendListener(eventList[i], [&queue, i, &dataList](const int d) {
-			dataList[i] += d;
-		});
-	}
+	queue.enqueue(3);
+	queue.process();
 
-	std::vector<std::thread> threadList;
-	for(int i = 0; i < threadCount; ++i) {
-		threadList.emplace_back([i, dataCountPerThread, &queue, itemCount]() {
-			for(int k = i * dataCountPerThread; k < (i + 1) * dataCountPerThread; ++k) {
-				queue.enqueue(k, 3);
-			}
-			for(int k = 0; k < 10; ++k) {
-				queue.process();
-			}
-		});
-	}
-	for(int i = 0; i < threadCount; ++i) {
-		threadList[i].join();
-	}
+	REQUIRE(a == 2);
+	REQUIRE(b == 8);
 
-	std::vector<int> compareList(itemCount);
-	std::fill(compareList.begin(), compareList.end(), 3);
-	REQUIRE(dataList == compareList);
+	queue.enqueue(3);
+	queue.clearEvents();
+	queue.process();
+
+	REQUIRE(a == 2);
+	REQUIRE(b == 8);
 }
 
-TEST_CASE("queue multi threading, one thread waits")
+TEST_CASE("EventQueue, processIf")
 {
-	using EQ = eventpp::EventQueue<int, void (int)>;
-	EQ queue;
+	eventpp::EventQueue<int, void (int)> queue;
 
-	// note, all events will be process from the other thread instead of main thread
-	constexpr int stopEvent = 1;
-	constexpr int otherEvent = 2;
+	std::vector<int> dataList(3);
 
-	constexpr int itemCount = 5;
-
-	std::vector<int> dataList(itemCount);
-
-	std::atomic<int> threadProcessCount(0);
-
-	std::thread thread([stopEvent, otherEvent, &dataList, &queue, &threadProcessCount]() {
-		volatile bool shouldStop = false;
-		queue.appendListener(stopEvent, [&shouldStop](int) {
-			shouldStop = true;
-		});
-		queue.appendListener(otherEvent, [&dataList](const int index) {
-			dataList[index] += index + 1;
-		});
-
-		while(! shouldStop) {
-			queue.wait();
-
-			++threadProcessCount;
-
-			queue.process();
-		}
+	queue.appendListener(5, [&dataList](int) {
+		++dataList[0];
 	});
-	
-	REQUIRE(threadProcessCount.load() == 0);
-
-	auto waitUntilQueueEmpty = [&queue]() {
-		while(queue.waitFor(std::chrono::nanoseconds(0))) ;
-	};
-
-	SECTION("Enqueue one by one") {
-		queue.enqueue(otherEvent, 1);
-		waitUntilQueueEmpty();
-		REQUIRE(threadProcessCount.load() == 1);
-		REQUIRE(queue.empty());
-		REQUIRE(dataList == std::vector<int>{ 0, 2, 0, 0, 0 });
-
-		queue.enqueue(otherEvent, 3);
-		waitUntilQueueEmpty();
-		REQUIRE(threadProcessCount.load() == 2);
-		REQUIRE(queue.empty());
-		REQUIRE(dataList == std::vector<int>{ 0, 2, 0, 4, 0 });
-	}
-
-	SECTION("Enqueue two") {
-		queue.enqueue(otherEvent, 1);
-		std::this_thread::sleep_for(std::chrono::milliseconds(10));
-		REQUIRE(threadProcessCount.load() == 1);
-		REQUIRE(queue.empty());
-
-		queue.enqueue(otherEvent, 3);
-		waitUntilQueueEmpty();
-
-		REQUIRE(threadProcessCount.load() == 2);
-		REQUIRE(dataList == std::vector<int>{ 0, 2, 0, 4, 0 });
-	}
-
-	SECTION("Batching enqueue") {
-		{
-			EQ::DisableQueueNotify disableNotify(&queue);
-
-			queue.enqueue(otherEvent, 2);
-			std::this_thread::sleep_for(std::chrono::milliseconds(10));
-			REQUIRE(threadProcessCount.load() == 0);
-			REQUIRE(! queue.empty());
-
-			queue.enqueue(otherEvent, 4);
-			std::this_thread::sleep_for(std::chrono::milliseconds(10));
-			REQUIRE(threadProcessCount.load() == 0);
-			REQUIRE(! queue.empty());
-		}
-
-		waitUntilQueueEmpty();
-		REQUIRE(threadProcessCount.load() == 1);
-		REQUIRE(dataList == std::vector<int>{ 0, 0, 3, 0, 5 });
-	}
-
-	queue.enqueue(stopEvent, 1);
-	thread.join();
-}
-
-TEST_CASE("queue multi threading, many threads wait")
-{
-	using EQ = eventpp::EventQueue<int, void (int)>;
-	EQ queue;
-
-	// note, all events will be process from the other thread instead of main thread
-	constexpr int stopEvent = 1;
-	constexpr int otherEvent = 2;
-
-	constexpr int unit = 3;
-	constexpr int itemCount = 30 * unit;
-
-	std::vector<int> dataList(itemCount);
-
-	std::vector<std::thread> threadList;
-
-	std::atomic<bool> shouldStop(false);
-
-	queue.appendListener(stopEvent, [&shouldStop](int) {
-		shouldStop = true;
+	queue.appendListener(6, [&dataList](int) {
+		++dataList[1];
 	});
-	queue.appendListener(otherEvent, [&dataList](const int index) {
-		++dataList[index];
+	queue.appendListener(7, [&dataList](int) {
+		++dataList[2];
 	});
 
-	for(int i = 0; i < itemCount; ++i) {
-		threadList.emplace_back([stopEvent, otherEvent, i, &dataList, &queue, &shouldStop]() {
-			for(;;) {
-				// can't use queue.wait() because the thread can't be waken up by shouldStop = true
-				while(! queue.waitFor(std::chrono::milliseconds(10)) && ! shouldStop.load()) ;
+	REQUIRE(dataList == std::vector<int>{ 0, 0, 0 });
 
-				if(shouldStop.load()) {
-					break;
-				}
+	queue.enqueue(5);
+	queue.enqueue(6);
+	queue.enqueue(7);
+	queue.process();
+	REQUIRE(dataList == std::vector<int>{ 1, 1, 1 });
 
-				queue.process();
-			}
-		});
-	}
+	queue.enqueue(5);
+	queue.enqueue(6);
+	queue.enqueue(7);
+	queue.processIf([](const int event) -> bool { return event == 6; });
+	REQUIRE(dataList == std::vector<int>{ 1, 2, 1 });
+	// Now the queue contains 5, 7
 
-	for(int i = 0; i < itemCount; ++i) {
-		queue.enqueue(otherEvent, i);
-		std::this_thread::sleep_for(std::chrono::milliseconds(0));
-	}
+	queue.enqueue(5);
+	queue.enqueue(6);
+	queue.enqueue(7);
+	queue.processIf([](const int event) -> bool { return event == 5; });
+	REQUIRE(dataList == std::vector<int>{ 3, 2, 1 });
+	// Now the queue contains 6, 7, 7
 
-	for(int i = 0; i < itemCount; i += unit) {
-		EQ::DisableQueueNotify disableNotify(&queue);
-		for(int k = 0; k < unit; ++k) {
-			queue.enqueue(otherEvent, i);
-			std::this_thread::sleep_for(std::chrono::milliseconds(0));
-		}
-	}
+	// Ensure the callback in processIf is not called for unncessary times.
+	// Veriy the internal loops in processIf is correct.
+	std::vector<int> callbackCounters(10);
 
-	queue.enqueue(stopEvent);
+	queue.enqueue(5);
+	queue.enqueue(6);
+	queue.enqueue(7);
+	queue.processIf([&callbackCounters](const int event) -> bool {
+		++callbackCounters[event];
+		return event == 7;
+	});
+	REQUIRE(dataList == std::vector<int>{ 3, 2, 4 });
+	// Now the queue contains 5, 6, 6
 
-	for(auto & thread : threadList) {
-		thread.join();
-	}
+	REQUIRE(callbackCounters[5] == 1);
+	REQUIRE(callbackCounters[6] == 2);
+	REQUIRE(callbackCounters[7] == 3);
 
-	REQUIRE(std::accumulate(dataList.begin(), dataList.end(), 0) == itemCount * 2);
+	queue.process();
+	REQUIRE(dataList == std::vector<int>{ 4, 4, 4 });
 }
 

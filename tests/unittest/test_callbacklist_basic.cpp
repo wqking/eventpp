@@ -11,154 +11,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "test.h"
-
-#define private public
-#include "eventpp/callbacklist.h"
-#undef private
-
-#include <vector>
-#include <thread>
-#include <chrono>
-#include <numeric>
-#include <random>
-#include <algorithm>
-
-using namespace eventpp;
-
-namespace {
-
-template <typename CL, typename T>
-void verifyLinkedList(CL & callbackList, const std::vector<T> & dataList)
-{
-	const int count = (int)dataList.size();
-	if(count == 0) {
-		REQUIRE(! callbackList.head);
-		REQUIRE(! callbackList.tail);
-		return;
-	}
-
-	REQUIRE(! callbackList.head->previous);
-	REQUIRE(! callbackList.tail->next);
-
-	if(count == 1) {
-		REQUIRE(callbackList.head);
-		REQUIRE(callbackList.head == callbackList.tail);
-	}
-
-	auto node = callbackList.head;
-	for(int i = 0; i < count; ++i) {
-		REQUIRE(node);
-		
-		if(i == 0) {
-			REQUIRE(! node->previous);
-			REQUIRE(node == callbackList.head);
-		}
-		if(i == count - 1) {
-			REQUIRE(! node->next);
-			REQUIRE(node == callbackList.tail);
-		}
-		
-		REQUIRE(node->callback == dataList[i]);
-
-		node = node->next;
-	}
-}
-
-template <typename CL, typename T>
-void verifyDisorderedLinkedList(CL & callbackList, std::vector<T> dataList)
-{
-	std::vector<T> buffer;
-
-	auto node = callbackList.head;
-	while(node) {
-		buffer.push_back(node->callback);
-		node = node->next;
-	}
-
-	std::sort(buffer.begin(), buffer.end());
-	std::sort(dataList.begin(), dataList.end());
-
-	REQUIRE(buffer == dataList);
-}
-
-template <typename CL>
-auto extractCallbackListHandles(CL & callbackList)
-	-> std::vector<typename CL::Handle>
-{
-	std::vector<typename CL::Handle> result;
-
-	auto node = callbackList.head;
-	while(node) {
-		result.push_back(typename CL::Handle(node));
-		node = node->next;
-	}
-
-	return result;
-}
-
-struct RemovalTester
-{
-	RemovalTester(
-			const int callbackCount,
-			const int removerIndex,
-			const std::vector<int> & indexesToBeRemoved
-		)
-		:
-			callbackCount(callbackCount),
-			removerIndex(removerIndex),
-			indexesToBeRemoved(indexesToBeRemoved)
-	{
-	}
-
-	void test()
-	{
-		using CL = CallbackList<void()>;
-		CL callbackList;
-		std::vector<CL::Handle> handleList(callbackCount);
-		std::vector<int> dataList(callbackCount);
-
-		for(int i = 0; i < callbackCount; ++i) {
-			if(i == removerIndex) {
-				handleList[i] = callbackList.append([this, &dataList, &handleList, &callbackList, i]() {
-					dataList[i] = i + 1;
-					
-					for(auto index : indexesToBeRemoved) {
-						callbackList.remove(handleList[index]);
-					}
-				});
-			}
-			else {
-				handleList[i] = callbackList.append([&dataList, i]() {
-					dataList[i] = i + 1;
-				});
-			}
-		}
-
-		callbackList();
-
-		std::vector<int> compareList(callbackCount);
-		std::iota(compareList.begin(), compareList.end(), 1);
-
-		for (auto index : indexesToBeRemoved) {
-			if(index > removerIndex) {
-				compareList[index] = 0;
-			}
-		}
-
-		REQUIRE(dataList == compareList);
-	}
-
-	const int callbackCount;
-	const int removerIndex;
-	const std::vector<int> indexesToBeRemoved;
-};
-
-} //unnamed namespace
+#include "test_callbacklist_util.h"
 
 TEST_CASE("CallbackList, nested callbacks, new callbacks should not be triggered")
 {
-	using CL = CallbackList<void()>;
+	using CL = eventpp::CallbackList<void()>;
 	CL callbackList;
 	int a = 0, b = 0;
 
@@ -254,17 +111,9 @@ TEST_CASE("CallbackList, remove inside callback")
 	RemovalTester(7, 3, { 6, 4, 5, 3, 1, 2, 0 }).test();
 }
 
-namespace {
-struct FakeCallbackListPolicies
-{
-	using Callback = int;
-};
-
-} //unnamed namespace
-
 TEST_CASE("CallbackList, no memory leak after callback list is freed")
 {
-	using CL = CallbackList<void(), FakeCallbackListPolicies>;
+	using CL = eventpp::CallbackList<void(), FakeCallbackListPolicies>;
 
 	std::vector<CL::Handle> nodeList;
 
@@ -282,7 +131,7 @@ TEST_CASE("CallbackList, no memory leak after callback list is freed")
 
 TEST_CASE("CallbackList, no memory leak after all callbacks are removed")
 {
-	using CL = CallbackList<void(), FakeCallbackListPolicies>;
+	using CL = eventpp::CallbackList<void(), FakeCallbackListPolicies>;
 
 	std::vector<CL::Handle> nodeList;
 	std::vector<CL::Handle> handleList;
@@ -301,9 +150,62 @@ TEST_CASE("CallbackList, no memory leak after all callbacks are removed")
 	REQUIRE(checkAllWeakPtrAreFreed(nodeList));
 }
 
+TEST_CASE("CallbackList, forEach")
+{
+	using CL = eventpp::CallbackList<int()>;
+	CL callbackList;
+
+	callbackList.append([]() { return 1; });
+	callbackList.append([]() { return 2; });
+	callbackList.append([]() { return 3; });
+
+	int i = 1;
+	callbackList.forEach([&i](auto callback) {
+		REQUIRE(callback() == i);
+		++i;
+	});
+
+	i = 1;
+	callbackList.forEach([&i, &callbackList](const CL::Handle & /*handle*/, auto callback) {
+		REQUIRE(callback() == i);
+		++i;
+	});
+}
+
+TEST_CASE("CallbackList, forEachIf")
+{
+	using CL = eventpp::CallbackList<void ()>;
+	CL callbackList;
+
+	std::vector<int> dataList(3);
+
+	callbackList.append([&dataList]() {
+		dataList[0] += 1;
+	});
+	callbackList.append([&dataList]() {
+		dataList[1] += 2;
+	});
+	callbackList.append([&dataList]() {
+		dataList[2] += 3;
+	});
+
+	REQUIRE(dataList == std::vector<int>{ 0, 0, 0 });
+
+	int i = 0;
+	bool result = callbackList.forEachIf([&i](const std::function<void ()> & callback) -> bool {
+		callback();
+		++i;
+
+		return i != 2;
+	});
+
+	REQUIRE(! result);
+	REQUIRE(dataList == std::vector<int>{ 1, 2, 0 });
+}
+
 TEST_CASE("CallbackList, forEach and forEachIf")
 {
-	using CL = CallbackList<void()>;
+	using CL = eventpp::CallbackList<void()>;
 	CL callbackList;
 
 	const int itemCount = 5;
@@ -340,7 +242,7 @@ TEST_CASE("CallbackList, forEach and forEachIf")
 
 TEST_CASE("CallbackList, non-lvaue-reference arguments should not be modified by callbacks")
 {
-	using CL = CallbackList<void(std::string)>;
+	using CL = eventpp::CallbackList<void(std::string)>;
 	CL callbackList;
 
 	constexpr int itemCount = 2;
@@ -371,7 +273,7 @@ TEST_CASE("CallbackList, non-lvaue-reference arguments should not be modified by
 
 TEST_CASE("CallbackList, lvaue-reference arguments cant be modified by callbacks")
 {
-	using CL = CallbackList<void(std::string &)>;
+	using CL = eventpp::CallbackList<void(std::string &)>;
 	CL callbackList;
 
 	constexpr int itemCount = 2;
@@ -397,7 +299,7 @@ TEST_CASE("CallbackList, lvaue-reference arguments cant be modified by callbacks
 
 TEST_CASE("CallbackList, append/remove/insert")
 {
-	using CL = CallbackList<void(), FakeCallbackListPolicies>;
+	using CL = eventpp::CallbackList<void(), FakeCallbackListPolicies>;
 
 	CL callbackList;
 
@@ -465,7 +367,7 @@ TEST_CASE("CallbackList, append/remove/insert")
 
 TEST_CASE("CallbackList, insert")
 {
-	using CL = CallbackList<void(), FakeCallbackListPolicies>;
+	using CL = eventpp::CallbackList<void(), FakeCallbackListPolicies>;
 
 	CL callbackList;
 	
@@ -493,7 +395,7 @@ TEST_CASE("CallbackList, insert")
 
 TEST_CASE("CallbackList, remove")
 {
-	using CL = CallbackList<void(), FakeCallbackListPolicies>;
+	using CL = eventpp::CallbackList<void(), FakeCallbackListPolicies>;
 
 	CL callbackList;
 
@@ -545,216 +447,31 @@ TEST_CASE("CallbackList, remove")
 	}
 }
 
-
-TEST_CASE("CallbackList, multi threading, append")
+TEST_CASE("CallbackList, prototype convert")
 {
-	using CL = CallbackList<void(), FakeCallbackListPolicies>;
+	struct MyClass
+	{
+		MyClass(int) {}
+	};
 
+	using CL = eventpp::CallbackList<void (int)>;
 	CL callbackList;
 
-	constexpr int threadCount = 256;
-	constexpr int taskCountPerThread = 1024 * 4;
-	constexpr int itemCount = threadCount * taskCountPerThread;
+	std::vector<int> dataList(2);
 
-	std::vector<int> taskList(itemCount);
-	std::iota(taskList.begin(), taskList.end(), 0);
-	std::shuffle(taskList.begin(), taskList.end(), std::mt19937(std::random_device()()));
+	callbackList.append([&dataList](int) {
+		++dataList[0];
+	});
+	callbackList.append([&dataList](const MyClass &) {
+		++dataList[1];
+	});
 
-	std::vector<std::thread> threadList;
-	for(int i = 0; i < threadCount; ++i) {
-		threadList.emplace_back([i, taskCountPerThread, &callbackList, &taskList]() {
-			for(int k = i * taskCountPerThread; k < (i + 1) * taskCountPerThread; ++k) {
-				callbackList.append(taskList[k]);
-			}
-		});
-	}
+	REQUIRE(dataList == std::vector<int>{ 0, 0 });
 
-	for(auto & thread : threadList) {
-		thread.join();
-	}
+	callbackList((int)5);
+	REQUIRE(dataList == std::vector<int>{ 1, 1 });
 
-	taskList.clear();
-
-	std::vector<int> compareList(itemCount);
-	std::iota(compareList.begin(), compareList.end(), 0);
-
-	verifyDisorderedLinkedList(callbackList, compareList);
-}
-
-TEST_CASE("CallbackList, multi threading, remove")
-{
-	using CL = CallbackList<void(), FakeCallbackListPolicies>;
-
-	CL callbackList;
-
-	constexpr int threadCount = 256;
-	constexpr int taskCountPerThread = 1024 * 4;
-	constexpr int itemCount = threadCount * taskCountPerThread;
-
-	std::vector<int> taskList(itemCount);
-	std::iota(taskList.begin(), taskList.end(), 0);
-	std::shuffle(taskList.begin(), taskList.end(), std::mt19937(std::random_device()()));
-
-	std::vector<CL::Handle> handleList;
-
-	for(const auto & item : taskList) {
-		handleList.push_back(callbackList.append(item));
-	}
-
-	std::vector<std::thread> threadList;
-	for(int i = 0; i < threadCount; ++i) {
-		threadList.emplace_back([i, taskCountPerThread, &callbackList, &handleList]() {
-			for(int k = i * taskCountPerThread; k < (i + 1) * taskCountPerThread; ++k) {
-				callbackList.remove(handleList[k]);
-			}
-		});
-	}
-
-	for(auto & thread : threadList) {
-		thread.join();
-	}
-
-	taskList.clear();
-
-	REQUIRE(! callbackList.head);
-	REQUIRE(! callbackList.tail);
-}
-
-TEST_CASE("CallbackList, multi threading, double remove")
-{
-	using CL = CallbackList<void(), FakeCallbackListPolicies>;
-
-	CL callbackList;
-
-	constexpr int threadCount = 256;
-	constexpr int taskCountPerThread = 1024 * 4;
-	constexpr int itemCount = threadCount * taskCountPerThread;
-
-	std::vector<int> taskList(itemCount);
-	std::iota(taskList.begin(), taskList.end(), 0);
-	std::shuffle(taskList.begin(), taskList.end(), std::mt19937(std::random_device()()));
-
-	std::vector<CL::Handle> handleList;
-
-	for(const auto & item : taskList) {
-		handleList.push_back(callbackList.append(item));
-	}
-
-	std::vector<std::thread> threadList;
-	for(int i = 0; i < threadCount; ++i) {
-		threadList.emplace_back([i, taskCountPerThread, &callbackList, &handleList, threadCount]() {
-			int start = i;
-			int end = i + 1;
-			if(i > 0) {
-				--start;
-			}
-			else if(i < threadCount - 1) {
-				++end;
-			}
-			for(int k = start * taskCountPerThread; k < end * taskCountPerThread; ++k) {
-				callbackList.remove(handleList[k]);
-			}
-		});
-	}
-
-	for(auto & thread : threadList) {
-		thread.join();
-	}
-
-	taskList.clear();
-
-	REQUIRE(! callbackList.head);
-	REQUIRE(! callbackList.tail);
-}
-
-TEST_CASE("CallbackList, multi threading, append/double remove")
-{
-	using CL = CallbackList<void(), FakeCallbackListPolicies>;
-
-	CL callbackList;
-
-	constexpr int threadCount = 256;
-	constexpr int taskCountPerThread = 1024 * 4;
-	constexpr int itemCount = threadCount * taskCountPerThread;
-
-	std::vector<int> taskList(itemCount);
-	std::iota(taskList.begin(), taskList.end(), 0);
-	std::shuffle(taskList.begin(), taskList.end(), std::mt19937(std::random_device()()));
-
-	std::vector<CL::Handle> handleList(taskList.size());
-
-	std::vector<std::thread> threadList;
-	for(int i = 0; i < threadCount; ++i) {
-		threadList.emplace_back([i, taskCountPerThread, &callbackList, &handleList, threadCount, &taskList]() {
-			for(int k = i * taskCountPerThread; k < (i + 1) * taskCountPerThread; ++k) {
-				handleList[k] = callbackList.append(taskList[k]);
-			}
-			int start = i;
-			int end = i + 1;
-			if(i > 0) {
-				--start;
-			}
-			else if(i < threadCount - 1) {
-				++end;
-			}
-			for(int k = start * taskCountPerThread; k < end * taskCountPerThread; ++k) {
-				callbackList.remove(handleList[k]);
-			}
-		});
-	}
-
-	for(auto & thread : threadList) {
-		thread.join();
-	}
-
-	taskList.clear();
-
-	REQUIRE(! callbackList.head);
-	REQUIRE(! callbackList.tail);
-}
-
-TEST_CASE("CallbackList, multi threading, insert")
-{
-	using CL = CallbackList<void(), FakeCallbackListPolicies>;
-
-	CL callbackList;
-
-	constexpr int threadCount = 256;
-	constexpr int taskCountPerThread = 1024;
-	constexpr int itemCount = threadCount * taskCountPerThread;
-
-	std::vector<int> taskList(itemCount);
-	std::iota(taskList.begin(), taskList.end(), 0);
-	std::shuffle(taskList.begin(), taskList.end(), std::mt19937(std::random_device()()));
-
-	std::vector<CL::Handle> handleList(taskList.size());
-
-	std::vector<std::thread> threadList;
-	for(int i = 0; i < threadCount; ++i) {
-		threadList.emplace_back([i, taskCountPerThread, &callbackList, &taskList, &handleList]() {
-			int k = i * taskCountPerThread;
-			for(; k < (i + 1) * taskCountPerThread / 2; ++k) {
-				handleList[k] = callbackList.append(taskList[k]);
-			}
-			int offset = 0;
-			for(; k < (i + 1) * taskCountPerThread / 2 + (i + 1) * taskCountPerThread / 4; ++k) {
-				handleList[k] = callbackList.insert(taskList[k], handleList[offset++]);
-			}
-			for(; k < (i + 1) * taskCountPerThread; ++k) {
-				handleList[k] = callbackList.insert(taskList[k], handleList[offset++]);
-			}
-		});
-	}
-
-	for(auto & thread : threadList) {
-		thread.join();
-	}
-
-	taskList.clear();
-
-	std::vector<int> compareList(itemCount);
-	std::iota(compareList.begin(), compareList.end(), 0);
-
-	verifyDisorderedLinkedList(callbackList, compareList);
+	callbackList((char)5);
+	REQUIRE(dataList == std::vector<int>{ 2, 2 });
 }
 

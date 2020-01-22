@@ -119,43 +119,49 @@ TEST_CASE("EventDispatcher tutorial 3, customized Event struct")
 	dispatcher.dispatch(MyEvent { 3, "Hello world", 38 }, true);
 }
 
+struct Tutor4MyEvent {
+	Tutor4MyEvent() : type(0), canceled(false) {
+	}
+	explicit Tutor4MyEvent(const int type)
+		: type(type), canceled(false) {
+	}
+
+	int type;
+	mutable bool canceled;
+};
+
+struct Tutor4MyEventPolicies
+{
+	// E is Tutor4MyEvent and getEvent doesn't need to be template.
+	// We make it template to show getEvent can be templated member.
+	template <typename E>
+	static int getEvent(const E & e) {
+		return e.type;
+	}
+
+	// E is Tutor4MyEvent and canContinueInvoking doesn't need to be template.
+	// We make it template to show canContinueInvoking can be templated member.
+	template <typename E>
+	static bool canContinueInvoking(const E & e) {
+		return ! e.canceled;
+	}
+};
+
 TEST_CASE("EventDispatcher tutorial 4, event canceling")
 {
 	std::cout << "EventDispatcher tutorial 4, event canceling" << std::endl;
 
-	struct MyEvent {
-		MyEvent() : type(0), canceled(false) {
-		}
-		explicit MyEvent(const int type)
-			: type(type), canceled(false) {
-		}
+	eventpp::EventDispatcher<int, void (const Tutor4MyEvent &), Tutor4MyEventPolicies> dispatcher;
 
-		int type;
-		mutable bool canceled;
-	};
-
-	struct MyEventPolicies
-	{
-		static int getEvent(const MyEvent & e) {
-			return e.type;
-		}
-
-		static bool canContinueInvoking(const MyEvent & e) {
-			return ! e.canceled;
-		}
-	};
-
-	eventpp::EventDispatcher<int, void (const MyEvent &), MyEventPolicies> dispatcher;
-
-	dispatcher.appendListener(3, [](const MyEvent & e) {
+	dispatcher.appendListener(3, [](const Tutor4MyEvent & e) {
 		std::cout << "Got event 3" << std::endl;
 		e.canceled = true;
 	});
-	dispatcher.appendListener(3, [](const MyEvent & e) {
+	dispatcher.appendListener(3, [](const Tutor4MyEvent & /*e*/) {
 		std::cout << "Should not get this event 3" << std::endl;
 	});
 
-	dispatcher.dispatch(MyEvent(3));
+	dispatcher.dispatch(Tutor4MyEvent(3));
 }
 
 TEST_CASE("EventDispatcher tutorial 5, event filter")
