@@ -110,6 +110,13 @@
 
 #define EVENTPP_MAKE_EVENT(className, baseClassName, baseClassArgs, ...) EVENTPP_EXPAND(I_EVENTPP_MAKE_EVENT(className, baseClassName, baseClassArgs, __VA_ARGS__))
 
+#define EVENTPP_MAKE_EMPTY_EVENT(className, baseClassName, baseClassArgs) \
+	class className : public EVENTPP_REMOVE_BACKETS(baseClassName) { \
+		public: \
+			className() \
+				: EVENTPP_REMOVE_BACKETS(baseClassName) EVENTPP_ADD_BACKETS(baseClassArgs) {} \
+	}
+
 
 #endif
 
