@@ -13,7 +13,6 @@
 
 #include "test.h"
 #include "eventpp/utilities/eventmaker.h"
-#include "eventpp/eventqueue.h"
 
 enum class EventType
 {
@@ -38,17 +37,6 @@ private:
 	EventType type;
 };
 
-using EventPtr = std::unique_ptr<Event>;
-
-struct EventPolicies
-{
-	static EventType getEvent(const EventPtr & e) {
-		return e->getType();
-	}
-};
-
-using EventQueue = eventpp::EventQueue<EventType, void(const EventPtr &), EventPolicies>;
-
 EVENTPP_MAKE_EVENT(EventDraw, Event, EventType::draw, (std::string, getText, setText), (int, getX), (double, getSize));
 
 TEST_CASE("eventmake, simple EventDraw")
@@ -71,3 +59,50 @@ TEST_CASE("eventmake, templated EventKey")
 	EventKey<EventType::keyUp> eventKeyUp(0);
 	REQUIRE(eventKeyUp.getType() == EventType::keyUp);
 }
+
+template <int A, int B>
+class TemplatedEvent
+{
+public:
+	TemplatedEvent(const EventType type, const int c) : type(type), c(c) {}
+	virtual ~TemplatedEvent() {}
+
+	EventType getType() const {
+		return type;
+	}
+
+	int getA() const {
+		return A;
+	}
+
+	int getB() const {
+		return B;
+	}
+
+	int getC() const {
+		return c;
+	}
+
+private:
+	EventType type;
+	int c;
+};
+
+EVENTPP_MAKE_EVENT(EventTemplatedDraw, (TemplatedEvent<3, 8>), (EventType::draw, 9), (std::string, getText, setText), (int, getX), (double, getSize));
+TEST_CASE("eventmake, TemplatedEvent")
+{
+	EventTemplatedDraw e("Hello", 98, 3.5);
+	
+	REQUIRE(e.getA() == 3);
+	REQUIRE(e.getB() == 8);
+	REQUIRE(e.getC() == 9);
+
+	REQUIRE(e.getType() == EventType::draw);
+	REQUIRE(e.getText() == "Hello");
+	REQUIRE(e.getX() == 98);
+	REQUIRE(e.getSize() == 3.5);
+
+	e.setText("world");
+	REQUIRE(e.getText() == "world");
+}
+
