@@ -61,7 +61,10 @@ The macro always generates a default constructor and a constructor that takes al
 
 Code examples:  
 ```c++
-EVENTPP_MAKE_EVENT(EventDraw, Event, EventType::draw, (std::string, getText, setText), (int, getX), (double, getSize));
+EVENTPP_MAKE_EVENT(
+	EventDraw, Event, EventType::draw,
+	(std::string, getText, setText), (int, getX), (double, getSize)
+);
 ```
 Generates class like (in pseudo code),
 ```c++
@@ -98,12 +101,16 @@ private:
 ```
 
 ```c++
-EVENTPP_MAKE_EVENT(EventDraw, (Event<int, char>), EventType::draw, (std::string, getText, setText), (int, getX), (double, getSize));
+EVENTPP_MAKE_EVENT(EventDraw, (Event<int, char>), EventType::draw,
+	(std::string, getText, setText), (int, getX), (double, getSize)
+);
 ```
 Similar to above example, except the base class is `Event<int, char>`.  
 
 ```c++
-EVENTPP_MAKE_EVENT(EventDraw, (Event<int, char>), (EventType::draw, 5), (std::string, getText, setText), (int, getX), (double, getSize));
+EVENTPP_MAKE_EVENT(EventDraw, (Event<int, char>), (EventType::draw, 5),
+	(std::string, getText, setText), (int, getX), (double, getSize)
+);
 ```
 Similar to above example, except the base class is constructed with `(EventType::draw, 5)` instead of `(EventType::draw)`.  
 
