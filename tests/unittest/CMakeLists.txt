@@ -18,6 +18,7 @@ set(SRC_TEST
 	test_heterdispatcher_basic.cpp
 	test_heterqueue_basic.cpp
 	test_eventutil.cpp
+	test_eventmaker.cpp
 	test_conditionalremover.cpp
 	test_counterremover.cpp
 	test_scopedremover.cpp

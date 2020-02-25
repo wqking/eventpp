@@ -204,11 +204,11 @@ TEST_CASE("CallbackList, multi threading, insert")
 	for(int i = 0; i < threadCount; ++i) {
 		threadList.emplace_back([i, taskCountPerThread, &callbackList, &taskList, &handleList]() {
 			int k = i * taskCountPerThread;
-			for(; k < (i + 1) * taskCountPerThread / 2; ++k) {
+			for(; k < i * taskCountPerThread + taskCountPerThread / 2; ++k) {
 				handleList[k] = callbackList.append(taskList[k]);
 			}
 			int offset = 0;
-			for(; k < (i + 1) * taskCountPerThread / 2 + (i + 1) * taskCountPerThread / 4; ++k) {
+			for(; k < i * taskCountPerThread + taskCountPerThread / 2 + taskCountPerThread / 4; ++k) {
 				handleList[k] = callbackList.insert(taskList[k], handleList[offset++]);
 			}
 			for(; k < (i + 1) * taskCountPerThread; ++k) {

@@ -68,7 +68,7 @@ EventQueue & operator = (const EventQueue & other);
 EventQueue & operator = (EventQueue && other) noexcept;
 ```
 
-EventDispatcher can be copied, moved,  assigned, and move assigned.  
+EventQueue can be copied, moved,  assigned, and move assigned.  
 Note: the queued events are not copied, moved, assigned, or move assigned, only the listeners are performed these operations.
 
 #### enqueue

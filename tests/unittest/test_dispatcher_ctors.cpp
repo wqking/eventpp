@@ -59,3 +59,67 @@ TEST_CASE("EventDispatcher, copy constructor from non-empty EventDispatcher")
 	REQUIRE(dataList == std::vector<int> { 4, 4, 1 });
 }
 
+TEST_CASE("EventDispatcher, assign from non-empty EventDispatcher")
+{
+	using ED = eventpp::EventDispatcher<int, void ()>;
+	ED dispatcher;
+	constexpr int event = 3;
+
+	std::vector<int> dataList(3);
+
+	dispatcher.appendListener(event, [&dataList]() {
+		++dataList[0];
+	});
+	dispatcher.appendListener(event, [&dataList]() {
+		++dataList[1];
+	});
+
+	REQUIRE(dataList == std::vector<int> { 0, 0, 0 });
+	dispatcher.dispatch(event);
+	REQUIRE(dataList == std::vector<int> { 1, 1, 0 });
+	
+	ED assignedDispatcher;
+	assignedDispatcher = dispatcher;
+	assignedDispatcher.dispatch(event);
+	REQUIRE(dataList == std::vector<int> { 2, 2, 0 });
+	assignedDispatcher.appendListener(event, [&dataList]() {
+		++dataList[2];
+	});
+	assignedDispatcher.dispatch(event);
+	REQUIRE(dataList == std::vector<int> { 3, 3, 1 });
+	dispatcher.dispatch(event);
+	REQUIRE(dataList == std::vector<int> { 4, 4, 1 });
+}
+
+TEST_CASE("EventDispatcher, move assign from non-empty EventDispatcher")
+{
+	using ED = eventpp::EventDispatcher<int, void ()>;
+	ED dispatcher;
+	constexpr int event = 3;
+
+	std::vector<int> dataList(3);
+
+	dispatcher.appendListener(event, [&dataList]() {
+		++dataList[0];
+	});
+	dispatcher.appendListener(event, [&dataList]() {
+		++dataList[1];
+	});
+
+	REQUIRE(dataList == std::vector<int> { 0, 0, 0 });
+	dispatcher.dispatch(event);
+	REQUIRE(dataList == std::vector<int> { 1, 1, 0 });
+	
+	ED assignedDispatcher;
+	assignedDispatcher = std::move(dispatcher);
+	assignedDispatcher.dispatch(event);
+	REQUIRE(dataList == std::vector<int> { 2, 2, 0 });
+	assignedDispatcher.appendListener(event, [&dataList]() {
+		++dataList[2];
+	});
+	assignedDispatcher.dispatch(event);
+	REQUIRE(dataList == std::vector<int> { 3, 3, 1 });
+	dispatcher.dispatch(event);
+	REQUIRE(dataList == std::vector<int> { 3, 3, 1 });
+}
+
