@@ -120,12 +120,14 @@ public:
 
 	EventDispatcherBase & operator = (const EventDispatcherBase & other)
 	{
-		eventCallbackListMap = other;
+		eventCallbackListMap = other.eventCallbackListMap;
+		return *this;
 	}
 
 	EventDispatcherBase & operator = (EventDispatcherBase && other) noexcept
 	{
-		eventCallbackListMap = std::move(other);
+		eventCallbackListMap = std::move(other.eventCallbackListMap);
+		return *this;
 	}
 
 	void swap(EventDispatcherBase & other) noexcept {

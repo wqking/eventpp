@@ -107,12 +107,14 @@ public:
 
 	HeterEventDispatcherBase & operator = (const HeterEventDispatcherBase & other)
 	{
-		eventCallbackListMap = other;
+		eventCallbackListMap = other.eventCallbackListMap;
+		return *this;
 	}
 
 	HeterEventDispatcherBase & operator = (HeterEventDispatcherBase && other) noexcept
 	{
-		eventCallbackListMap = std::move(other);
+		eventCallbackListMap = std::move(other.eventCallbackListMap);
+		return *this;
 	}
 
 	void swap(HeterEventDispatcherBase & other) noexcept {
