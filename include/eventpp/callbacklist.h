@@ -63,7 +63,7 @@ private:
 
 	struct Node
 	{
-		using Counter = uint64_t;
+		using Counter = unsigned int;
 
 		Node(const Callback_ & callback, const Counter counter)
 			: callback(callback), counter(counter)
