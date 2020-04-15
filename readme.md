@@ -132,6 +132,7 @@ Go to folder `tests/build`, then run `make` with different target.
 - `make vc15` #generate solution files for Microsoft Visual Studio 2015, then open eventpptest.sln in folder project_vc15
 - `make mingw` #build using MinGW
 - `make linux` #build on Linux
+- `make mingw_coverage` #build using MinGW and generate code coverage report
 
 ## Motivations
 

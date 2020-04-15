@@ -34,3 +34,9 @@ find_package(Threads REQUIRED)
 target_link_libraries(${TARGET_TEST} Threads::Threads)
 
 set_target_properties(${TARGET_TEST} PROPERTIES CXX_STANDARD 14)
+
+if(CMAKE_COMPILER_IS_GNUCXX)
+if(coverage)
+	set(CMAKE_CXX_FLAGS "-g -O0 -Wall -fprofile-arcs -ftest-coverage")
+endif()
+endif()
