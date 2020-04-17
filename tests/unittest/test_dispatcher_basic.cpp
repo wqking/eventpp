@@ -76,8 +76,8 @@ TEST_CASE("EventDispatcher, add/remove, int, void ()")
 
 	ha = dispatcher.appendListener(event, [event, &a, &dispatcher, &ha, &hb]() {
 		a = 2;
-		dispatcher.removeListener(event, hb);
-		dispatcher.removeListener(event, ha);
+		REQUIRE(dispatcher.removeListener(event, hb));
+		REQUIRE(dispatcher.removeListener(event, ha));
 	});
 	hb = dispatcher.appendListener(event, [&b]() {
 		b = 8;
@@ -104,6 +104,9 @@ TEST_CASE("EventDispatcher, add/remove, int, void ()")
 	dispatcher.dispatch(event);
 	REQUIRE(a != 2);
 	REQUIRE(b != 8);
+
+	REQUIRE(! dispatcher.removeListener(event + 1, ha));
+	REQUIRE(! dispatcher.removeListener(event + 1, hb));
 }
 
 TEST_CASE("EventDispatcher, add another listener inside a listener, int, void ()")
@@ -147,8 +150,8 @@ TEST_CASE("EventDispatcher, inside EventDispatcher, int, void ()")
 	});
 	hb = dispatcher.appendListener(event2, [&b, &dispatcher, event1, event2, &ha, &hb]() {
 		b = 8;
-		dispatcher.removeListener(event1, ha);
-		dispatcher.removeListener(event2, hb);
+		REQUIRE(dispatcher.removeListener(event1, ha));
+		REQUIRE(dispatcher.removeListener(event2, hb));
 	});
 
 	REQUIRE(ha);

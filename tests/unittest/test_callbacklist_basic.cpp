@@ -475,3 +475,33 @@ TEST_CASE("CallbackList, prototype convert")
 	REQUIRE(dataList == std::vector<int>{ 2, 2 });
 }
 
+TEST_CASE("CallbackList, internal counter overflow")
+{
+	eventpp::CallbackList<void()> callbackList;
+
+	SECTION("no overflow") {
+		std::vector<int> dataList(2);
+		callbackList.append([&dataList, &callbackList]() {
+			++dataList[0];
+			callbackList.append([&dataList]() {
+				++dataList[1];
+			});
+		});
+		callbackList();
+		REQUIRE(dataList == std::vector<int>{ 1, 0 });
+	}
+
+	SECTION("overflow") {
+		std::vector<int> dataList(2);
+		callbackList.append([&dataList, &callbackList]() {
+			++dataList[0];
+			callbackList.currentCounter = (unsigned int )-1;
+			callbackList.append([&dataList]() {
+				++dataList[1];
+			});
+		});
+		callbackList();
+		REQUIRE(dataList == std::vector<int>{ 1, 1 });
+	}
+}
+
