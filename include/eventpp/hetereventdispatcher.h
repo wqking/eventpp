@@ -123,10 +123,6 @@ public:
 		swap(eventCallbackListMap, other.eventCallbackListMap);
 	}
 
-	friend void swap(HeterEventDispatcherBase & first, HeterEventDispatcherBase & second) noexcept {
-		first.swap(second);
-	}
-
 	template <typename C>
 	Handle appendListener(const Event & event, const C & callback)
 	{
@@ -315,6 +311,10 @@ private:
 
 public:
 	using super::super;
+
+	friend void swap(HeterEventDispatcher & first, HeterEventDispatcher & second) noexcept {
+		first.swap(second);
+	}
 };
 
 

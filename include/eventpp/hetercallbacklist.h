@@ -145,10 +145,6 @@ public:
 		swap(callbackListList, other.callbackListList);
 	}
 
-	friend void swap(HeterCallbackListBase & first, HeterCallbackListBase & second) noexcept {
-		first.swap(second);
-	}
-
 	bool empty() const {
 		for(const auto & callbackList : callbackListList) {
 			if(callbackList && ! callbackList->empty()) {
@@ -313,6 +309,10 @@ private:
 
 public:
 	using super::super;
+
+	friend void swap(HeterCallbackList & first, HeterCallbackList & second) noexcept {
+		first.swap(second);
+	}
 };
 
 
