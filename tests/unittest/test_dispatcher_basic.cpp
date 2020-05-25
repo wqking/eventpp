@@ -199,6 +199,61 @@ TEST_CASE("EventDispatcher, int, void (const std::string &, int)")
 	REQUIRE(iList[1] == 8);
 }
 
+TEST_CASE("EventDispatcher, forEach")
+{
+	eventpp::EventDispatcher<int, void ()> dispatcher;
+	constexpr int event = 3;
+
+	std::vector<int> dataList(3);
+
+	dispatcher.appendListener(event, [event, &dataList]() {
+		++dataList[0];
+	});
+	dispatcher.appendListener(event, [event, &dataList]() {
+		++dataList[1];
+	});
+	dispatcher.appendListener(event, [event, &dataList]() {
+		++dataList[2];
+	});
+
+	int i = 0;
+	dispatcher.forEach(event, [&i, &dataList](auto callback) {
+		REQUIRE(dataList[i] == 0);
+		callback();
+		REQUIRE(dataList[i] == 1);
+		++i;
+	});
+}
+
+TEST_CASE("EventDispatcher, forEachIf")
+{
+	eventpp::EventDispatcher<int, void ()> dispatcher;
+	constexpr int event = 3;
+
+	std::vector<int> dataList(3);
+
+	dispatcher.appendListener(event, [event, &dataList]() {
+		++dataList[0];
+	});
+	dispatcher.appendListener(event, [event, &dataList]() {
+		++dataList[1];
+	});
+	dispatcher.appendListener(event, [event, &dataList]() {
+		++dataList[2];
+	});
+
+	int i = 0;
+	dispatcher.forEachIf(event, [&i, &dataList](auto callback) {
+		if(i == 1) {
+			return false;
+		}
+		callback();
+		++i;
+		return true;
+	});
+	REQUIRE(dataList == std::vector<int>{ 1, 0, 0 });
+}
+
 TEST_CASE("EventDispatcher, Event struct, void (const std::string &, int)")
 {
 	struct MyEvent {

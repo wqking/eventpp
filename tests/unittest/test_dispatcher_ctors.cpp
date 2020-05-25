@@ -91,6 +91,51 @@ TEST_CASE("EventDispatcher, assign from non-empty EventDispatcher")
 	REQUIRE(dataList == std::vector<int> { 4, 4, 1 });
 }
 
+TEST_CASE("EventDispatcher, move constructor from empty EventDispatcher")
+{
+	using ED = eventpp::EventDispatcher<int, void ()>;
+	ED dispatcher;
+
+	REQUIRE(dispatcher.eventCallbackListMap.empty());
+
+	ED movedDispatcher(std::move(dispatcher));
+	REQUIRE(movedDispatcher.eventCallbackListMap.empty());
+	REQUIRE(dispatcher.eventCallbackListMap.empty());
+}
+
+TEST_CASE("EventDispatcher, move constructor from non-empty EventDispatcher")
+{
+	using ED = eventpp::EventDispatcher<int, void ()>;
+	ED dispatcher;
+
+	constexpr int event = 3;
+
+	std::vector<int> dataList(3);
+
+	dispatcher.appendListener(event, [&dataList]() {
+		++dataList[0];
+	});
+	dispatcher.appendListener(event, [&dataList]() {
+		++dataList[1];
+	});
+	dispatcher.appendListener(event, [&dataList]() {
+		++dataList[2];
+	});
+
+	REQUIRE(! dispatcher.eventCallbackListMap.empty());
+	REQUIRE(dataList == std::vector<int> { 0, 0, 0 });
+	dispatcher.dispatch(event);
+	REQUIRE(dataList == std::vector<int> { 1, 1, 1 });
+
+	ED movedDispatcher(std::move(dispatcher));
+	REQUIRE(! movedDispatcher.eventCallbackListMap.empty());
+	REQUIRE(dispatcher.eventCallbackListMap.empty());
+	movedDispatcher.dispatch(event);
+	REQUIRE(dataList == std::vector<int> { 2, 2, 2 });
+	dispatcher.dispatch(event);
+	REQUIRE(dataList == std::vector<int> { 2, 2, 2 });
+}
+
 TEST_CASE("EventDispatcher, move assign from non-empty EventDispatcher")
 {
 	using ED = eventpp::EventDispatcher<int, void ()>;
@@ -123,3 +168,65 @@ TEST_CASE("EventDispatcher, move assign from non-empty EventDispatcher")
 	REQUIRE(dataList == std::vector<int> { 3, 3, 1 });
 }
 
+TEST_CASE("EventDispatcher, swap with self")
+{
+	using ED = eventpp::EventDispatcher<int, void ()>;
+	ED swappedDispatcher;
+	REQUIRE(swappedDispatcher.eventCallbackListMap.empty());
+
+	using std::swap;
+	swap(swappedDispatcher, swappedDispatcher);
+	REQUIRE(swappedDispatcher.eventCallbackListMap.empty());
+}
+
+TEST_CASE("EventDispatcher, swap with empty EventDispatcher")
+{
+	using ED = eventpp::EventDispatcher<int, void ()>;
+	ED dispatcher;
+	REQUIRE(dispatcher.eventCallbackListMap.empty());
+
+	ED swappedDispatcher;
+
+	using std::swap;
+	swap(swappedDispatcher, dispatcher);
+	REQUIRE(swappedDispatcher.eventCallbackListMap.empty());
+
+	dispatcher.appendListener(1, []() {});
+	REQUIRE(! dispatcher.eventCallbackListMap.empty());
+	REQUIRE(swappedDispatcher.eventCallbackListMap.empty());
+}
+
+TEST_CASE("EventDispatcher, swap with non-empty EventDispatcher")
+{
+	using ED = eventpp::EventDispatcher<int, void ()>;
+	ED dispatcher;
+	constexpr int event = 3;
+
+	std::vector<int> dataList(3);
+
+	dispatcher.appendListener(event, [&dataList]() {
+		++dataList[0];
+	});
+	dispatcher.appendListener(event, [&dataList]() {
+		++dataList[1];
+	});
+
+	ED swappedDispatcher;
+
+	swappedDispatcher.appendListener(event, [&dataList]() {
+		++dataList[1];
+	});
+	swappedDispatcher.appendListener(event, [&dataList]() {
+		++dataList[2];
+	});
+	
+	dispatcher.dispatch(event);
+	REQUIRE(dataList == std::vector<int> { 1, 1, 0 });
+
+	using std::swap;
+	swap(swappedDispatcher, dispatcher);
+	dispatcher.dispatch(event);
+	REQUIRE(dataList == std::vector<int> { 1, 2, 1 });
+	swappedDispatcher.dispatch(event);
+	REQUIRE(dataList == std::vector<int> { 2, 3, 1 });
+}
