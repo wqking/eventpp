@@ -82,10 +82,10 @@ dispatcher.dispatch(5);
 ```c++
 eventpp::EventQueue<int, void (const std::string &, const bool)> queue;
 
-dispatcher.appendListener(3, [](const std::string s, bool b) {
+queue.appendListener(3, [](const std::string s, bool b) {
 	std::cout << std::boolalpha << "Got event 3, s is " << s << " b is " << b << std::endl;
 });
-dispatcher.appendListener(5, [](const std::string s, bool b) {
+queue.appendListener(5, [](const std::string s, bool b) {
 	std::cout << std::boolalpha << "Got event 5, s is " << s << " b is " << b << std::endl;
 });
 
