@@ -38,14 +38,14 @@ TEST_CASE("HeterEventDispatcher, multi threading")
 	std::vector<std::thread> threadList;
 
 	for(int i = 0; i < threadCount; ++i) {
-		threadList.emplace_back([i, eventCountPerThread, &dispatcher, &eventList, &handleList, &dataList]() {
+		threadList.emplace_back([i, eventCountPerThread, &dispatcher, &eventList, &handleList, &dataList, itemCount]() {
 			for(int k = i * eventCountPerThread; k < (i + 1) * eventCountPerThread; ++k) {
 				handleList[k] = dispatcher.appendListener(eventList[k], [&dispatcher, k, &dataList, &eventList, &handleList](const int e) {
 					dataList[k] += e;
 					dispatcher.removeListener(eventList[k], handleList[k]);
 				});
 				handleList[k + itemCount] = dispatcher.appendListener(
-					eventList[k], [&dispatcher, k, &dataList, &eventList, &handleList](const int /*e*/, const int n) {
+					eventList[k], [&dispatcher, k, &dataList, &eventList, &handleList, itemCount](const int /*e*/, const int n) {
 					dataList[k] += n;
 					dispatcher.removeListener(eventList[k], handleList[k + itemCount]);
 				});
