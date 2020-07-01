@@ -133,6 +133,12 @@ public:
 
 	CallbackListBase & operator = (CallbackListBase && other) noexcept {
 		if(this != &other) {
+			while(head) {
+				// Create copy because doFreeNode reset temp->counter
+				// after head reassignment.
+				auto temp = head;
+				doFreeNode(temp);
+			}
 			head = std::move(other.head);
 			tail = std::move(other.tail);
 			currentCounter = other.currentCounter.load();

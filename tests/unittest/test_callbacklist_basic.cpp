@@ -505,3 +505,15 @@ TEST_CASE("CallbackList, internal counter overflow")
 	}
 }
 
+TEST_CASE("CallbackList, move assignement")
+{
+	using CL = eventpp::CallbackList<void()>;
+	CL callbackList;
+	const auto h1 = callbackList.append([]() {});
+	const auto h2 = callbackList.append([]() {});
+	callbackList = {};
+
+	// Make sure nodes were destroyed
+	REQUIRE(h1.expired());
+	REQUIRE(h2.expired());
+}
