@@ -133,12 +133,8 @@ public:
 
 	CallbackListBase & operator = (CallbackListBase && other) noexcept {
 		if(this != &other) {
-			while(head) {
-				// Create copy because doFreeNode reset temp->counter
-				// after head reassignment.
-				auto temp = head;
-				doFreeNode(temp);
-			}
+			doFreeAllNodes();
+
 			head = std::move(other.head);
 			tail = std::move(other.tail);
 			currentCounter = other.currentCounter.load();
@@ -149,15 +145,7 @@ public:
 	~CallbackListBase()	{
 		// Don't lock mutex here since it may throw exception
 
-		NodePtr node = head;
-		head.reset();
-		while(node) {
-			NodePtr next = node->next;
-			node->previous.reset();
-			node->next.reset();
-			node = next;
-		}
-		node.reset();
+		doFreeAllNodes();
 	}
 	
 	void swap(CallbackListBase & other) noexcept {
@@ -358,6 +346,18 @@ private:
 
 		// don't modify node->previous or node->next
 		// because node may be still used in a loop.
+	}
+
+	void doFreeAllNodes() {
+		NodePtr node = head;
+		head.reset();
+		while(node) {
+			NodePtr next = node->next;
+			node->previous.reset();
+			node->next.reset();
+			node = next;
+		}
+		node.reset();
 	}
 
 	Counter getNextCounter()
