@@ -334,15 +334,17 @@ private:
 			node->previous->next = node->next;
 		}
 
+		// Mark it as deleted, this must be beforeNodethe assignment of head and tail below,
+		// because node can be a reference to head or tail, and after the assignment, node
+		// can be null pointer.
+		node->counter = removedCounter;
+
 		if(head == node) {
 			head = node->next;
 		}
 		if(tail == node) {
 			tail = node->previous;
 		}
-
-		// Mark it as deleted
-		node->counter = removedCounter;
 
 		// don't modify node->previous or node->next
 		// because node may be still used in a loop.

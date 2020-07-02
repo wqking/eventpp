@@ -525,3 +525,19 @@ TEST_CASE("CallbackList, internal counter overflow")
 	}
 }
 
+TEST_CASE("CallbackList, no crash when doFreeNode(head)")
+{
+	eventpp::CallbackList<void()> callbackList;
+	callbackList.append([](){});
+	try {
+		// This loop should not cause memory access crash
+		while(callbackList.head) {
+			callbackList.doFreeNode(callbackList.head);
+		}
+	}
+	catch(...) {
+		// The catch may not work on some platforms, but that doesn't matter,
+		// if there is something wrong, we already notice the crash rather than asset failure.
+		REQUIRE(false);
+	}
+}
