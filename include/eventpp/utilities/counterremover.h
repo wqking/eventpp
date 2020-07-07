@@ -47,7 +47,7 @@ private:
 			if(--data->triggerCount <= 0) {
 				data->dispatcher.removeListener(data->event, data->handle);
 			}
-			data->listener(std::forward(args)...);
+			data->listener(std::forward<Args>(args)...);
 		}
 		
 		std::shared_ptr<Data> data;
@@ -129,7 +129,7 @@ private:
 			if(--data->triggerCount <= 0) {
 				data->callbackList.remove(data->handle);
 			}
-			data->listener(std::forward(args)...);
+			data->listener(std::forward<Args>(args)...);
 		}
 		
 		std::shared_ptr<Data> data;

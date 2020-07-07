@@ -43,13 +43,23 @@ private:
 		};
 
 		template <typename ...Args>
-		void operator() (Args && ...args) const {
+		auto operator() (Args && ...args) const
+			-> typename std::enable_if<internal_::CanInvoke<Condition, Args...>::value>::type {
+			if(data->shouldRemove(std::forward<Args>(args)...)) {
+				data->dispatcher.removeListener(data->event, data->handle);
+			}
+			data->listener(std::forward<Args>(args)...);
+		}
+
+		template <typename ...Args>
+		auto operator() (Args && ...args) const
+			-> typename std::enable_if<! internal_::CanInvoke<Condition, Args...>::value>::type {
 			if(data->shouldRemove()) {
 				data->dispatcher.removeListener(data->event, data->handle);
 			}
-			data->listener(std::forward(args)...);
+			data->listener(std::forward<Args>(args)...);
 		}
-		
+
 		std::shared_ptr<Data> data;
 	};
 
@@ -128,11 +138,21 @@ private:
 		};
 
 		template <typename ...Args>
-		void operator() (Args && ...args) const {
+		auto operator() (Args && ...args) const
+			-> typename std::enable_if<internal_::CanInvoke<Condition, Args...>::value>::type const {
+			if(data->shouldRemove(std::forward<Args>(args)...)) {
+				data->callbackList.remove(data->handle);
+			}
+			data->listener(std::forward<Args>(args)...);
+		}
+
+		template <typename ...Args>
+		auto operator() (Args && ...args) const
+			-> typename std::enable_if<! internal_::CanInvoke<Condition, Args...>::value>::type {
 			if(data->shouldRemove()) {
 				data->callbackList.remove(data->handle);
 			}
-			data->listener(std::forward(args)...);
+			data->listener(std::forward<Args>(args)...);
 		}
 		
 		std::shared_ptr<Data> data;

@@ -92,7 +92,18 @@ typename CallbackListType::Handle insert(
 	);
 ```
 
-The member functions have the same names with the corresponding underlying class (CallbackList, EventDispatcher, or EventQueue), and also have the same parameters except there is one more parameter, `condition`. `condition` is a predicate function of prototype `bool()`. It's invoked after each trigger, if it returns true, the listener will be removed.  
+The member functions have the same names with the corresponding underlying class (CallbackList, EventDispatcher, or EventQueue), and also have the same parameters except there is one more parameter, `condition`. `condition` is a predicate function that returns a bool value. It's invoked after each trigger, if it returns true, the listener will be removed.  
+`condition` can have two kinds of prototype,  
+
+```
+bool condition()
+```
+This `condition` doesn't receive any arguments.
+
+```
+bool condition(Args ...args)
+```
+This `condition` receives the arguments that passed to the listener.
 
 <a id="a3_4"></a>
 ### Free functions

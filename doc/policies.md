@@ -146,7 +146,7 @@ A mixin is used to inject code in the EventDispatcher/EventQueue inheritance hie
 ### Type Threading
 
 **Default value**: `using Threading = eventpp::MultipleThreading`.  
-**Apply**: CallbackList, EventDispatcher, EventQueue.
+**Apply**: CallbackList, EventDispatcher, EventQueue, HeterCallbackList, HeterEventDispatcher, HeterEventQueue.
 
 `Threading` controls threading model. Default is 'MultipleThreading'. Possible values:  
   * `MultipleThreading`: the core data is protected with mutex. It's the default value.  
@@ -262,7 +262,7 @@ For `ArgumentPassingAutoDetect`: P == D or P + 1 == D
 For `ArgumentPassingIncludeEvent`: P == D  
 For `ArgumentPassingExcludeEvent`: P + 1 == D  
 
-**Note**: the same rules also applies to `EventDispatcher<>::enqueue`, since `enqueue` has same parameters as `dispatch`.
+**Note**: the same rules also applies to `EventQueue::enqueue`, since `enqueue` has same parameters as `dispatch`.
 
 Examples to demonstrate argument passing mode  
 

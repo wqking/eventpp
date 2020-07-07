@@ -52,7 +52,7 @@ protected:
 	>::type;
 	using Policies = Policies_;
 
-	using Threading = typename SelectThreading<Policies_, HasTypeThreading<Policies_>::value>::Type;
+	using Threading = typename SelectThreading<Policies, HasTypeThreading<Policies_>::value>::Type;
 
 	using ArgumentPassingMode = typename SelectArgumentPassingMode<
 		Policies_,
