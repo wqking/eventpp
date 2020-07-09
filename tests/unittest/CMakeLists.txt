@@ -44,3 +44,5 @@ if(coverage)
 	set(CMAKE_CXX_FLAGS "-g -O0 -Wall -fprofile-arcs -ftest-coverage")
 endif()
 endif()
+
+add_test(NAME ${TARGET_TEST} COMMAND ${TARGET_TEST})

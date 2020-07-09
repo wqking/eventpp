@@ -18,3 +18,4 @@ set(THREADS_PREFER_PTHREAD_FLAG ON)
 find_package(Threads REQUIRED)
 target_link_libraries(${TARGET_TEST} Threads::Threads)
 
+add_test(NAME ${TARGET_TEST} COMMAND ${TARGET_TEST})
