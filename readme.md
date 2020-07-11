@@ -28,6 +28,7 @@ eventpp is a C++ event library that provides tools that enable your application 
 Apache License, Version 2.0  
 
 ## Version 0.1.0
+![CI](https://github.com/wqking/eventpp/workflows/CI/badge.svg)
 
 eventpp is currently usable and stable.
 

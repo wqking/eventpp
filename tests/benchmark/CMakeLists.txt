@@ -18,4 +18,5 @@ set(THREADS_PREFER_PTHREAD_FLAG ON)
 find_package(Threads REQUIRED)
 target_link_libraries(${TARGET_TEST} Threads::Threads)
 
-add_test(NAME ${TARGET_TEST} COMMAND ${TARGET_TEST})
+#No need to run it via ctest or in CI since it's benchmark and will be very slow.
+#add_test(NAME ${TARGET_TEST} COMMAND ${TARGET_TEST})
