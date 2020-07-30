@@ -93,8 +93,8 @@ private:
 	using ArgumentPassingMode = typename super::ArgumentPassingMode;
 
 public:
-	using super::Event;
-	using super::Handle;
+	using Event = typename super::Event;
+	using Handle = typename super::Handle;
 	using Mutex = typename super::Mutex;
 
 public:
