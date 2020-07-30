@@ -81,9 +81,9 @@ private:
 
 public:
 	using QueuedEvent = QueuedEvent_;
-	using super::Event;
-	using super::Handle;
-	using super::Callback;
+	using Event = typename super::Event;
+	using Handle = typename super::Handle;
+	using Callback = typename super::Callback;
 	using Mutex = typename super::Mutex;
 
 	struct DisableQueueNotify
