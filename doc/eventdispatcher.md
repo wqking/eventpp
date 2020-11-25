@@ -143,6 +143,8 @@ Dispatch an event. The event type is deducted from the arguments of `dispatch`.
 In both overloads, the listeners are called with arguments `args`.  
 The function is synchronous. The listeners are called in the thread same as the caller of `dispatch`.
 
+The two overloaded functions have similar but slightly difference. How to use them depends on the `ArgumentPassingMode` policy. Please reference the [document of policies](policies.md) for more information.
+
 <a id="a2_3"></a>
 ## Nested listener safety
 1. If a listener adds another listener of the same event to the dispatcher during a dispatching, the new listener is guaranteed not to be triggered within the same dispatching. This is guaranteed by an unsigned 64 bits integer counter. This rule will be broken is the counter is overflowed to zero in a dispatching, but this rule will continue working on the subsequence dispatching.  
