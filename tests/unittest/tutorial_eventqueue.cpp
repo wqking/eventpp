@@ -110,12 +110,17 @@ TEST_CASE("EventQueue tutorial 2, multiple threading")
 	thread.join();
 }
 
+// In tutorial 3, we will demonstrate how to make EventQueue dispatch higher priority event earlier.
+
+// First let's define the event struct. e is the event type, priority determines the priority.
 struct MyEvent
 {
 	int e;
 	int priority;
 };
 
+// The comparison function object used by eventpp::OrderedQueueList.
+// The function compares the event by priority.
 struct MyCompare
 {
 	template <typename T>
@@ -124,6 +129,7 @@ struct MyCompare
 	}
 };
 
+// Define the EventQueue policy
 struct MyPolicy
 {
 	template <typename Item>
@@ -151,6 +157,8 @@ TEST_CASE("EventQueue tutorial 3, ordered queue")
 		std::cout << "Get event " << event.e << "(should be 7)." << " priority: " << event.priority << std::endl;
 	});
 
+	// Add an event, the first number 5 is the event type, the second number 100 is the priority.
+	// After the queue processes, the events will be processed from higher priority to lower priority.
 	queue.enqueue(MyEvent{ 5, 100 });
 	queue.enqueue(MyEvent{ 5, 200 });
 	queue.enqueue(MyEvent{ 7, 300 });

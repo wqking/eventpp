@@ -58,7 +58,7 @@ public:
 private:
 	void doSort() {
 		auto compare = Compare();
-		sort([compare](const T & a, const T & b) {
+		this->sort([compare](const T & a, const T & b) {
 			return compare(a.get(), b.get());
 		});
 	}
