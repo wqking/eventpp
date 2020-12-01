@@ -65,7 +65,6 @@ private:
 };
 
 
-
 } //namespace eventpp
 
 #endif

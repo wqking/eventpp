@@ -12,6 +12,7 @@
   * [Type Threading](#a3_5)
 * [Type ArgumentPassingMode](#a2_3)
   * [Template Map](#a3_6)
+  * [Template QueueList](#a3_7)
 * [How to use policies](#a2_4)
 <!--endtoc-->
 
@@ -325,6 +326,38 @@ using Map = // std::map <Key, T> or other map type
 `Map` is a template with two parameters, the first parameter is the key, the second parameter is the value.  
 `Map` must support operations `[]`, `find()`, and `end()`.  
 If `Map` is not specified, eventpp will auto determine the type. If the event type supports `std::hash`, `std::unordered_map` is used, otherwise, `std::map` is used.
+
+<a id="a3_7"></a>
+### Template QueueList
+
+**Prototype**:  
+```c++
+template <typename Item>
+using QueueList = std::list<Item>;
+```
+**Default value**: `std::list`.  
+**Apply**: EventQueue.  
+
+`QueueList` is used to manage the internal events in EventQueue. It works as a queue. Events are appended to the rear of `QueueList`, and when being processing, events are popped from the head of `QueueList`.  
+Using a different `QueueList` can give more control on the queue. For example, if the `QueueList` keeps the events ordered, the events will be processed in certain order instead of the adding order.
+
+A `QueueList` doesn't need to implement all members from `std::list`, it must implement below types and functions.  
+
+```c++
+type iterator;
+type const_iterator;
+bool empty() const;
+iterator begin();
+const_iterator begin() const;
+iterator end();
+const_iterator end() const;
+void swap(QueueList & other);
+void emplace_back();
+void splice(const_iterator pos, QueueList & other );
+void splice(const_iterator pos, QueueList & other, const_iterator it);
+```
+
+[OrderedQueueList](orderedqueuelist.md) in eventpp is a good example.
 
 <a id="a2_4"></a>
 ## How to use policies
