@@ -21,6 +21,7 @@
 #include <condition_variable>
 #include <map>
 #include <unordered_map>
+#include <list>
 
 namespace eventpp {
 

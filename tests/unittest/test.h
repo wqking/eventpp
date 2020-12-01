@@ -71,4 +71,38 @@ struct ToInt
 	int value;
 };
 
+// return 0 -- no order, 1 -- ascend -1 -- descend
+template <typename Iterator>
+int detectDataListOrder(Iterator from, Iterator to)
+{
+	if(from == to) {
+		return 0;
+	}
+	auto previous = *from;
+	++from;
+	bool ascend = false;
+	bool descend = false;
+	while(from != to) {
+		auto current = *from;
+		++from;
+		if(current > previous) {
+			ascend = true;
+		}
+		if(current < previous) {
+			descend = true;
+		}
+		if(ascend && descend) {
+			return 0;
+		}
+		previous = current;
+	}
+	if(ascend) {
+		return 1;
+	}
+	if(descend) {
+		return -1;
+	}
+	return 0;
+}
+
 #endif

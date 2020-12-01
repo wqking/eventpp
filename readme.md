@@ -114,6 +114,7 @@ queue.process();
 * [Utility class CounterRemover -- auto remove listeners after triggered certain times](doc/counterremover.md)
 * [Utility class ConditionalRemover -- auto remove listeners when certain condition is satisfied](doc/conditionalremover.md)
 * [Utility class ScopedRemover -- auto remove listeners when out of scope](doc/scopedremover.md)
+* [Utility class OrderedQueueList.h -- make EventQueue ordered](doc/orderedqueuelist.md)
 * [Utility header eventmaker.h -- auto generate event classes](doc/eventmaker.md)
 * [Document of utilities](doc/eventutil.md)
 * [Policies -- configure eventpp](doc/policies.md)
