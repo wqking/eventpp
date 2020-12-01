@@ -10,10 +10,10 @@
   * [Type Mixins](#a3_3)
   * [Type Callback](#a3_4)
   * [Type Threading](#a3_5)
-* [Type ArgumentPassingMode](#a2_3)
-  * [Template Map](#a3_6)
-  * [Template QueueList](#a3_7)
-* [How to use policies](#a2_4)
+  * [Type ArgumentPassingMode](#a3_6)
+  * [Template Map](#a3_7)
+  * [Template QueueList](#a3_8)
+* [How to use policies](#a2_3)
 <!--endtoc-->
 
 <a id="a2_1"></a>
@@ -219,7 +219,7 @@ eventpp::EventDispatcher<int, void (), MyEventPolicies> dispatcher;
 eventpp::CallbackList<void (), MyEventPolicies> callbackList;
 ```
 
-<a id="a2_3"></a>
+<a id="a3_6"></a>
 ### Type ArgumentPassingMode
 
 **Default value**: `using ArgumentPassingMode = ArgumentPassingAutoDetect`.  
@@ -311,7 +311,7 @@ eventpp::EventDispatcher<
 dispatcher.dispatch(3, 8, "hello"); // Compile OK
 ```
 
-<a id="a3_6"></a>
+<a id="a3_7"></a>
 ### Template Map
 
 **Prototype**:  
@@ -327,7 +327,7 @@ using Map = // std::map <Key, T> or other map type
 `Map` must support operations `[]`, `find()`, and `end()`.  
 If `Map` is not specified, eventpp will auto determine the type. If the event type supports `std::hash`, `std::unordered_map` is used, otherwise, `std::map` is used.
 
-<a id="a3_7"></a>
+<a id="a3_8"></a>
 ### Template QueueList
 
 **Prototype**:  
@@ -359,7 +359,7 @@ void splice(const_iterator pos, QueueList & other, const_iterator it);
 
 [OrderedQueueList](orderedqueuelist.md) in eventpp is a good example.
 
-<a id="a2_4"></a>
+<a id="a2_3"></a>
 ## How to use policies
 
 To use policies, declare a struct, define the policies in it, and pass the struct to CallbackList, EventDispatcher, or EventQueue.  
