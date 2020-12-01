@@ -220,7 +220,7 @@ eventpp::CallbackList<void (), MyEventPolicies> callbackList;
 ```
 
 <a id="a2_3"></a>
-## Type ArgumentPassingMode
+### Type ArgumentPassingMode
 
 **Default value**: `using ArgumentPassingMode = ArgumentPassingAutoDetect`.  
 **Apply**: EventDispatcher, EventQueue.
