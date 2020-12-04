@@ -264,10 +264,11 @@ public:
 		});
 	}
 #else
-	// This is a patch version for GCC 4. It inlines the unrolled doForEachIf
+	// This is a patch version for GCC 4. It inlines the unrolled doForEachIf.
 	// GCC 4.8.3 doesn't supporting parameter pack catpure in lambda, see,
 	// https://github.com/wqking/eventpp/issues/19
 	// This is a compromised patch for GCC 4, it may be not maintained or updated unless there are bugs.
+	// We don't use the patch as main code because the patch generates longer code, and duplicated with doForEachIf.
 	void operator() (Args ...args) const
 	{
 		NodePtr node;

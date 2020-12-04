@@ -14,7 +14,7 @@
 // Include the head
 #include "eventpp/hetercallbacklist.h"
 
-#include "test.h"
+#include "tutorial.h"
 
 #include <iostream>
 
@@ -78,9 +78,10 @@ TEST_CASE("HeterCallbackList tutorial 2, for each")
 		++index;
 	});
 
-	// The forEach callback prototype can also be void(const std::function<prototype> & callback)
-	// Here uses C++14 generic lambda to simplify the callback.
-	callbackList.forEach<void (int)>([&callbackList, &index](const auto & callback) {
+	// The forEach callback prototype is void(const std::function<prototype> & callback)
+	// We can also use C++14 generic lambda to simplify the callback, for example,
+	// callbackList.forEach<void (int)>([&callbackList, &index](const auto & callback)
+	callbackList.forEach<void (int)>([&callbackList, &index](const std::function<void(int)> & callback) {
 		std::cout << "forEach(Callback), invoked" << std::endl;
 		callback(3);
 	});

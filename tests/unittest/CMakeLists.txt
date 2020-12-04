@@ -2,10 +2,6 @@ set(TARGET_TEST unittest)
 
 set(SRC_TEST
 	testmain.cpp
-	tutorial_callbacklist.cpp
-	tutorial_eventdispatcher.cpp
-	tutorial_eventqueue.cpp
-	tutorial_hetercallbacklist.cpp
 	test_callbacklist_basic.cpp
 	test_callbacklist_ctors.cpp
 	test_callbacklist_multithread.cpp
