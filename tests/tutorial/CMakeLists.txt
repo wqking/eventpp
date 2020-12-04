@@ -13,4 +13,8 @@ add_executable(
 	${SRC_TUTORIAL}
 )
 
+set(THREADS_PREFER_PTHREAD_FLAG ON)
+find_package(Threads REQUIRED)
+target_link_libraries(${TARGET_TUTORIAL} Threads::Threads)
+
 
