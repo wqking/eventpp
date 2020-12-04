@@ -20,7 +20,7 @@ eventpp is a C++ event library that provides tools that enable your application 
 - **Flexible and easy to use**
   - Listeners and events can be of any type and do not need to be inherited from any base class.
   - Header only, no source file, no need to build. Does not depend on other libraries.
-  - Requires C++ 11 (tested with MSVC 2019, MinGW (Msys) gcc 7.2, Ubuntu gcc 5.4, and MacOS gcc).
+  - Requires C++ 11.
   - Written in portable and standard C++, no hacks or quirks.
 
 ## License
@@ -35,6 +35,12 @@ eventpp is currently usable and stable.
 ## Source code
 
 [https://github.com/wqking/eventpp](https://github.com/wqking/eventpp)
+
+## Supported compilers
+
+Tested with MSVC 2019, MinGW (Msys) GCC 7.2, Ubuntu GCC 5.4, and MacOS GCC.
+GCC 4.8.3 can compile the library, but we don't support GCC prior to GCC 5.
+In brief, MSVB, GCC, Clang that has well support for C++11, or released after 2019, should be able to compile the library.
 
 ## Quick start
 

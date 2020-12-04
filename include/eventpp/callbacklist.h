@@ -255,6 +255,7 @@ public:
 		});
 	}
 
+#if !defined(__GNUC__) || __GNUC__ >= 5
 	void operator() (Args ...args) const
 	{
 		forEachIf([&args...](Callback & callback) -> bool {
@@ -262,6 +263,37 @@ public:
 			return CanContinueInvoking::canContinueInvoking(args...);
 		});
 	}
+#else
+	// This is a patch version for GCC 4. It inlines the unrolled doForEachIf
+	// GCC 4.8.3 doesn't supporting parameter pack catpure in lambda, see,
+	// https://github.com/wqking/eventpp/issues/19
+	// This is a compromised patch for GCC 4, it may be not maintained or updated unless there are bugs.
+	void operator() (Args ...args) const
+	{
+		NodePtr node;
+
+		{
+			std::lock_guard<Mutex> lockGuard(mutex);
+			node = head;
+		}
+
+		const Counter counter = currentCounter.load(std::memory_order_acquire);
+
+		while(node) {
+			if(node->counter != removedCounter && counter >= node->counter) {
+				node->callback(args...);
+				if(! CanContinueInvoking::canContinueInvoking(args...)) {
+					break;
+				}
+			}
+
+			{
+				std::lock_guard<Mutex> lockGuard(mutex);
+				node = node->next;
+			}
+		}
+	}
+#endif
 
 private:
 	template <typename F>
