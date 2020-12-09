@@ -77,13 +77,17 @@ private:
 		std::tuple<typename std::remove_cv<typename std::remove_reference<Args>::type>::type...> arguments;
 	};
 
-	using BufferedItemList = std::list<BufferedItem<sizeof(QueuedEvent_)> >;
+	using BufferedItemList = typename SelectQueueList<
+		BufferedItem<QueuedEvent_>, 
+		Policies_,
+		HasTemplateQueueList<Policies_>::value
+	>::Type;
 
 public:
 	using QueuedEvent = QueuedEvent_;
-	using super::Event;
-	using super::Handle;
-	using super::Callback;
+	using Event = typename super::Event;
+	using Handle = typename super::Handle;
+	using Callback = typename super::Callback;
 	using Mutex = typename super::Mutex;
 
 	struct DisableQueueNotify
@@ -219,7 +223,7 @@ public:
 			if(! tempList.empty()) {
 				for(auto & item : tempList) {
 					doDispatchQueuedEvent(
-						item.template get<QueuedEvent_>(),
+						item.get(),
 						typename MakeIndexSequence<sizeof...(Args)>::Type()
 					);
 					item.clear();
@@ -254,7 +258,7 @@ public:
 			if(! tempList.empty()) {
 				auto & item = tempList.front();
 				doDispatchQueuedEvent(
-					item.template get<QueuedEvent_>(),
+					item.get(),
 					typename MakeIndexSequence<sizeof...(Args)>::Type()
 				);
 				item.clear();
@@ -289,11 +293,11 @@ public:
 				for(auto it = tempList.begin(); it != tempList.end(); ) {
 					if(doInvokeFuncWithQueuedEvent(
 							func,
-							it->template get<QueuedEvent_>(),
+							it->get(),
 							typename MakeIndexSequence<sizeof...(Args)>::Type())
 						) {
 						doDispatchQueuedEvent(
-							it->template get<QueuedEvent_>(),
+							it->get(),
 							typename MakeIndexSequence<sizeof...(Args)>::Type()
 						);
 						it->clear();
@@ -359,7 +363,7 @@ public:
 			std::lock_guard<Mutex> queueListLock(queueListMutex);
 			
 			if(! queueList.empty()) {
-				*queuedEvent = queueList.front().template get<QueuedEvent_>();
+				*queuedEvent = queueList.front().get();
 				return true;
 			}
 		}
@@ -381,7 +385,7 @@ public:
 			}
 
 			if(! tempList.empty()) {
-				*queuedEvent = std::move(tempList.front().template get<QueuedEvent_>());
+				*queuedEvent = std::move(tempList.front().get());
 				tempList.front().clear();
 
 				std::lock_guard<Mutex> queueListLock(freeListMutex);

@@ -81,13 +81,15 @@ TEST_CASE("EventQueue, processOne, int, void ()")
 	queue.enqueue(3);
 	queue.enqueue(5);
 
-	queue.processOne();
+	REQUIRE(queue.processOne());
 	REQUIRE(a == 2);
 	REQUIRE(b == 5);
 
-	queue.processOne();
+	REQUIRE(queue.processOne());
 	REQUIRE(a == 2);
 	REQUIRE(b == 8);
+
+	REQUIRE(! queue.processOne());
 }
 
 TEST_CASE("EventQueue, int, void (const std::string &, int)")
@@ -528,14 +530,14 @@ TEST_CASE("EventQueue, processIf")
 	queue.enqueue(5);
 	queue.enqueue(6);
 	queue.enqueue(7);
-	queue.processIf([](const int event) -> bool { return event == 6; });
+	REQUIRE(queue.processIf([](const int event) -> bool { return event == 6; }));
 	REQUIRE(dataList == std::vector<int>{ 1, 2, 1 });
 	// Now the queue contains 5, 7
 
 	queue.enqueue(5);
 	queue.enqueue(6);
 	queue.enqueue(7);
-	queue.processIf([](const int event) -> bool { return event == 5; });
+	REQUIRE(queue.processIf([](const int event) -> bool { return event == 5; }));
 	REQUIRE(dataList == std::vector<int>{ 3, 2, 1 });
 	// Now the queue contains 6, 7, 7
 
@@ -546,10 +548,10 @@ TEST_CASE("EventQueue, processIf")
 	queue.enqueue(5);
 	queue.enqueue(6);
 	queue.enqueue(7);
-	queue.processIf([&callbackCounters](const int event) -> bool {
+	REQUIRE(queue.processIf([&callbackCounters](const int event) -> bool {
 		++callbackCounters[event];
 		return event == 7;
-	});
+	}));
 	REQUIRE(dataList == std::vector<int>{ 3, 2, 4 });
 	// Now the queue contains 5, 6, 6
 
@@ -559,5 +561,7 @@ TEST_CASE("EventQueue, processIf")
 
 	queue.process();
 	REQUIRE(dataList == std::vector<int>{ 4, 4, 4 });
+
+	REQUIRE(! queue.processIf([](const int /*event*/) -> bool { return true; }));
 }
 

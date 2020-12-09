@@ -52,7 +52,7 @@ protected:
 	>::type;
 	using Policies = Policies_;
 
-	using Threading = typename SelectThreading<Policies_, HasTypeThreading<Policies_>::value>::Type;
+	using Threading = typename SelectThreading<Policies, HasTypeThreading<Policies_>::value>::Type;
 
 	using ArgumentPassingMode = typename SelectArgumentPassingMode<
 		Policies_,
@@ -121,10 +121,6 @@ public:
 		using std::swap;
 
 		swap(eventCallbackListMap, other.eventCallbackListMap);
-	}
-
-	friend void swap(HeterEventDispatcherBase & first, HeterEventDispatcherBase & second) noexcept {
-		first.swap(second);
 	}
 
 	template <typename C>
@@ -315,6 +311,10 @@ private:
 
 public:
 	using super::super;
+
+	friend void swap(HeterEventDispatcher & first, HeterEventDispatcher & second) noexcept {
+		first.swap(second);
+	}
 };
 
 

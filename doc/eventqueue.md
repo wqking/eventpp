@@ -88,6 +88,8 @@ If an argument is a pointer, only the pointer will be stored. The object it poin
 `enqueue` wakes up any threads that are blocked by `wait` or `waitFor`.  
 The time complexity is O(1).  
 
+The two overloaded functions have similar but slightly difference. How to use them depends on the `ArgumentPassingMode` policy. Please reference the [document of policies](policies.md) for more information.
+
 #### process
 
 ```c++

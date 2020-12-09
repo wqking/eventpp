@@ -103,6 +103,23 @@ struct SelectMap<Key, Value, T, false> {
 	>::type;
 };
 
+template <typename T>
+struct HasTemplateQueueList
+{
+	template <typename C> static std::true_type test(typename C::template QueueList<int> *);
+	template <typename C> static std::false_type test(...);
+
+	enum { value = !! decltype(test<T>(0))() };
+};
+template <typename Value, typename T, bool>
+struct SelectQueueList
+{
+	using Type = typename T::template QueueList<Value>;
+};
+template <typename Value, typename T>
+struct SelectQueueList<Value, T, false> {
+	using Type = std::list<Value>;
+};
 
 template <typename T>
 struct HasTypeMixins

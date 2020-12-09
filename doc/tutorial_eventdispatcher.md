@@ -4,6 +4,8 @@
 
 ## Tutorials
 
+Note if you are going to try the tutorial code, you'd better test the code under the tests/unittest. The sample code in the document may be out of date and not compilable.
+
 ### Tutorial 1 -- Basic usage
 
 **Code**  

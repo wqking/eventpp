@@ -93,35 +93,48 @@ public:
 public:
 	HeterCallbackListBase()
 		:
-		callbackListList(),
-		callbackListListMutex()
+			callbackListList(),
+			callbackListListMutex()
 	{
 	}
 
 	HeterCallbackListBase(const HeterCallbackListBase & other)
+		:
+			callbackListList(),
+			callbackListListMutex()
 	{
 		for(size_t i = 0; i < callbackListList.size(); ++i) {
-			callbackListList[i] = other.callbackListList[i]->doClone();
+			if(other.callbackListList[i]) {
+				callbackListList[i] = other.callbackListList[i]->doClone();
+			}
 		}
 	}
 
 	HeterCallbackListBase(HeterCallbackListBase && other) noexcept
 		:
-		callbackListList(std::move(other.callbackListList)),
-		callbackListListMutex()
+			callbackListList(std::move(other.callbackListList)),
+			callbackListListMutex()
 	{
 	}
 
-	HeterCallbackListBase & operator = (HeterCallbackListBase other)
+	// If we use pass by value idiom and omit the 'this' check,
+	// when assigning to self there is a deep copy which is inefficient.
+	HeterCallbackListBase & operator = (const HeterCallbackListBase & other) noexcept
 	{
-		swap(*this, other);
-
+		if(this != &other) {
+			HeterCallbackListBase copied(other);
+			swap(copied);
+		}
 		return *this;
 	}
 
 	HeterCallbackListBase & operator = (HeterCallbackListBase && other) noexcept
 	{
-		callbackListList = std::move(other.callbackListList);
+		if(this != &other) {
+			for(size_t i = 0; i < callbackListList.size(); ++i) {
+				callbackListList[i] = std::move(other.callbackListList[i]);
+			}
+		}
 
 		return *this;
 	}
@@ -130,10 +143,6 @@ public:
 		using std::swap;
 
 		swap(callbackListList, other.callbackListList);
-	}
-
-	friend void swap(HeterCallbackListBase & first, HeterCallbackListBase & second) noexcept {
-		first.swap(second);
 	}
 
 	bool empty() const {
@@ -300,6 +309,10 @@ private:
 
 public:
 	using super::super;
+
+	friend void swap(HeterCallbackList & first, HeterCallbackList & second) noexcept {
+		first.swap(second);
+	}
 };
 
 

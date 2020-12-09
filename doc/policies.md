@@ -10,9 +10,10 @@
   * [Type Mixins](#a3_3)
   * [Type Callback](#a3_4)
   * [Type Threading](#a3_5)
-* [Type ArgumentPassingMode](#a2_3)
-  * [Template Map](#a3_6)
-* [How to use policies](#a2_4)
+  * [Type ArgumentPassingMode](#a3_6)
+  * [Template Map](#a3_7)
+  * [Template QueueList](#a3_8)
+* [How to use policies](#a2_3)
 <!--endtoc-->
 
 <a id="a2_1"></a>
@@ -146,7 +147,7 @@ A mixin is used to inject code in the EventDispatcher/EventQueue inheritance hie
 ### Type Threading
 
 **Default value**: `using Threading = eventpp::MultipleThreading`.  
-**Apply**: CallbackList, EventDispatcher, EventQueue.
+**Apply**: CallbackList, EventDispatcher, EventQueue, HeterCallbackList, HeterEventDispatcher, HeterEventQueue.
 
 `Threading` controls threading model. Default is 'MultipleThreading'. Possible values:  
   * `MultipleThreading`: the core data is protected with mutex. It's the default value.  
@@ -218,8 +219,8 @@ eventpp::EventDispatcher<int, void (), MyEventPolicies> dispatcher;
 eventpp::CallbackList<void (), MyEventPolicies> callbackList;
 ```
 
-<a id="a2_3"></a>
-## Type ArgumentPassingMode
+<a id="a3_6"></a>
+### Type ArgumentPassingMode
 
 **Default value**: `using ArgumentPassingMode = ArgumentPassingAutoDetect`.  
 **Apply**: EventDispatcher, EventQueue.
@@ -262,7 +263,7 @@ For `ArgumentPassingAutoDetect`: P == D or P + 1 == D
 For `ArgumentPassingIncludeEvent`: P == D  
 For `ArgumentPassingExcludeEvent`: P + 1 == D  
 
-**Note**: the same rules also applies to `EventDispatcher<>::enqueue`, since `enqueue` has same parameters as `dispatch`.
+**Note**: the same rules also applies to `EventQueue::enqueue`, since `enqueue` has same parameters as `dispatch`.
 
 Examples to demonstrate argument passing mode  
 
@@ -310,7 +311,7 @@ eventpp::EventDispatcher<
 dispatcher.dispatch(3, 8, "hello"); // Compile OK
 ```
 
-<a id="a3_6"></a>
+<a id="a3_7"></a>
 ### Template Map
 
 **Prototype**:  
@@ -326,7 +327,39 @@ using Map = // std::map <Key, T> or other map type
 `Map` must support operations `[]`, `find()`, and `end()`.  
 If `Map` is not specified, eventpp will auto determine the type. If the event type supports `std::hash`, `std::unordered_map` is used, otherwise, `std::map` is used.
 
-<a id="a2_4"></a>
+<a id="a3_8"></a>
+### Template QueueList
+
+**Prototype**:  
+```c++
+template <typename Item>
+using QueueList = std::list<Item>;
+```
+**Default value**: `std::list`.  
+**Apply**: EventQueue.  
+
+`QueueList` is used to manage the internal events in EventQueue. It works as a queue. Events are appended to the rear of `QueueList`, and when being processing, events are popped from the head of `QueueList`.  
+Using a different `QueueList` can give more control on the queue. For example, if the `QueueList` keeps the events ordered, the events will be processed in certain order instead of the adding order.
+
+A `QueueList` doesn't need to implement all members from `std::list`, it must implement below types and functions.  
+
+```c++
+type iterator;
+type const_iterator;
+bool empty() const;
+iterator begin();
+const_iterator begin() const;
+iterator end();
+const_iterator end() const;
+void swap(QueueList & other);
+void emplace_back();
+void splice(const_iterator pos, QueueList & other );
+void splice(const_iterator pos, QueueList & other, const_iterator it);
+```
+
+[OrderedQueueList](orderedqueuelist.md) in eventpp is a good example.
+
+<a id="a2_3"></a>
 ## How to use policies
 
 To use policies, declare a struct, define the policies in it, and pass the struct to CallbackList, EventDispatcher, or EventQueue.  

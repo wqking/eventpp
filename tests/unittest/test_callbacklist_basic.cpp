@@ -150,6 +150,26 @@ TEST_CASE("CallbackList, no memory leak after all callbacks are removed")
 	REQUIRE(checkAllWeakPtrAreFreed(nodeList));
 }
 
+TEST_CASE("CallbackList, no memory leak in move assignement")
+{
+	using CL = eventpp::CallbackList<void()>;
+	CL callbackList;
+	const auto h1 = callbackList.append([]() {});
+	const auto h2 = callbackList.append([]() {});
+	for(int i = 0; i < 100; ++i) {
+		callbackList.append([]() {});
+	}
+
+	const std::vector<CL::Handle> nodeList = extractCallbackListHandles(callbackList);
+
+	callbackList = {};
+
+	// Make sure nodes were destroyed
+	REQUIRE(h1.expired());
+	REQUIRE(h2.expired());
+	REQUIRE(checkAllWeakPtrAreFreed(nodeList));
+}
+
 TEST_CASE("CallbackList, forEach")
 {
 	using CL = eventpp::CallbackList<int()>;
@@ -475,3 +495,49 @@ TEST_CASE("CallbackList, prototype convert")
 	REQUIRE(dataList == std::vector<int>{ 2, 2 });
 }
 
+TEST_CASE("CallbackList, internal counter overflow")
+{
+	eventpp::CallbackList<void()> callbackList;
+
+	SECTION("no overflow") {
+		std::vector<int> dataList(2);
+		callbackList.append([&dataList, &callbackList]() {
+			++dataList[0];
+			callbackList.append([&dataList]() {
+				++dataList[1];
+			});
+		});
+		callbackList();
+		REQUIRE(dataList == std::vector<int>{ 1, 0 });
+	}
+
+	SECTION("overflow") {
+		std::vector<int> dataList(2);
+		callbackList.append([&dataList, &callbackList]() {
+			++dataList[0];
+			callbackList.currentCounter = (unsigned int )-1;
+			callbackList.append([&dataList]() {
+				++dataList[1];
+			});
+		});
+		callbackList();
+		REQUIRE(dataList == std::vector<int>{ 1, 1 });
+	}
+}
+
+TEST_CASE("CallbackList, no crash when doFreeNode(head)")
+{
+	eventpp::CallbackList<void()> callbackList;
+	callbackList.append([](){});
+	try {
+		// This loop should not cause memory access crash
+		while(callbackList.head) {
+			callbackList.doFreeNode(callbackList.head);
+		}
+	}
+	catch(...) {
+		// The catch may not work on some platforms, but that doesn't matter,
+		// if there is something wrong, we already notice the crash rather than asset failure.
+		REQUIRE(false);
+	}
+}

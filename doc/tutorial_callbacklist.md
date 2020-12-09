@@ -4,6 +4,8 @@
 
 ## Tutorials
 
+Note if you are going to try the tutorial code, you'd better test the code under the tests/unittest. The sample code in the document may be out of date and not compilable.
+
 ### CallbackList tutorial 1, basic
 
 **Code**  
@@ -144,11 +146,6 @@ callbackList.forEach([&callbackList, &index](const CL::Handle & handle, const CL
 		std::cout << "forEach(Handle, Callback), removed second callback" << std::endl;
 	}
 	++index;
-});
-
-// The forEach callback prototype can also be void(const CallbackList::Handle & handle)
-callbackList.forEach([&callbackList, &index](const CL::Handle & handle) {
-	std::cout << "forEach(Handle), invoked" << std::endl;
 });
 
 // The forEach callback prototype can also be void(const CallbackList::Callback & callback)

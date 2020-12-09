@@ -46,9 +46,12 @@ void commonDtor(void * instance)
 	reinterpret_cast<T *>(instance)->~T();
 }
 
-template <size_t Size>
+template <typename T>
 class BufferedItem
 {
+public:
+	using ValueType = T;
+
 public:
 	explicit BufferedItem() : buffer(), dtor(nullptr)
 	{
@@ -65,9 +68,60 @@ public:
 	BufferedItem(const BufferedItem &) = delete;
 	BufferedItem & operator = (const BufferedItem &) = delete;
 
+	void set(T && item) {
+		assert(dtor == nullptr);
+
+		new (buffer.data()) T(std::forward<T>(item));
+		dtor = &commonDtor<T>;
+	}
+
+	T & get() {
+		assert(dtor != nullptr);
+
+		return *reinterpret_cast<T *>(buffer.data());
+	}
+
+	const T & get() const {
+		assert(dtor != nullptr);
+
+		return *reinterpret_cast<const T *>(buffer.data());
+	}
+
+	void clear() {
+		assert(dtor != nullptr);
+
+		dtor(buffer.data());
+		dtor = nullptr;
+	}
+
+private:
+	std::array<char, sizeof(T)> buffer;
+	DtorFunc dtor;
+};
+
+
+template <size_t Size>
+class BufferedUnion
+{
+public:
+	explicit BufferedUnion() : buffer(), dtor(nullptr)
+	{
+	}
+
+	~BufferedUnion()
+	{
+		if(dtor != nullptr) {
+			clear();
+		}
+	}
+
+	BufferedUnion(BufferedUnion &&) = delete;
+	BufferedUnion(const BufferedUnion &) = delete;
+	BufferedUnion & operator = (const BufferedUnion &) = delete;
+
 	template <typename U>
 	void set(U && item) {
-		static_assert(sizeof(U) <= Size, "Item is too large to fit in BufferedItem");
+		static_assert(sizeof(U) <= Size, "Item is too large to fit in BufferedUnion");
 		assert(dtor == nullptr);
 
 		new (buffer.data()) U(std::forward<U>(item));
@@ -79,6 +133,13 @@ public:
 		assert(dtor != nullptr);
 
 		return *reinterpret_cast<U *>(buffer.data());
+	}
+
+	template <typename U>
+	const U & get() const {
+		assert(dtor != nullptr);
+
+		return *reinterpret_cast<const U *>(buffer.data());
 	}
 
 	void clear() {

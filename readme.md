@@ -20,7 +20,7 @@ eventpp is a C++ event library that provides tools that enable your application 
 - **Flexible and easy to use**
   - Listeners and events can be of any type and do not need to be inherited from any base class.
   - Header only, no source file, no need to build. Does not depend on other libraries.
-  - Requires C++ 11 (tested with MSVC 2017, MSVC 2015, MinGW (Msys) gcc 7.2, and Ubuntu gcc 5.4).
+  - Requires C++ 11.
   - Written in portable and standard C++, no hacks or quirks.
 
 ## License
@@ -28,12 +28,19 @@ eventpp is a C++ event library that provides tools that enable your application 
 Apache License, Version 2.0  
 
 ## Version 0.1.0
+![CI](https://github.com/wqking/eventpp/workflows/CI/badge.svg)
 
 eventpp is currently usable and stable.
 
 ## Source code
 
 [https://github.com/wqking/eventpp](https://github.com/wqking/eventpp)
+
+## Supported compilers
+
+Tested with MSVC 2019, MinGW (Msys) GCC 7.2, Ubuntu GCC 5.4, and MacOS GCC.
+GCC 4.8.3 can compile the library, but we don't support GCC prior to GCC 5.
+In brief, MSVB, GCC, Clang that has well support for C++11, or released after 2019, should be able to compile the library.
 
 ## Quick start
 
@@ -82,10 +89,10 @@ dispatcher.dispatch(5);
 ```c++
 eventpp::EventQueue<int, void (const std::string &, const bool)> queue;
 
-dispatcher.appendListener(3, [](const std::string s, bool b) {
+queue.appendListener(3, [](const std::string s, bool b) {
 	std::cout << std::boolalpha << "Got event 3, s is " << s << " b is " << b << std::endl;
 });
-dispatcher.appendListener(5, [](const std::string s, bool b) {
+queue.appendListener(5, [](const std::string s, bool b) {
 	std::cout << std::boolalpha << "Got event 5, s is " << s << " b is " << b << std::endl;
 });
 
@@ -113,6 +120,7 @@ queue.process();
 * [Utility class CounterRemover -- auto remove listeners after triggered certain times](doc/counterremover.md)
 * [Utility class ConditionalRemover -- auto remove listeners when certain condition is satisfied](doc/conditionalremover.md)
 * [Utility class ScopedRemover -- auto remove listeners when out of scope](doc/scopedremover.md)
+* [Utility class OrderedQueueList.h -- make EventQueue ordered](doc/orderedqueuelist.md)
 * [Utility header eventmaker.h -- auto generate event classes](doc/eventmaker.md)
 * [Document of utilities](doc/eventutil.md)
 * [Policies -- configure eventpp](doc/policies.md)
@@ -121,17 +129,25 @@ queue.process();
 * [FAQs, tricks, and tips](doc/faq.md)
 * There are compilable tutorials in the unit tests.
 
-## Build the unit tests
+## Build the test code
 
 The library itself is header only and doesn't need building.  
-The unit tests require CMake to build, and there is a makefile to ease the building.  
-Note the unit tests require C++14 (generic lambda), the library itself only requires C++11.  
+There are three parts of code to test the library,
+
+- unittests: tests the library. They require C++14 since it uses generic lambda (the library itself only requires C++11).
+- tutorials: sample code to demonstrate how to use the library. They require C++11. If you want to have a quick study on how to use the library, you can look at the tutorials.
+- benchmarks: measure the library performance.
+
+All parts are in the `tests` folder.
+
+All three parts require CMake to build, and there is a makefile to ease the building.  
 Go to folder `tests/build`, then run `make` with different target.
 - `make vc19` #generate solution files for Microsoft Visual Studio 2019, then open eventpptest.sln in folder project_vc19
 - `make vc17` #generate solution files for Microsoft Visual Studio 2017, then open eventpptest.sln in folder project_vc17
 - `make vc15` #generate solution files for Microsoft Visual Studio 2015, then open eventpptest.sln in folder project_vc15
 - `make mingw` #build using MinGW
 - `make linux` #build on Linux
+- `make mingw_coverage` #build using MinGW and generate code coverage report
 
 ## Motivations
 

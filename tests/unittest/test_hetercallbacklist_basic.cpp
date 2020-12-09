@@ -136,6 +136,9 @@ TEST_CASE("HeterCallbackList, insert")
 	callbackList.insert([&orderList, &order](int) {
 		orderList[order++] = 4;
 	}, h2);
+	// Increase h2.index to trigger the check `if(before.index != PrototypeInfo::index)` in HeterCallbackList::insert
+	// This works as if the callback is appended rather than inserted.
+	++h2.index;
 	callbackList.insert([&orderList, &order](int) {
 		orderList[order++] = 5;
 	}, h2);
@@ -144,9 +147,9 @@ TEST_CASE("HeterCallbackList, insert")
 
 	order = 0;
 	callbackList(3);
-	REQUIRE(orderList == std::vector<int>{ 4, 5, 3, 0, 0 });
+	REQUIRE(orderList == std::vector<int>{ 4, 3, 5, 0, 0 });
 	callbackList();
-	REQUIRE(orderList == std::vector<int>{ 4, 5, 3, 2, 1 });
+	REQUIRE(orderList == std::vector<int>{ 4, 3, 5, 2, 1 });
 }
 
 TEST_CASE("HeterCallbackList, remove")
@@ -174,38 +177,41 @@ TEST_CASE("HeterCallbackList, remove")
 
 	REQUIRE(dataList == std::vector<int>{ 0, 0, 0, 0, 0 });
 
+	// Remove non-exist handle
+	REQUIRE(! callbackList.remove(decltype(h1)()));
+
 	callbackList(3);
 	REQUIRE(dataList == std::vector<int>{ 0, 0, 1, 1, 1 });
 	callbackList();
 	REQUIRE(dataList == std::vector<int>{ 1, 1, 1, 1, 1 });
 
-	callbackList.remove(h2);
+	REQUIRE(callbackList.remove(h2));
 	callbackList(3);
 	callbackList();
 	REQUIRE(dataList == std::vector<int>{ 2, 1, 2, 2, 2 });
 
 	// double remove, no effect
-	callbackList.remove(h2);
+	REQUIRE(! callbackList.remove(h2));
 	callbackList(3);
 	callbackList();
 	REQUIRE(dataList == std::vector<int>{ 3, 1, 3, 3, 3 });
 
-	callbackList.remove(h3);
+	REQUIRE(callbackList.remove(h3));
 	callbackList(3);
 	callbackList();
 	REQUIRE(dataList == std::vector<int>{ 4, 1, 3, 4, 4 });
 
-	callbackList.remove(h5);
+	REQUIRE(callbackList.remove(h5));
 	callbackList(3);
 	callbackList();
 	REQUIRE(dataList == std::vector<int>{ 5, 1, 3, 5, 4 });
 
-	callbackList.remove(h1);
+	REQUIRE(callbackList.remove(h1));
 	callbackList(3);
 	callbackList();
 	REQUIRE(dataList == std::vector<int>{ 5, 1, 3, 6, 4 });
 
-	callbackList.remove(h4);
+	REQUIRE(callbackList.remove(h4));
 	callbackList(3);
 	callbackList();
 	REQUIRE(dataList == std::vector<int>{ 5, 1, 3, 6, 4 });

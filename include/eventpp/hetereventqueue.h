@@ -84,7 +84,7 @@ private:
 	template <typename ...Args>
 	using QueuedItemSizer = QueuedItem<std::tuple<typename std::remove_cv<typename std::remove_reference<Args>::type>::type...> >;
 
-	using BufferedQueuedItem = BufferedItem<GetCallablePrototypeMaxSize<PrototypeList_, QueuedItemSizer>::value>;
+	using BufferedQueuedItem = BufferedUnion<GetCallablePrototypeMaxSize<PrototypeList_, QueuedItemSizer>::value>;
 
 	using BufferedItemList = std::list<BufferedQueuedItem>;
 
@@ -93,8 +93,8 @@ private:
 	using ArgumentPassingMode = typename super::ArgumentPassingMode;
 
 public:
-	using super::Event;
-	using super::Handle;
+	using Event = typename super::Event;
+	using Handle = typename super::Handle;
 	using Mutex = typename super::Mutex;
 
 public:

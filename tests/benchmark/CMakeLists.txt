@@ -1,6 +1,6 @@
-set(TARGET_TEST benchmark)
+set(TARGET_BENCHMARK benchmark)
 
-set(SRC_TEST
+set(SRC_BENCHMARK
 	testmain.cpp
 	b1_callbacklist_invoking_vs_cpp.cpp
 	b2_map_vs_unordered_map.cpp
@@ -10,11 +10,11 @@ set(SRC_TEST
 )
 
 add_executable(
-	${TARGET_TEST}
-	${SRC_TEST}
+	${TARGET_BENCHMARK}
+	${SRC_BENCHMARK}
 )
 
 set(THREADS_PREFER_PTHREAD_FLAG ON)
 find_package(Threads REQUIRED)
-target_link_libraries(${TARGET_TEST} Threads::Threads)
+target_link_libraries(${TARGET_BENCHMARK} Threads::Threads)
 

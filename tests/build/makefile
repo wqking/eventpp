@@ -27,6 +27,7 @@ none: needcmake
 	$(ECHO) "  linux        Generate Linux/Unix makefile and then use GCC make to build."
 	$(ECHO) "  mingw        Generate MinGW makefile and then use mingw32-make to build (release version)."
 	$(ECHO) "  mingw_debug  Generate MinGW makefile and then use mingw32-make to build (debug version)."
+	$(ECHO) "  mingw_coverage  Generate MinGW makefile and then use mingw32-make to build and generate code coverage report."
 	$(ECHO) "  msys         Generate MSys makefile and then use make to build (release version)."
 	$(ECHO) "  nmake        Generate Microsoft VC makefile and then use nmake to build."
 	$(ECHO) "  vc19         Generate project files for Microsoft VC 2019. No auto build. You need to open the project in VC IDE then build."
@@ -51,6 +52,18 @@ mingw_debug: needcmake
 	$(MK_CACHE)_mingw_debug
 	$(CH_DIR) $(CACHE_DIR)_mingw_debug $(CMAKE) -DCMAKE_BUILD_TYPE=Debug -G"MinGW Makefiles"
 	$(EXEC_BUILD)_mingw_debug mingw32-make $(TARGET)
+
+mingw_coverage: needcmake
+	$(MK_CACHE)_mingw_coverage
+	$(MK_DIR) ../coverage
+	@cmake -E remove $(CACHE_DIR)_mingw_coverage/unittest/CMakeFiles/unittest.dir/*.gcov
+	@cmake -E remove ../coverage/*
+	$(CH_DIR) $(CACHE_DIR)_mingw_coverage $(CMAKE) -Dcoverage=True -G"MinGW Makefiles"
+	$(EXEC_BUILD)_mingw_coverage mingw32-make $(TARGET)
+	$(ECHO) "Running tests..."
+	$(CH_DIR) $(CACHE_DIR)_mingw_coverage/unittest unittest
+	$(CH_DIR) $(CACHE_DIR)_mingw_coverage/unittest/CMakeFiles/unittest.dir gcov -b ./*.cpp.gcno
+	$(CH_DIR) ../coverage gcovr -r ../.. --html --html-details -o coverage.html
 
 msys: needcmake
 	$(MK_CACHE)_msys

@@ -63,7 +63,7 @@ private:
 
 	struct Node
 	{
-		using Counter = uint64_t;
+		using Counter = unsigned int;
 
 		Node(const Callback_ & callback, const Counter counter)
 			: callback(callback), counter(counter)
@@ -133,6 +133,8 @@ public:
 
 	CallbackListBase & operator = (CallbackListBase && other) noexcept {
 		if(this != &other) {
+			doFreeAllNodes();
+
 			head = std::move(other.head);
 			tail = std::move(other.tail);
 			currentCounter = other.currentCounter.load();
@@ -143,15 +145,7 @@ public:
 	~CallbackListBase()	{
 		// Don't lock mutex here since it may throw exception
 
-		NodePtr node = head;
-		head.reset();
-		while(node) {
-			NodePtr next = node->next;
-			node->previous.reset();
-			node->next.reset();
-			node = next;
-		}
-		node.reset();
+		doFreeAllNodes();
 	}
 	
 	void swap(CallbackListBase & other) noexcept {
@@ -164,15 +158,11 @@ public:
 		currentCounter.exchange(other.currentCounter.load());
 		other.currentCounter.exchange(value);
 	}
-	
-	friend void swap(CallbackListBase & first, CallbackListBase & second) noexcept {
-		first.swap(second);
-	}
 
 	bool empty() const {
 		// Don't lock the mutex for performance reason.
 		// !head still works even when the underlying raw pointer is garbled (for other thread is writting to head)
-      // And empty() doesn't guarantee the list is still empty after the function returned.
+		// And empty() doesn't guarantee the list is still empty after the function returned.
 		//std::lock_guard<Mutex> lockGuard(mutex);
 
 		return ! head;
@@ -265,6 +255,7 @@ public:
 		});
 	}
 
+#if !defined(__GNUC__) || __GNUC__ >= 5
 	void operator() (Args ...args) const
 	{
 		forEachIf([&args...](Callback & callback) -> bool {
@@ -272,6 +263,38 @@ public:
 			return CanContinueInvoking::canContinueInvoking(args...);
 		});
 	}
+#else
+	// This is a patch version for GCC 4. It inlines the unrolled doForEachIf.
+	// GCC 4.8.3 doesn't supporting parameter pack catpure in lambda, see,
+	// https://github.com/wqking/eventpp/issues/19
+	// This is a compromised patch for GCC 4, it may be not maintained or updated unless there are bugs.
+	// We don't use the patch as main code because the patch generates longer code, and duplicated with doForEachIf.
+	void operator() (Args ...args) const
+	{
+		NodePtr node;
+
+		{
+			std::lock_guard<Mutex> lockGuard(mutex);
+			node = head;
+		}
+
+		const Counter counter = currentCounter.load(std::memory_order_acquire);
+
+		while(node) {
+			if(node->counter != removedCounter && counter >= node->counter) {
+				node->callback(args...);
+				if(! CanContinueInvoking::canContinueInvoking(args...)) {
+					break;
+				}
+			}
+
+			{
+				std::lock_guard<Mutex> lockGuard(mutex);
+				node = node->next;
+			}
+		}
+	}
+#endif
 
 private:
 	template <typename F>
@@ -344,6 +367,11 @@ private:
 			node->previous->next = node->next;
 		}
 
+		// Mark it as deleted, this must be beforeNodethe assignment of head and tail below,
+		// because node can be a reference to head or tail, and after the assignment, node
+		// can be null pointer.
+		node->counter = removedCounter;
+
 		if(head == node) {
 			head = node->next;
 		}
@@ -351,11 +379,20 @@ private:
 			tail = node->previous;
 		}
 
-		// Mark it as deleted
-		node->counter = removedCounter;
-
 		// don't modify node->previous or node->next
 		// because node may be still used in a loop.
+	}
+
+	void doFreeAllNodes() {
+		NodePtr node = head;
+		head.reset();
+		while(node) {
+			NodePtr next = node->next;
+			node->previous.reset();
+			node->next.reset();
+			node = next;
+		}
+		node.reset();
 	}
 
 	Counter getNextCounter()
@@ -423,6 +460,10 @@ private:
 	
 public:
 	using super::super;
+	
+	friend void swap(CallbackList & first, CallbackList & second) noexcept {
+		first.swap(second);
+	}
 };
 
 
