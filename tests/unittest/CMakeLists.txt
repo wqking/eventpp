@@ -23,6 +23,7 @@ set(SRC_TEST
 	test_conditionalremover.cpp
 	test_counterremover.cpp
 	test_scopedremover.cpp
+	test_no_extra_copy_move.cpp
 )
 
 add_executable(
