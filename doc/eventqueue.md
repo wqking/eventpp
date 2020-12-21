@@ -49,8 +49,16 @@ EventQueue has the exactly same template parameters with EventDispatcher. Please
 ```c++
 struct EventQueue::QueuedEvent
 {
-	TheEventType event;
-	std::tuple<ArgumentTypes...> arguments;
+	EventType event;
+	std::tuple<ArgTypes...> arguments;
+	
+	// get the event
+	EventType getEvent() const;
+
+	// get the argument of index N
+	// same as std::get<N>(queuedEvent.arguments)
+	template <std::size_t N>
+	NthArgType getArgument() const;
 };
 ```
 `event` is the EventQueue::Event, `arguments` are the arguments passed in `enqueue`.  

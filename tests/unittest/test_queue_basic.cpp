@@ -374,7 +374,7 @@ TEST_CASE("EventQueue, peekEvent/takeEvent/dispatch")
 		EQ::QueuedEvent event;
 		REQUIRE(queue->peekEvent(&event));
 		REQUIRE(event.event == 3);
-		REQUIRE(*std::get<0>(event.arguments) == 0);
+		REQUIRE(*event.getArgument<0>() == 0);
 		REQUIRE(wpList[0].use_count() == 2);
 	}
 
@@ -382,13 +382,13 @@ TEST_CASE("EventQueue, peekEvent/takeEvent/dispatch")
 		EQ::QueuedEvent event;
 		REQUIRE(queue->peekEvent(&event));
 		REQUIRE(event.event == 3);
-		REQUIRE(*std::get<0>(event.arguments) == 0);
+		REQUIRE(*event.getArgument<0>() == 0);
 		REQUIRE(wpList[0].use_count() == 2);
 
 		EQ::QueuedEvent event2;
 		REQUIRE(queue->peekEvent(&event2));
 		REQUIRE(event2.event == 3);
-		REQUIRE(*std::get<0>(event2.arguments) == 0);
+		REQUIRE(*event2.getArgument<0>() == 0);
 		REQUIRE(wpList[0].use_count() == 3);
 	}
 
@@ -396,13 +396,13 @@ TEST_CASE("EventQueue, peekEvent/takeEvent/dispatch")
 		EQ::QueuedEvent event;
 		REQUIRE(queue->peekEvent(&event));
 		REQUIRE(event.event == 3);
-		REQUIRE(*std::get<0>(event.arguments) == 0);
+		REQUIRE(*event.getArgument<0>() == 0);
 		REQUIRE(wpList[0].use_count() == 2);
 
 		EQ::QueuedEvent event2;
 		REQUIRE(queue->takeEvent(&event2));
 		REQUIRE(event2.event == 3);
-		REQUIRE(*std::get<0>(event2.arguments) == 0);
+		REQUIRE(*event2.getArgument<0>() == 0);
 		REQUIRE(wpList[0].use_count() == 2);
 	}
 
@@ -410,19 +410,19 @@ TEST_CASE("EventQueue, peekEvent/takeEvent/dispatch")
 		EQ::QueuedEvent event;
 		REQUIRE(queue->peekEvent(&event));
 		REQUIRE(event.event == 3);
-		REQUIRE(*std::get<0>(event.arguments) == 0);
+		REQUIRE(*event.getArgument<0>() == 0);
 		REQUIRE(wpList[0].use_count() == 2);
 
 		EQ::QueuedEvent event2;
 		REQUIRE(queue->takeEvent(&event2));
 		REQUIRE(event2.event == 3);
-		REQUIRE(*std::get<0>(event2.arguments) == 0);
+		REQUIRE(*event2.getArgument<0>() == 0);
 		REQUIRE(wpList[0].use_count() == 2);
 
 		EQ::QueuedEvent event3;
 		REQUIRE(queue->peekEvent(&event3));
 		REQUIRE(event3.event == 3);
-		REQUIRE(*std::get<0>(event3.arguments) == 1);
+		REQUIRE(*event3.getArgument<0>() == 1);
 		REQUIRE(wpList[0].use_count() == 2);
 		REQUIRE(wpList[1].use_count() == 2);
 	}
@@ -431,7 +431,7 @@ TEST_CASE("EventQueue, peekEvent/takeEvent/dispatch")
 		EQ::QueuedEvent event;
 		REQUIRE(queue->peekEvent(&event));
 		REQUIRE(event.event == 3);
-		REQUIRE(*std::get<0>(event.arguments) == 0);
+		REQUIRE(*event.getArgument<0>() == 0);
 		REQUIRE(wpList[0].use_count() == 2);
 
 		queue->dispatch(event);
@@ -439,7 +439,7 @@ TEST_CASE("EventQueue, peekEvent/takeEvent/dispatch")
 		EQ::QueuedEvent event2;
 		REQUIRE(queue->peekEvent(&event2));
 		REQUIRE(event2.event == 3);
-		REQUIRE(*std::get<0>(event2.arguments) == 0);
+		REQUIRE(*event2.getArgument<0>() == 0);
 		REQUIRE(wpList[0].use_count() == 3);
 
 		REQUIRE(dataList == std::vector<int>{ 1, 0, 0 });
