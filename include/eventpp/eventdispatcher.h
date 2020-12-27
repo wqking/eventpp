@@ -268,7 +268,7 @@ private:
 		}
 
 		template <typename T, typename Self, typename ...A>
-		static auto forEach(const Self * /*self*/, A && ...args)
+		static auto forEach(const Self * /*self*/, A && ... /*args*/)
 			-> typename std::enable_if<! HasFunctionMixinBeforeDispatch<T, A...>::value, bool>::type {
 			return true;
 		}
