@@ -13,6 +13,7 @@
 
 #include "test.h"
 #include "eventpp/callbacklist.h"
+#include "eventpp/eventdispatcher.h"
 
 #include <memory>
 
@@ -216,6 +217,138 @@ TEST_CASE("copymove, CallbackList<void(const &)>, callback(value)")
 		REQUIRE(ref1.getCalledAndReset() == 0);
 		callbackList(ref1, 1);
 		REQUIRE(ref1.getCalledAndReset() > 0);
+	}
+}
+
+TEST_CASE("copymove, EventDispatcher<void(const &)>, callback(const &)")
+{
+	using ED = eventpp::EventDispatcher<int, void(const CopyMoveCounter &, int)>;
+	ED eventDispatcher;
+
+	auto func = [](const CopyMoveCounter & obj, const int expected) {
+		REQUIRE(obj.getCounter().copied == expected);
+		obj.called();
+	};
+
+	SECTION("Raw function: temporary object") {
+		func(CopyMoveCounter(), 0);
+	}
+	SECTION("Raw function: object variable") {
+		CopyMoveCounter obj1;
+		REQUIRE(obj1.getCalledAndReset() == 0);
+		func(obj1, 0);
+		REQUIRE(obj1.getCalledAndReset() > 0);
+	}
+
+	SECTION("EventDispatcher: temporary object") {
+		eventDispatcher.appendListener(1, func);
+		eventDispatcher.dispatch(1, CopyMoveCounter(), 0);
+	}
+	SECTION("eventDispatcher: object variable") {
+		eventDispatcher.appendListener(1, func);
+		CopyMoveCounter obj1;
+		REQUIRE(obj1.getCalledAndReset() == 0);
+		eventDispatcher.dispatch(1, obj1, 0);
+		REQUIRE(obj1.getCalledAndReset() > 0);
+	}
+}
+
+TEST_CASE("copymove, EventDispatcher<void(value)>, callback(value)")
+{
+	using ED = eventpp::EventDispatcher<int, void(CopyMoveCounter, int)>;
+	ED eventDispatcher;
+
+	auto func = [](CopyMoveCounter obj, const int expected) {
+		REQUIRE(obj.getCounter().copied == expected);
+		obj.called();
+	};
+
+	SECTION("Raw function: temporary object") {
+		func(CopyMoveCounter(), 0);
+	}
+	SECTION("Raw function: object variable") {
+		CopyMoveCounter obj1;
+		REQUIRE(obj1.getCalledAndReset() == 0);
+		func(obj1, 1);
+		REQUIRE(obj1.getCalledAndReset() > 0);
+	}
+
+	SECTION("EventDispatcher: temporary object") {
+		eventDispatcher.appendListener(1, func);
+		eventDispatcher.dispatch(1, CopyMoveCounter(), 1);
+	}
+	SECTION("eventDispatcher: object variable") {
+		eventDispatcher.appendListener(1, func);
+		CopyMoveCounter obj1;
+		REQUIRE(obj1.getCalledAndReset() == 0);
+		eventDispatcher.dispatch(1, obj1, 2);
+		REQUIRE(obj1.getCalledAndReset() > 0);
+	}
+}
+
+TEST_CASE("copymove, EventDispatcher<void(value)>, callback(const &)")
+{
+	using ED = eventpp::EventDispatcher<int, void(CopyMoveCounter, int)>;
+	ED eventDispatcher;
+
+	auto func = [](CopyMoveCounter obj, const int expected) {
+		REQUIRE(obj.getCounter().copied == expected);
+		obj.called();
+	};
+
+	SECTION("Raw function: temporary object") {
+		func(CopyMoveCounter(), 0);
+	}
+	SECTION("Raw function: object variable") {
+		CopyMoveCounter obj1;
+		REQUIRE(obj1.getCalledAndReset() == 0);
+		func(obj1, 1);
+		REQUIRE(obj1.getCalledAndReset() > 0);
+	}
+
+	SECTION("EventDispatcher: temporary object") {
+		eventDispatcher.appendListener(1, func);
+		eventDispatcher.dispatch(1, CopyMoveCounter(), 1);
+	}
+	SECTION("eventDispatcher: object variable") {
+		eventDispatcher.appendListener(1, func);
+		CopyMoveCounter obj1;
+		REQUIRE(obj1.getCalledAndReset() == 0);
+		eventDispatcher.dispatch(1, obj1, 2);
+		REQUIRE(obj1.getCalledAndReset() > 0);
+	}
+}
+
+TEST_CASE("copymove, EventDispatcher<void(const &)>, callback(value)")
+{
+	using ED = eventpp::EventDispatcher<int, void(const CopyMoveCounter &, int)>;
+	ED eventDispatcher;
+
+	auto func = [](CopyMoveCounter obj, const int expected) {
+		REQUIRE(obj.getCounter().copied == expected);
+		obj.called();
+	};
+
+	SECTION("Raw function: temporary object") {
+		func(CopyMoveCounter(), 0);
+	}
+	SECTION("Raw function: object variable") {
+		CopyMoveCounter obj1;
+		REQUIRE(obj1.getCalledAndReset() == 0);
+		func(obj1, 1);
+		REQUIRE(obj1.getCalledAndReset() > 0);
+	}
+
+	SECTION("EventDispatcher: temporary object") {
+		eventDispatcher.appendListener(1, func);
+		eventDispatcher.dispatch(1, CopyMoveCounter(), 1);
+	}
+	SECTION("eventDispatcher: object variable") {
+		eventDispatcher.appendListener(1, func);
+		CopyMoveCounter obj1;
+		REQUIRE(obj1.getCalledAndReset() == 0);
+		eventDispatcher.dispatch(1, obj1, 1);
+		REQUIRE(obj1.getCalledAndReset() > 0);
 	}
 }
 

@@ -157,7 +157,7 @@ This is useful to clear any references such as shared pointer in the queued even
 ```c++
 void wait() const;
 ```
-`wait` causes the current thread to block until there is new event arrives in the queue.  
+`wait` causes the current thread to block until the queue is not empty.  
 Note: though `wait` has work around with spurious wakeup internally, the queue is not guaranteed not empty after `wait` returns.  
 `wait` is useful when a thread processes the event queue. A sampel usage is,
 ```c++
@@ -166,7 +166,7 @@ for(;;) {
 	eventQueue.process();
 }
 ```
-The code works event if it doesn't `wait`, but doing that will waste CPU power resource.
+The code works even if it doesn't `wait`, but doing that will waste CPU power resource.
 
 #### waitFor
 

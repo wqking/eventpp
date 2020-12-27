@@ -371,7 +371,7 @@ private:
 			node->previous->next = node->next;
 		}
 
-		// Mark it as deleted, this must be beforeNodethe assignment of head and tail below,
+		// Mark it as deleted, this must be before the assignment of head and tail below,
 		// because node can be a reference to head or tail, and after the assignment, node
 		// can be null pointer.
 		node->counter = removedCounter;
