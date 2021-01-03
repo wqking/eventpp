@@ -46,7 +46,7 @@ class CallbackList;
 <a id="a3_3"></a>
 ### Public types
 
-`Handle`: the handle type returned by append, prepend and insert. A handle can be used to insert a callback or remove a callback. To check if a `Handle` is empty, convert it to boolean, *false* is empty. `Handle` is copyable.  
+`Handle`: the handle type returned by `append`, `prepend` and `insert`. A handle can be used to insert a callback or remove a callback. To check if a `Handle` is empty, convert it to boolean, *false* is empty. `Handle` is copyable.  
 `Callback`: the callback storage type.
 
 <a id="a3_4"></a>
@@ -70,7 +70,7 @@ CallbackList can be copied, moved,  assigned, and move assigned.
 bool empty() const;
 ```
 Return true if the callback list is empty.  
-Note: in multi threading, this function returning true doesn't guarantee that the list is empty. The list may immediately become non-empty after the function returns true.
+Note: in multi threading, this function returning true doesn't guarantee that the list is empty. The list may immediately become non-empty after the function returns true, and vice versa.
 
 #### bool casting operator
 
@@ -132,7 +132,7 @@ The `func` can be one of the two prototypes:
 AnyReturnType func(const CallbackList::Handle &, const CallbackList::Callback &);
 AnyReturnType func(const CallbackList::Callback &);
 ```
-**Note**: the `func` can remove any callbacks, or add other callbacks, safely.
+Note: the `func` can remove any callbacks, or add other callbacks, safely.
 
 #### forEachIf
 
