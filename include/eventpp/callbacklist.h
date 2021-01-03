@@ -258,6 +258,10 @@ public:
 #if !defined(__GNUC__) || __GNUC__ >= 5
 	void operator() (Args ...args) const
 	{
+		// We can't use std::forward here, because if we use std::forward,
+		// for arg that is passed by value, and the callback prototype accepts it by value,
+		// std::forward will move it and may cause the original value invalid.
+		// That happens on any value-to-value passing, no matter the callback moves it or not.
 		forEachIf([&args...](Callback & callback) -> bool {
 			callback(args...);
 			return CanContinueInvoking::canContinueInvoking(args...);
@@ -367,7 +371,7 @@ private:
 			node->previous->next = node->next;
 		}
 
-		// Mark it as deleted, this must be beforeNodethe assignment of head and tail below,
+		// Mark it as deleted, this must be before the assignment of head and tail below,
 		// because node can be a reference to head or tail, and after the assignment, node
 		// can be null pointer.
 		node->counter = removedCounter;

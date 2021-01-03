@@ -49,8 +49,16 @@ EventQueue has the exactly same template parameters with EventDispatcher. Please
 ```c++
 struct EventQueue::QueuedEvent
 {
-	TheEventType event;
-	std::tuple<ArgumentTypes...> arguments;
+	EventType event;
+	std::tuple<ArgTypes...> arguments;
+	
+	// get the event
+	EventType getEvent() const;
+
+	// get the argument of index N
+	// same as std::get<N>(queuedEvent.arguments)
+	template <std::size_t N>
+	NthArgType getArgument() const;
 };
 ```
 `event` is the EventQueue::Event, `arguments` are the arguments passed in `enqueue`.  
@@ -69,7 +77,7 @@ EventQueue & operator = (EventQueue && other) noexcept;
 ```
 
 EventQueue can be copied, moved,  assigned, and move assigned.  
-Note: the queued events are not copied, moved, assigned, or move assigned, only the listeners are performed these operations.
+Note: the queued events are not copied, moved, assigned, or move assigned, only the listeners are performed with these operations. That's to say, the queued events are not duplicated when an EventQueue is copied or assigned.
 
 #### enqueue
 
@@ -124,8 +132,8 @@ Process the event queue. Before processing an event, the event is passed to `fun
 `func` takes exactly the same arguments as `EventQueue::enqueue`, and returns a boolean value.  
 `processIf` returns true if any event was dispatched, false if no event was dispatched.  
 `processIf` has some good use scenarios:  
-1. Process certain events in certain thread. For example, in a GUI application, the UI related events may be only desired to processed in the main thread.  
-2. Process the events until certain time. For example, in a game engine, the event process may be limited to only several milliseconds, the remaining events will be process in next game loop.  
+1. Process certain events in certain thread. For example, in a GUI application, the UI related events may be only desired to be processed in the main thread.  
+2. Process the events within certain duration. For example, in a game engine, the event process may be limited to only several milliseconds, the remaining events will be process in next game loop. In such situation, the `func` can return false when time out.  
 
 #### emptyQueue
 
@@ -149,7 +157,7 @@ This is useful to clear any references such as shared pointer in the queued even
 ```c++
 void wait() const;
 ```
-`wait` causes the current thread to block until there is new event arrives in the queue.  
+`wait` causes the current thread to block until the queue is not empty.  
 Note: though `wait` has work around with spurious wakeup internally, the queue is not guaranteed not empty after `wait` returns.  
 `wait` is useful when a thread processes the event queue. A sampel usage is,
 ```c++
@@ -158,7 +166,7 @@ for(;;) {
 	eventQueue.process();
 }
 ```
-The code works event if it doesn't `wait`, but doing that will waste CPU power resource.
+The code works even if it doesn't `wait`, but doing that will waste CPU power resource.
 
 #### waitFor
 

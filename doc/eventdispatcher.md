@@ -158,7 +158,6 @@ The time complexities being discussed here is about when operating on the listen
 - `prependListener`: O(1)
 - `insertListener`: O(1)
 - `removeListener`: O(1)
-- `enqueue`: O(1)
 
 <a id="a2_5"></a>
 ## Internal data structure

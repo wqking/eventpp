@@ -125,7 +125,7 @@ struct MyCompare
 {
 	template <typename T>
 	bool operator() (const T & a, const T & b) const {
-		return std::get<0>(a.arguments).priority > std::get<0>(b.arguments).priority;
+		return a.template getArgument<0>().priority > b.template getArgument<0>().priority;
 	}
 };
 

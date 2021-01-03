@@ -75,6 +75,16 @@ private:
 	{
 		typename std::remove_cv<typename std::remove_reference<typename super::Event>::type>::type event;
 		std::tuple<typename std::remove_cv<typename std::remove_reference<Args>::type>::type...> arguments;
+
+		typename super::Event getEvent() const {
+			return event;
+		}
+
+		template <std::size_t N>
+		auto getArgument() const
+			-> typename std::tuple_element<N, std::tuple<Args...> >::type {
+			return std::get<N>(arguments);
+		}
 	};
 
 	using BufferedItemList = typename SelectQueueList<
