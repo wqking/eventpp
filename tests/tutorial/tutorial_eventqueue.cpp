@@ -22,7 +22,7 @@
 
 TEST_CASE("EventQueue tutorial 1, basic")
 {
-	std::cout << "EventQueue tutorial 1, basic" << std::endl;
+	std::cout << std::endl << "EventQueue tutorial 1, basic" << std::endl;
 
 	eventpp::EventQueue<int, void (const std::string &, std::unique_ptr<int> &)> queue;
 
@@ -49,7 +49,7 @@ TEST_CASE("EventQueue tutorial 1, basic")
 
 TEST_CASE("EventQueue tutorial 2, multiple threading")
 {
-	std::cout << "EventQueue tutorial 2, multiple threading" << std::endl;
+	std::cout << std::endl << "EventQueue tutorial 2, multiple threading" << std::endl;
 
 	using EQ = eventpp::EventQueue<int, void (int)>;
 	EQ queue;
@@ -142,7 +142,7 @@ struct MyPolicy
 
 TEST_CASE("EventQueue tutorial 3, ordered queue")
 {
-	std::cout << "EventQueue tutorial 3, ordered queue" << std::endl;
+	std::cout << std::endl << "EventQueue tutorial 3, ordered queue" << std::endl;
 
 	using EQ = eventpp::EventQueue<int, void(const MyEvent &), MyPolicy>;
 	EQ queue;

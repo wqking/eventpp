@@ -14,15 +14,70 @@
 #ifndef ARGUMENTADAPTER_H_566280692673
 #define ARGUMENTADAPTER_H_566280692673
 
+#include <memory>
+
 namespace eventpp {
 
-template <typename Func, typename Prototype>
+namespace internal_ {
+
+template <typename T>
+struct ArgumentAdapterCast
+{
+	template <typename U>
+	static T cast(U && value)
+	{
+		return static_cast<T>(value);
+	}
+};
+
+template <typename T>
+struct ArgumentAdapterCast<std::shared_ptr<T> >
+{
+	template <typename U>
+	static std::shared_ptr<T> cast(U && value)
+	{
+		return std::static_pointer_cast<T>(value);
+	}
+};
+
+template <typename T>
+struct ArgumentAdapterIsSharedPtr
+{
+	enum { value = false };
+};
+
+template <typename T>
+struct ArgumentAdapterIsSharedPtr<std::shared_ptr<T> >
+{
+	enum { value = true };
+};
+
+template <typename ...Args>
+struct ArgumentAdapterIsAnySharedPtr
+{
+	enum { value = false };
+};
+
+template <typename First, typename ...Others>
+struct ArgumentAdapterIsAnySharedPtr <First, Others...>
+{
+	enum { value = ArgumentAdapterIsSharedPtr<First>::value
+		|| ArgumentAdapterIsAnySharedPtr<Others...>::value };
+};
+
+} //namespace internal_
+
+template <typename Func, typename Prototype, typename IsSharedPtr = void>
 struct ArgumentAdapter;
 
 template <typename Func, typename R, typename ...Args>
-struct ArgumentAdapter<Func, R(Args...)>
+struct ArgumentAdapter <
+		Func,
+		R(Args...),
+		typename std::enable_if<! internal_::ArgumentAdapterIsAnySharedPtr<Args...>::value>::type
+	>
 {
-	ArgumentAdapter(Func f) : func(std::move(f)) {}
+	explicit ArgumentAdapter(Func f) : func(std::move(f)) {}
 
 	template <typename ...A>
 	void operator() (A &&...args) {
@@ -32,22 +87,39 @@ struct ArgumentAdapter<Func, R(Args...)>
 	Func func;
 };
 
+template <typename Func, typename R, typename ...Args>
+struct ArgumentAdapter <
+		Func,
+		R(Args...),
+		typename std::enable_if<internal_::ArgumentAdapterIsAnySharedPtr<Args...>::value>::type
+	>
+{
+	explicit ArgumentAdapter(Func f) : func(std::move(f)) {}
+
+	template <typename ...A>
+	void operator() (A &&...args) {
+		func(std::forward<Args>(internal_::ArgumentAdapterCast<Args>::cast(args))...);
+	}
+
+	Func func;
+};
+
 template <template <typename> class Func, typename R, typename ...Args>
 ArgumentAdapter<Func<R(Args...)>, R(Args...)> argumentAdapter(Func<R(Args...)> f)
 {
-	return ArgumentAdapter<Func<R(Args...)>, R(Args...)>(f);
+	return ArgumentAdapter<Func<R(Args...)>, R(Args...)>(std::move(f));
 }
 
 template <typename Prototype, typename Func>
 ArgumentAdapter<Func, Prototype> argumentAdapter(Func f)
 {
-	return ArgumentAdapter<Func, Prototype>(f);
+	return ArgumentAdapter<Func, Prototype>(std::move(f));
 }
 
 template <typename R, typename ...Args>
 ArgumentAdapter<R(*)(Args...), R(Args...)> argumentAdapter(R(*f)(Args...))
 {
-	return ArgumentAdapter<R(*)(Args...), R(Args...)>(f);
+	return ArgumentAdapter<R(*)(Args...), R(Args...)>(std::move(f));
 }
 
 

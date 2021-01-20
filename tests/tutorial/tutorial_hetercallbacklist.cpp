@@ -20,7 +20,7 @@
 
 TEST_CASE("HeterCallbackList tutorial 1, basic")
 {
-	std::cout << "HeterCallbackList tutorial 1, basic" << std::endl;
+	std::cout << std::endl << "HeterCallbackList tutorial 1, basic" << std::endl;
 
 	// The namespace is eventpp
 	// the first parameter is a HeterTuple of the listener prototypes.
@@ -46,7 +46,7 @@ TEST_CASE("HeterCallbackList tutorial 1, basic")
 
 TEST_CASE("HeterCallbackList tutorial 2, for each")
 {
-	std::cout << "HeterCallbackList tutorial 2, for each" << std::endl;
+	std::cout << std::endl << "HeterCallbackList tutorial 2, for each" << std::endl;
 
 	using CL = eventpp::HeterCallbackList<eventpp::HeterTuple<void (), void (int)> >;
 	CL callbackList;

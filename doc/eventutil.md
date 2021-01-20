@@ -2,7 +2,9 @@
 
 ## Header
 
-eventpp/eventutil.h
+eventpp/utilities/eventutil.h
+
+## API reference
 
 ```c++
 template <typename DispatcherType>
