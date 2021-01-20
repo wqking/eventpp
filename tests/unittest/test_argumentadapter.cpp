@@ -161,6 +161,7 @@ TEST_CASE("ArgumentAdapter, std::shared_ptr with CallbackList")
 	REQUIRE(obj->getValue() == 11);
 }
 
+/*
 TEST_CASE("ArgumentAdapter, check binary code length")
 {
 	// The code in this test is not to test anything.
@@ -213,3 +214,4 @@ TEST_CASE("ArgumentAdapter, check binary code length")
 		__debugbreak();
 	}
 }
+*/

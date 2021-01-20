@@ -117,6 +117,7 @@ queue.process();
 * [Class HeterCallbackList](doc/hetercallbacklist.md)
 * [Class HeterEventDispatcher](doc/hetereventdispatcher.md)
 * [Class HeterEventQueue](doc/hetereventqueue.md)
+* [Utility argumentAdapter -- adapt pass-in argument types to the types of the functioning being called](doc/argumentadapter.md)
 * [Utility class CounterRemover -- auto remove listeners after triggered certain times](doc/counterremover.md)
 * [Utility class ConditionalRemover -- auto remove listeners when certain condition is satisfied](doc/conditionalremover.md)
 * [Utility class ScopedRemover -- auto remove listeners when out of scope](doc/scopedremover.md)
