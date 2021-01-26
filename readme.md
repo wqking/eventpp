@@ -162,9 +162,15 @@ Thanking to C++11, now it's quite easy to write a reusable event library with be
 
 ## Change log
 
-**Version 0.1.1**  Dec 13, 2019
+**Version 0.1.2**  Latest  
+Bug fix.  
+Added more unit tests.  
+Added utilities argumentAdapter and conditionalFunctor.  
+Added event maker macros.  
+  
+**Version 0.1.1**  Dec 13, 2019  
 Added HeterCallbackList, HeterEventDispatcher, and HeterEventQueue.
 
-**Version 0.1.0**  Sep 1, 2018
+**Version 0.1.0**  Sep 1, 2018  
 First version.  
 Added CallbackList, EventDispatcher, EventQueue, CounterRemover, ConditionalRemover, ScopedRemover, and utilities.
