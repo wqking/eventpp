@@ -21,7 +21,7 @@
 
 TEST_CASE("EventDispatcher tutorial 1, basic")
 {
-	std::cout << "EventDispatcher tutorial 1, basic" << std::endl;
+	std::cout << std::endl << "EventDispatcher tutorial 1, basic" << std::endl;
 
 	// The namespace is eventpp
 	// The first template parameter int is the event type,
@@ -51,7 +51,7 @@ TEST_CASE("EventDispatcher tutorial 1, basic")
 
 TEST_CASE("EventDispatcher tutorial 2, listener with parameters")
 {
-	std::cout << "EventDispatcher tutorial 2, listener with parameters" << std::endl;
+	std::cout << std::endl << "EventDispatcher tutorial 2, listener with parameters" << std::endl;
 
 	// The listener has two parameters.
 	eventpp::EventDispatcher<int, void (const std::string &, const bool)> dispatcher;
@@ -75,7 +75,7 @@ TEST_CASE("EventDispatcher tutorial 2, listener with parameters")
 
 TEST_CASE("EventDispatcher tutorial 3, customized Event struct")
 {
-	std::cout << "EventDispatcher tutorial 3, customized Event struct" << std::endl;
+	std::cout << std::endl << "EventDispatcher tutorial 3, customized Event struct" << std::endl;
 
 	// Define an Event to hold all parameters.
 	struct MyEvent {
@@ -149,7 +149,7 @@ struct Tutor4MyEventPolicies
 
 TEST_CASE("EventDispatcher tutorial 4, event canceling")
 {
-	std::cout << "EventDispatcher tutorial 4, event canceling" << std::endl;
+	std::cout << std::endl << "EventDispatcher tutorial 4, event canceling" << std::endl;
 
 	eventpp::EventDispatcher<int, void (const Tutor4MyEvent &), Tutor4MyEventPolicies> dispatcher;
 
@@ -166,7 +166,7 @@ TEST_CASE("EventDispatcher tutorial 4, event canceling")
 
 TEST_CASE("EventDispatcher tutorial 5, event filter")
 {
-	std::cout << "EventDispatcher tutorial 5, event filter" << std::endl;
+	std::cout << std::endl << "EventDispatcher tutorial 5, event filter" << std::endl;
 
 	struct MyPolicies {
 		using Mixins = eventpp::MixinList<eventpp::MixinFilter>;

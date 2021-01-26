@@ -20,7 +20,7 @@
 
 TEST_CASE("CallbackList tutorial 1, basic")
 {
-	std::cout << "CallbackList tutorial 1, basic" << std::endl;
+	std::cout << std::endl << "CallbackList tutorial 1, basic" << std::endl;
 
 	// The namespace is eventpp
 	// the first parameter is the prototype of the listener.
@@ -43,7 +43,7 @@ TEST_CASE("CallbackList tutorial 1, basic")
 
 TEST_CASE("CallbackList tutorial 2, callback with parameters")
 {
-	std::cout << "CallbackList tutorial 2, callback with parameters" << std::endl;
+	std::cout << std::endl << "CallbackList tutorial 2, callback with parameters" << std::endl;
 
 	// The callback list prototype has two parameters.
 	eventpp::CallbackList<void (const std::string &, const bool)> callbackList;
@@ -63,7 +63,7 @@ TEST_CASE("CallbackList tutorial 2, callback with parameters")
 
 TEST_CASE("CallbackList tutorial 3, remove")
 {
-	std::cout << "CallbackList tutorial 3, remove" << std::endl;
+	std::cout << std::endl << "CallbackList tutorial 3, remove" << std::endl;
 
 	using CL = eventpp::CallbackList<void ()>;
 	CL callbackList;
@@ -90,7 +90,7 @@ TEST_CASE("CallbackList tutorial 3, remove")
 
 TEST_CASE("CallbackList tutorial 4, for each")
 {
-	std::cout << "CallbackList tutorial 4, for each" << std::endl;
+	std::cout << std::endl << "CallbackList tutorial 4, for each" << std::endl;
 
 	using CL = eventpp::CallbackList<void ()>;
 	CL callbackList;

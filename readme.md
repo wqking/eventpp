@@ -19,6 +19,7 @@ eventpp is a C++ event library that provides tools that enable your application 
   - The CallbackList can add/remove 5M callbacks in 1 second (5K callbacks per millisecond).
 - **Flexible and easy to use**
   - Listeners and events can be of any type and do not need to be inherited from any base class.
+  - Utilities that can ease the usage, such as auto disconnecting, one shot listener, argument type adapter, etc.
   - Header only, no source file, no need to build. Does not depend on other libraries.
   - Requires C++ 11.
   - Written in portable and standard C++, no hacks or quirks.
@@ -27,10 +28,13 @@ eventpp is a C++ event library that provides tools that enable your application 
 
 Apache License, Version 2.0  
 
-## Version 0.1.0
+## Version 0.1.1
 ![CI](https://github.com/wqking/eventpp/workflows/CI/badge.svg)
 
-eventpp is currently usable and stable.
+The master branch is usable and stable.  
+There are some releases on Github, but usually the releases are far behind the latest code.  
+You shold prefer to clone or fork the master branch instead of downloading the releases.  
+The master branch is currently fully back compatible with the first version. So your project won't get any back compatible issues.
 
 ## Source code
 
@@ -48,7 +52,7 @@ In brief, MSVB, GCC, Clang that has well support for C++11, or released after 20
 
 `eventpp`
 
-### Add eventpp to your project
+### Use eventpp to your project
 
 eventpp is header only library. Just add the 'include' folder in eventpp to your project, then you can use the library.  
 You don't need to link to any source code.
@@ -117,6 +121,8 @@ queue.process();
 * [Class HeterCallbackList](doc/hetercallbacklist.md)
 * [Class HeterEventDispatcher](doc/hetereventdispatcher.md)
 * [Class HeterEventQueue](doc/hetereventqueue.md)
+* [Utility argumentAdapter -- adapt pass-in argument types to the types of the functioning being called](doc/argumentadapter.md)
+* [Utility conditionalFunctor -- pre-check the condition before calling a function](doc/conditionalfunctor.md)
 * [Utility class CounterRemover -- auto remove listeners after triggered certain times](doc/counterremover.md)
 * [Utility class ConditionalRemover -- auto remove listeners when certain condition is satisfied](doc/conditionalremover.md)
 * [Utility class ScopedRemover -- auto remove listeners when out of scope](doc/scopedremover.md)
@@ -156,9 +162,15 @@ Thanking to C++11, now it's quite easy to write a reusable event library with be
 
 ## Change log
 
-**Version 0.1.1**  
+**Version 0.1.2**  Latest  
+Bug fix.  
+Added more unit tests.  
+Added utilities argumentAdapter and conditionalFunctor.  
+Added event maker macros.  
+  
+**Version 0.1.1**  Dec 13, 2019  
 Added HeterCallbackList, HeterEventDispatcher, and HeterEventQueue.
 
-**Version 0.1.0**  
+**Version 0.1.0**  Sep 1, 2018  
 First version.  
 Added CallbackList, EventDispatcher, EventQueue, CounterRemover, ConditionalRemover, ScopedRemover, and utilities.
