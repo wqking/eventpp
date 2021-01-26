@@ -32,7 +32,7 @@ public:
 class Derived : public Base
 {
 public:
-	explicit Derived() : Base(), value(0) {
+	explicit Derived(const int value = 0) : Base(), value(value) {
 	}
 
 	virtual int getValue() const override {

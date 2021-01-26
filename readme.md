@@ -19,6 +19,7 @@ eventpp is a C++ event library that provides tools that enable your application 
   - The CallbackList can add/remove 5M callbacks in 1 second (5K callbacks per millisecond).
 - **Flexible and easy to use**
   - Listeners and events can be of any type and do not need to be inherited from any base class.
+  - Utilities that can ease the usage, such as auto disconnecting, one shot listener, argument type adapter, etc.
   - Header only, no source file, no need to build. Does not depend on other libraries.
   - Requires C++ 11.
   - Written in portable and standard C++, no hacks or quirks.
@@ -118,6 +119,7 @@ queue.process();
 * [Class HeterEventDispatcher](doc/hetereventdispatcher.md)
 * [Class HeterEventQueue](doc/hetereventqueue.md)
 * [Utility argumentAdapter -- adapt pass-in argument types to the types of the functioning being called](doc/argumentadapter.md)
+* [Utility conditionalFunctor -- pre-check the condition before calling a function](doc/conditionalfunctor.md)
 * [Utility class CounterRemover -- auto remove listeners after triggered certain times](doc/counterremover.md)
 * [Utility class ConditionalRemover -- auto remove listeners when certain condition is satisfied](doc/conditionalremover.md)
 * [Utility class ScopedRemover -- auto remove listeners when out of scope](doc/scopedremover.md)

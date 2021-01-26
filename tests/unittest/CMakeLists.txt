@@ -25,6 +25,7 @@ set(SRC_TEST
 	test_scopedremover.cpp
 	test_no_extra_copy_move.cpp
 	test_argumentadapter.cpp
+	test_conditionalfunctor.cpp
 )
 
 add_executable(

@@ -18,10 +18,10 @@
 
 namespace eventpp {
 
-namespace internal_ {
+namespace adapter_internal_ {
 
 template <typename T>
-struct ArgumentAdapterCast
+struct StaticCast
 {
 	template <typename U>
 	static T cast(U && value)
@@ -31,7 +31,7 @@ struct ArgumentAdapterCast
 };
 
 template <typename T>
-struct ArgumentAdapterCast<std::shared_ptr<T> >
+struct StaticCast<std::shared_ptr<T> >
 {
 	template <typename U>
 	static std::shared_ptr<T> cast(U && value)
@@ -41,31 +41,31 @@ struct ArgumentAdapterCast<std::shared_ptr<T> >
 };
 
 template <typename T>
-struct ArgumentAdapterIsSharedPtr
+struct IsSharedPtr
 {
 	enum { value = false };
 };
 
 template <typename T>
-struct ArgumentAdapterIsSharedPtr<std::shared_ptr<T> >
+struct IsSharedPtr<std::shared_ptr<T> >
 {
 	enum { value = true };
 };
 
 template <typename ...Args>
-struct ArgumentAdapterIsAnySharedPtr
+struct IsAnySharedPtr
 {
 	enum { value = false };
 };
 
 template <typename First, typename ...Others>
-struct ArgumentAdapterIsAnySharedPtr <First, Others...>
+struct IsAnySharedPtr <First, Others...>
 {
-	enum { value = ArgumentAdapterIsSharedPtr<First>::value
-		|| ArgumentAdapterIsAnySharedPtr<Others...>::value };
+	enum { value = IsSharedPtr<First>::value
+		|| IsAnySharedPtr<Others...>::value };
 };
 
-} //namespace internal_
+} //namespace adapter_internal_
 
 template <typename Func, typename Prototype, typename IsSharedPtr = void>
 struct ArgumentAdapter;
@@ -74,10 +74,13 @@ template <typename Func, typename R, typename ...Args>
 struct ArgumentAdapter <
 		Func,
 		R(Args...),
-		typename std::enable_if<! internal_::ArgumentAdapterIsAnySharedPtr<Args...>::value>::type
+		typename std::enable_if<! adapter_internal_::IsAnySharedPtr<Args...>::value>::type
 	>
 {
-	explicit ArgumentAdapter(Func f) : func(std::move(f)) {}
+	explicit ArgumentAdapter(Func f)
+		: func(std::move(f))
+	{
+	}
 
 	template <typename ...A>
 	void operator() (A &&...args) {
@@ -91,35 +94,38 @@ template <typename Func, typename R, typename ...Args>
 struct ArgumentAdapter <
 		Func,
 		R(Args...),
-		typename std::enable_if<internal_::ArgumentAdapterIsAnySharedPtr<Args...>::value>::type
+		typename std::enable_if<adapter_internal_::IsAnySharedPtr<Args...>::value>::type
 	>
 {
-	explicit ArgumentAdapter(Func f) : func(std::move(f)) {}
+	explicit ArgumentAdapter(Func f)
+		: func(std::move(f))
+	{
+	}
 
 	template <typename ...A>
 	void operator() (A &&...args) {
-		func(std::forward<Args>(internal_::ArgumentAdapterCast<Args>::cast(args))...);
+		func(std::forward<Args>(adapter_internal_::StaticCast<Args>::cast(args))...);
 	}
 
 	Func func;
 };
 
 template <template <typename> class Func, typename R, typename ...Args>
-ArgumentAdapter<Func<R(Args...)>, R(Args...)> argumentAdapter(Func<R(Args...)> f)
+ArgumentAdapter<Func<R(Args...)>, R(Args...)> argumentAdapter(Func<R(Args...)> func)
 {
-	return ArgumentAdapter<Func<R(Args...)>, R(Args...)>(std::move(f));
+	return ArgumentAdapter<Func<R(Args...)>, R(Args...)>(std::move(func));
 }
 
 template <typename Prototype, typename Func>
-ArgumentAdapter<Func, Prototype> argumentAdapter(Func f)
+ArgumentAdapter<Func, Prototype> argumentAdapter(Func func)
 {
-	return ArgumentAdapter<Func, Prototype>(std::move(f));
+	return ArgumentAdapter<Func, Prototype>(std::move(func));
 }
 
 template <typename R, typename ...Args>
-ArgumentAdapter<R(*)(Args...), R(Args...)> argumentAdapter(R(*f)(Args...))
+ArgumentAdapter<R(*)(Args...), R(Args...)> argumentAdapter(R(*func)(Args...))
 {
-	return ArgumentAdapter<R(*)(Args...), R(Args...)>(std::move(f));
+	return ArgumentAdapter<R(*)(Args...), R(Args...)>(std::move(func));
 }
 
 
