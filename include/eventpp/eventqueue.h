@@ -71,10 +71,12 @@ private:
 	using Threading = typename super::Threading;
 	using ConditionVariable = typename Threading::ConditionVariable;
 
+	using QueuedEventArgumentsType = std::tuple<typename std::decay<Args>::type...>;
+
 	struct QueuedEvent_
 	{
-		typename std::remove_cv<typename std::remove_reference<typename super::Event>::type>::type event;
-		std::tuple<typename std::remove_cv<typename std::remove_reference<Args>::type>::type...> arguments;
+		typename std::decay<typename super::Event>::type event;
+		QueuedEventArgumentsType arguments;
 
 		typename super::Event getEvent() const {
 			return event;
@@ -165,7 +167,7 @@ public:
 
 		doEnqueue(QueuedEvent{
 			GetEvent::getEvent(args...),
-			std::make_tuple(std::forward<A>(args)...)
+			QueuedEventArgumentsType(std::forward<A>(args)...)
 		});
 
 		if(doCanProcess()) {
@@ -182,7 +184,7 @@ public:
 
 		doEnqueue(QueuedEvent{
 			GetEvent::getEvent(std::forward<T>(first), args...),
-			std::make_tuple(std::forward<A>(args)...)
+			QueuedEventArgumentsType(std::forward<A>(args)...)
 		});
 
 		if(doCanProcess()) {

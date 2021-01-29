@@ -14,6 +14,8 @@
 #include "test.h"
 #include "eventpp/eventqueue.h"
 
+#include <functional>
+
 TEST_CASE("EventQueue, std::string, void (const std::string &)")
 {
 	eventpp::EventQueue<std::string, void (const std::string &)> queue;
@@ -565,3 +567,66 @@ TEST_CASE("EventQueue, processIf")
 	REQUIRE(! queue.processIf([](const int /*event*/) -> bool { return true; }));
 }
 
+class MyInt
+{
+public:
+	template <typename T>
+	MyInt(const T value) : value(value) {
+	}
+
+	int getValue() const {
+		return value;
+	}
+
+private:
+	int value;
+};
+
+bool operator == (const MyInt & a, const MyInt & b)
+{
+	return a.getValue() == b.getValue();
+}
+
+namespace std
+{
+template<> struct hash<MyInt>
+{
+	std::size_t operator()(const MyInt & value) const noexcept
+	{
+		return std::hash<int>()(value.getValue());
+	}
+};
+} //namespace std
+
+// This test is to reproduce a compiling issue that existed before this testg was added.
+// For MyInt in above, if its constructor is a plain `MyInt(const int value)`, the code
+// compiles fine. But if its constructor is template like how it is now, the compile
+// fails on the line `queue.enqueue(5);`, because MyInt is being constructed with a std::tuple<int>.
+// The issue is fixed after the test was added.
+TEST_CASE("EventQueue, implicit cast with template constructor")
+{
+	eventpp::EventQueue<MyInt, void(const MyInt &)> queue;
+
+	std::vector<int> dataList(3);
+
+	queue.appendListener(5, [&dataList](const MyInt & e) {
+		REQUIRE(e.getValue() == 5);
+		++dataList[0];
+	});
+	queue.appendListener(6, [&dataList](const MyInt & e) {
+		REQUIRE(e.getValue() == 6);
+		++dataList[1];
+	});
+	queue.appendListener(7, [&dataList](const MyInt & value) {
+		REQUIRE(value.getValue() == 2);
+		++dataList[2];
+	});
+
+	REQUIRE(dataList == std::vector<int>{ 0, 0, 0 });
+
+	queue.enqueue(5);
+	queue.enqueue(6);
+	queue.enqueue(7, 2); // This triggers the issue in the overloaded enqueue
+	queue.process();
+	REQUIRE(dataList == std::vector<int>{ 1, 1, 1 });
+}

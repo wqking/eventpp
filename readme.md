@@ -34,7 +34,8 @@ Apache License, Version 2.0
 The master branch is usable and stable.  
 There are some releases on Github, but usually the releases are far behind the latest code.  
 You shold prefer to clone or fork the master branch instead of downloading the releases.  
-The master branch is currently fully back compatible with the first version. So your project won't get any back compatible issues.
+The master branch is currently fully back compatible with the first version. So your project won't get any back compatible issues.  
+If you find any back compatible issue which is not announced, please report a bug.
 
 ## Source code
 
