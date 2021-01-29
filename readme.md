@@ -47,6 +47,16 @@ Tested with MSVC 2019, MinGW (Msys) GCC 7.2, Ubuntu GCC 5.4, and MacOS GCC.
 GCC 4.8.3 can compile the library, but we don't support GCC prior to GCC 5.
 In brief, MSVB, GCC, Clang that has well support for C++11, or released after 2019, should be able to compile the library.
 
+## C++ standard requirements
+* To Use the library  
+    * Core and most library: C++11.  
+    * `AnyHashableValue` in `eventpp/utilities/anyhashablevalue.h`: C++17, it requires `std::any`.  
+	* You only need C++11 unless you use `AnyHashableValue`.
+* To develop the library
+    * Unit tests: C++17.
+	* Tutorials: C++11.
+	* Benchmakrs: C++11.
+
 ## Quick start
 
 ### Namespace
@@ -111,37 +121,41 @@ queue.process();
 
 ## Documentations
 
-* [Overview, thread and exception safety](doc/introduction.md)
-* [Tutorials of CallbackList](doc/tutorial_callbacklist.md)
-* [Tutorials of EventDispatcher](doc/tutorial_eventdispatcher.md)
-* [Tutorials of EventQueue](doc/tutorial_eventqueue.md)
-* [Class CallbackList](doc/callbacklist.md)
-* [Class EventDispatcher](doc/eventdispatcher.md)
-* [Class EventQueue](doc/eventqueue.md)
-* [Overview of heterogeneous classes](doc/heterogeneous.md)
-* [Class HeterCallbackList](doc/hetercallbacklist.md)
-* [Class HeterEventDispatcher](doc/hetereventdispatcher.md)
-* [Class HeterEventQueue](doc/hetereventqueue.md)
-* [Utility argumentAdapter -- adapt pass-in argument types to the types of the functioning being called](doc/argumentadapter.md)
-* [Utility conditionalFunctor -- pre-check the condition before calling a function](doc/conditionalfunctor.md)
-* [Utility class CounterRemover -- auto remove listeners after triggered certain times](doc/counterremover.md)
-* [Utility class ConditionalRemover -- auto remove listeners when certain condition is satisfied](doc/conditionalremover.md)
-* [Utility class ScopedRemover -- auto remove listeners when out of scope](doc/scopedremover.md)
-* [Utility class OrderedQueueList.h -- make EventQueue ordered](doc/orderedqueuelist.md)
-* [Utility header eventmaker.h -- auto generate event classes](doc/eventmaker.md)
-* [Document of utilities](doc/eventutil.md)
-* [Policies -- configure eventpp](doc/policies.md)
-* [Mixins -- extend eventpp](doc/mixins.md)
-* [Performance benchmarks](doc/benchmark.md)
-* [FAQs, tricks, and tips](doc/faq.md)
-* There are compilable tutorials in the unit tests.
+* Core classes and functions
+    * [Overview](doc/introduction.md)
+    * [Tutorials of CallbackList](doc/tutorial_callbacklist.md)
+    * [Tutorials of EventDispatcher](doc/tutorial_eventdispatcher.md)
+    * [Tutorials of EventQueue](doc/tutorial_eventqueue.md)
+    * [Class CallbackList reference](doc/callbacklist.md)
+    * [Class EventDispatcher reference](doc/eventdispatcher.md)
+    * [Class EventQueue reference](doc/eventqueue.md)
+    * [Policies -- configure eventpp](doc/policies.md)
+    * [Mixins -- extend eventpp](doc/mixins.md)
+* Utilities
+    * [Utility argumentAdapter -- adapt pass-in argument types to the types of the functioning being called](doc/argumentadapter.md)
+    * [Utility conditionalFunctor -- pre-check the condition before calling a function](doc/conditionalfunctor.md)
+    * [Utility class CounterRemover -- auto remove listeners after triggered certain times](doc/counterremover.md)
+    * [Utility class ConditionalRemover -- auto remove listeners when certain condition is satisfied](doc/conditionalremover.md)
+    * [Utility class ScopedRemover -- auto remove listeners when out of scope](doc/scopedremover.md)
+    * [Utility class OrderedQueueList -- make EventQueue ordered](doc/orderedqueuelist.md)
+    * [Utility class AnyHashable and AnyHashableValue -- use various data types as EventType in EventDispatcher and EventQueue ordered](doc/anyhashable.md)
+    * [Utility header eventmaker.h -- auto generate event classes](doc/eventmaker.md)
+    * [Document of utilitie functions](doc/eventutil.md)
+* Miscellaneous
+    * [Performance benchmarks](doc/benchmark.md)
+    * [FAQs, tricks, and tips](doc/faq.md)
+* Heterogeneous classes and functions
+    * [Overview of heterogeneous classes](doc/heterogeneous.md)
+    * [Class HeterCallbackList](doc/hetercallbacklist.md)
+    * [Class HeterEventDispatcher](doc/hetereventdispatcher.md)
+    * [Class HeterEventQueue](doc/hetereventqueue.md)
 
 ## Build the test code
 
 The library itself is header only and doesn't need building.  
 There are three parts of code to test the library,
 
-- unittests: tests the library. They require C++14 since it uses generic lambda (the library itself only requires C++11).
+- unittests: tests the library. They require C++17 since it uses generic lambda (the library itself only requires C++11).
 - tutorials: sample code to demonstrate how to use the library. They require C++11. If you want to have a quick study on how to use the library, you can look at the tutorials.
 - benchmarks: measure the library performance.
 
@@ -166,7 +180,8 @@ Thanking to C++11, now it's quite easy to write a reusable event library with be
 **Version 0.1.2**  Latest  
 Bug fix.  
 Added more unit tests.  
-Added utilities argumentAdapter and conditionalFunctor.  
+Added utilities argumentAdapter and conditionalFunctor. 
+Added utilities AnyHashable and AnyHashableValue. 
 Added event maker macros.  
   
 **Version 0.1.1**  Dec 13, 2019  
