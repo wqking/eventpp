@@ -138,7 +138,7 @@ queue.process();
     * [Utility class ConditionalRemover -- auto remove listeners when certain condition is satisfied](doc/conditionalremover.md)
     * [Utility class ScopedRemover -- auto remove listeners when out of scope](doc/scopedremover.md)
     * [Utility class OrderedQueueList -- make EventQueue ordered](doc/orderedqueuelist.md)
-    * [Utility class AnyHashable and AnyHashableValue -- use various data types as EventType in EventDispatcher and EventQueue ordered](doc/anyhashable.md)
+    * [Utility class AnyId -- use various data types as EventType in EventDispatcher and EventQueue ordered](doc/anyid.md)
     * [Utility header eventmaker.h -- auto generate event classes](doc/eventmaker.md)
     * [Document of utilitie functions](doc/eventutil.md)
 * Miscellaneous
@@ -180,8 +180,8 @@ Thanking to C++11, now it's quite easy to write a reusable event library with be
 **Version 0.1.2**  Latest  
 Bug fix.  
 Added more unit tests.  
-Added utilities argumentAdapter and conditionalFunctor. 
-Added utilities AnyHashable and AnyHashableValue. 
+Added utilities argumentAdapter and conditionalFunctor.  
+Added utilities AnyId.  
 Added event maker macros.  
   
 **Version 0.1.1**  Dec 13, 2019  

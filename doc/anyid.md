@@ -28,7 +28,7 @@ eventpp/utilities/anyhashablevalue.h
 
 ## Details
 
-Any values of hashable types can be converted to `AnyHashable` implicit, thus the values can be passed to `EventDispatcher` or `EventQueue` as the event type.  
+Any values of hashable types can be converted to `AnyHashable` implicitly, thus the values can be passed to `EventDispatcher` or `EventQueue` as the event type.  
 A hashable type is a type that can be used with `std::hash`.  
 Note: the hash value calculated by `std::hash` has chances to collide. Two different event IDs with the same hash will be treated as the same ID.  
 

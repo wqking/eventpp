@@ -26,8 +26,7 @@ set(SRC_TEST
 	test_no_extra_copy_move.cpp
 	test_argumentadapter.cpp
 	test_conditionalfunctor.cpp
-	test_anyhashable.cpp
-	test_anyhashablevalue.cpp
+	test_anyid.cpp
 )
 
 add_executable(
