@@ -68,7 +68,7 @@ callbackList.append([](const std::string & s, const bool b) {
 	std::cout << std::boolalpha << "Got callback 1, s is " << s << " b is " << b << std::endl;
 });
 // The callback prototype doesn't need to be exactly same as the callback list.
-// It would be find as long as the arguments is compatible with the callbacklist.
+// It would be fine as long as the arguments are compatible with the callbacklist.
 callbackList.append([](std::string s, int b) {
 	std::cout << std::boolalpha << "Got callback 2, s is " << s << " b is " << b << std::endl;
 });
