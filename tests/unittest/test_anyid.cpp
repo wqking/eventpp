@@ -21,7 +21,7 @@
 #include <string>
 #include <any>
 
-TEST_CASE("AnyHashableId, unordered_map")
+TEST_CASE("AnyId, default, unordered_map")
 {
 	eventpp::EventQueue<eventpp::AnyHashableId, void()> eventQueue;
 
@@ -60,10 +60,9 @@ struct MyEventPolicies
 	template <typename Key, typename T>
 	using Map = std::map <Key, T>;
 };
-TEST_CASE("AnyHashableId, map")
+TEST_CASE("AnyId, default, map")
 {
-	using ED = eventpp::EventDispatcher<eventpp::AnyHashableId, void(), MyEventPolicies>;
-	ED dispatcher;
+	eventpp::EventDispatcher<eventpp::AnyHashableId, void(), MyEventPolicies> dispatcher;
 
 	std::vector<int> dataList(3);
 
@@ -87,23 +86,23 @@ TEST_CASE("AnyHashableId, map")
 	REQUIRE(dataList == std::vector<int>{ 1, 1, 1});
 }
 
-using AnyHashableValue = eventpp::AnyId<std::hash, std::any>;
-
-TEST_CASE("AnyHashableValue, unordered_map")
+TEST_CASE("AnyId<std::hash, std::any>")
 {
-	eventpp::EventQueue<AnyHashableValue, void(const AnyHashableValue &)> eventQueue;
+	using MyAnyId = eventpp::AnyId<std::hash, std::any>;
+
+	eventpp::EventQueue<MyAnyId, void(const MyAnyId &)> eventQueue;
 
 	std::vector<int> dataList(3);
 
-	eventQueue.appendListener(3, [&dataList](const AnyHashableValue & e) {
+	eventQueue.appendListener(3, [&dataList](const MyAnyId & e) {
 		REQUIRE(std::any_cast<int>(e.getValue()) == 3);
 		++dataList[0];
 		});
-	eventQueue.appendListener(std::string("hello"), [&dataList](const AnyHashableValue & e) {
+	eventQueue.appendListener(std::string("hello"), [&dataList](const MyAnyId & e) {
 		REQUIRE(std::any_cast<std::string>(e.getValue()) == "hello");
 		++dataList[1];
 		});
-	eventQueue.appendListener(std::vector<bool>{ true, false, true }, [&dataList](const AnyHashableValue & e) {
+	eventQueue.appendListener(std::vector<bool>{ true, false, true }, [&dataList](const MyAnyId & e) {
 		REQUIRE(std::any_cast<std::vector<bool>>(e.getValue()) == std::vector<bool>{ true, false, true });
 		++dataList[2];
 		});
@@ -127,30 +126,28 @@ TEST_CASE("AnyHashableValue, unordered_map")
 	REQUIRE(dataList == std::vector<int>{ 1, 1, 1});
 }
 
-struct AnyHashableValue_MyEventPolicies
+struct StringStorage
 {
-	template <typename Key, typename T>
-	using Map = std::map <Key, T>;
+	StringStorage(const int value) : value(std::to_string(value)) {}
+	StringStorage(const std::string & value) : value(value) {}
+
+	std::string value;
 };
-TEST_CASE("AnyHashableValue, map")
+
+TEST_CASE("AnyId<std::hash, StringStorage>")
 {
-	using ED = eventpp::EventDispatcher<AnyHashableValue, void(const AnyHashableValue &), AnyHashableValue_MyEventPolicies>;
-	ED dispatcher;
+	using MyAnyId = eventpp::AnyId<std::hash, StringStorage>;
+
+	eventpp::EventDispatcher<MyAnyId, void()> dispatcher;
 
 	std::vector<int> dataList(3);
 
-	dispatcher.appendListener(3, [&dataList](const AnyHashableValue & e) {
-		REQUIRE(std::any_cast<int>(e.getValue()) == 3);
+	dispatcher.appendListener(3, [&dataList]() {
 		++dataList[0];
-		});
-	dispatcher.appendListener(std::string("hello"), [&dataList](const AnyHashableValue & e) {
-		REQUIRE(std::any_cast<std::string>(e.getValue()) == "hello");
+	});
+	dispatcher.appendListener(std::string("hello"), [&dataList]() {
 		++dataList[1];
-		});
-	dispatcher.appendListener(std::vector<bool>{ true, false, true }, [&dataList](const AnyHashableValue & e) {
-		REQUIRE(std::any_cast<std::vector<bool>>(e.getValue()) == std::vector<bool>{ true, false, true });
-		++dataList[2];
-		});
+	});
 
 	REQUIRE(dataList == std::vector<int>{ 0, 0, 0});
 
@@ -158,7 +155,5 @@ TEST_CASE("AnyHashableValue, map")
 	REQUIRE(dataList == std::vector<int>{ 0, 1, 0});
 	dispatcher.dispatch(3);
 	REQUIRE(dataList == std::vector<int>{ 1, 1, 0});
-	dispatcher.dispatch(std::vector<bool>{ true, false, true });
-	REQUIRE(dataList == std::vector<int>{ 1, 1, 1});
 }
 

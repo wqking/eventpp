@@ -19,7 +19,7 @@
 
 namespace eventpp {
 
-namespace internal_ {
+namespace anyid_internal_ {
 
 template <typename T, typename Enabled = void>
 struct MakeHash;
@@ -40,7 +40,56 @@ struct MakeHash <T, typename std::enable_if<! std::is_convertible<T, std::size_t
 	}
 };
 
-} //namespace internal_
+template <typename T>
+class HasLess
+{
+	template <typename C> static std::true_type test(decltype(std::declval<C>() < std::declval<C>()) *);
+	template <typename C> static std::false_type test(...);
+
+public:
+	enum { value = !! decltype(test<T>(0))() };
+};
+
+template <typename T>
+auto compareLessThan(const T & a, const T & b)
+	-> typename std::enable_if<HasLess<T>::value, bool>::type
+{
+	return a < b;
+}
+
+template <typename T>
+auto compareLessThan(const T &, const T &)
+	-> typename std::enable_if<! HasLess<T>::value, bool>::type
+{
+	return false;
+}
+
+template <typename T>
+class HasEqual
+{
+	template <typename C> static std::true_type test(decltype(std::declval<C>() == std::declval<C>()) *);
+	template <typename C> static std::false_type test(...);
+
+public:
+	enum { value = !! decltype(test<T>(0))() };
+};
+
+template <typename T>
+auto compareEqual(const T & a, const T & b)
+	-> typename std::enable_if<HasEqual<T>::value, bool>::type
+{
+	return a == b;
+}
+
+template <typename T>
+auto compareEqual(const T &, const T &)
+	-> typename std::enable_if<! HasEqual<T>::value, bool>::type
+{
+	return true;
+}
+
+
+} //namespace anyid_internal_
 
 struct EmptyStorage
 {
@@ -50,7 +99,7 @@ struct EmptyStorage
 	EmptyStorage(const T &) {}
 };
 
-template <template <typename> class Digester, typename Storage = EmptyStorage>
+template <template <typename> class Digester = std::hash, typename Storage = EmptyStorage>
 class AnyId
 {
 public:
@@ -82,27 +131,29 @@ private:
 template <template <typename> class Digester, typename Storage>
 bool operator == (const AnyId<Digester, Storage> & a, const AnyId<Digester, Storage> & b)
 {
-	return a.getDigest() == b.getDigest();
+	return a.getDigest() == b.getDigest() && anyid_internal_::compareEqual(a.getValue(), b.getValue());
 }
 
 template <template <typename> class Digester, typename Storage>
 bool operator < (const AnyId<Digester, Storage> & a, const AnyId<Digester, Storage> & b)
 {
-	return a.getDigest() < b.getDigest();
+	return (a.getDigest() < b.getDigest())
+		|| (anyid_internal_::compareLessThan(a.getValue(), b.getValue()) && a.getDigest() == b.getDigest())
+	;
 }
 
-using AnyHashableId = AnyId<std::hash>;
+using AnyHashableId = AnyId<>;
 
 } //namespace eventpp
 
 namespace std
 {
-template <template <typename> class Digester>
-struct hash<eventpp::AnyId<Digester> >
+template <template <typename> class Digester, typename Storage>
+struct hash<eventpp::AnyId<Digester, Storage> >
 {
-	std::size_t operator()(const eventpp::AnyId<Digester> & value) const noexcept
+	std::size_t operator()(const eventpp::AnyId<Digester, Storage> & value) const noexcept
 	{
-		return eventpp::internal_::MakeHash<typename eventpp::AnyId<Digester>::DigestType>()(value.getDigest());
+		return eventpp::anyid_internal_::MakeHash<typename eventpp::AnyId<Digester, Storage>::DigestType>()(value.getDigest());
 	}
 };
 } //namespace std
