@@ -49,9 +49,7 @@ In brief, MSVB, GCC, Clang that has well support for C++11, or released after 20
 
 ## C++ standard requirements
 * To Use the library  
-    * Core and most library: C++11.  
-    * `AnyHashableValue` in `eventpp/utilities/anyhashablevalue.h`: C++17, it requires `std::any`.  
-	* You only need C++11 unless you use `AnyHashableValue`.
+    * The library: C++11.  
 * To develop the library
     * Unit tests: C++17.
 	* Tutorials: C++11.

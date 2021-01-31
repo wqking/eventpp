@@ -1,13 +1,13 @@
-# Class AnyHashable and AnyHashableValue reference
+# Class AnyId reference
 
 ## Description
 
-The class `AnyHashable` can be used as the event ID type in `EventDispatcher` and `EventQueue`, then any hashable types can be used as the event type.
+The template class `AnyId` can be used as the event ID type in `EventDispatcher` and `EventQueue`, then any types can be used as the event type.
 
 For example,  
 
 ```c++
-eventpp::EventQueue<eventpp::AnyHashable, void()> eventQueue;
+eventpp::EventQueue<eventpp::AnyId<>, void()> eventQueue;
 
 eventQueue.appendListener(3, []() {}); // listener 1
 eventQueue.appendListener(std::string("hello"), []() {}); // listener 2
@@ -16,66 +16,105 @@ eventQueue.dispatch(3); // trigger listener 1
 eventQueue.dispatch(std::string("hello")); // trigger listener 2
 ```
 
-`AnyHashableValue` is similar to `AnyHashable`. `AnyHashableValue` holds the underlying event ID and can be obtained by the users. `AnyHashable` doesn't hold the underlying event ID for better performance.
+## API reference
 
-## Header
+### Header
 
-AnyHashable  
-eventpp/utilities/anyhashable.h  
+eventpp/utilities/anyid.h  
 
-AnyHashableValue  
-eventpp/utilities/anyhashablevalue.h
-
-## Details
-
-Any values of hashable types can be converted to `AnyHashable` implicitly, thus the values can be passed to `EventDispatcher` or `EventQueue` as the event type.  
-A hashable type is a type that can be used with `std::hash`.  
-Note: the hash value calculated by `std::hash` has chances to collide. Two different event IDs with the same hash will be treated as the same ID.  
-
-`AnyHashable` has only one member function,
+### Class AnyId template parameters
 
 ```c++
-std::size_t AnyHashable::getHash() const;
+template <template <typename> class Digester = std::hash, typename Storage = EmptyStorage>
+class AnyId;
 ```
+`Digester`: a template class that has one template parameter. It has a function call operator that receives one value and returns the digest of the value. The returned digest must be hashable, i.e, it must be able to be passed to `std::hash`. One of such `Digester` is `std::hash`. The parameter default value is `std::hash`.  
+`Storage`: a class that can be constructed with any types of values which are going to be used in `AnyId`. One of such `Storage` is `std::any` (in C++17). The parameter default value is an empty storage class that can be constructed with any types and it doesn't hold the value.  
 
-The function returns the hash value.
+`Digester` is used to convert any types to a specified type and `AnyId` stores the digest instead of the value itself.  
+`Storage` is used to store the actural value.  
 
-`AnyHashableValue` supports `getHash` as well, and another member function,
-
+A typical implementation of `Digester`:  
 ```c++
-const std::any & AnyHashableValue::getValue() const;
-```
-
-`getValue` returns the underlying event ID value in `std::any`.  
-
-Example code for `AnyHashableValue`,  
-
-```c++
-eventpp::EventQueue<
-		eventpp::AnyHashableValue,
-		void(const eventpp::AnyHashableValue & e)
-	> eventQueue;
-
-eventQueue.appendListener(
-	3,
-	[](const eventpp::AnyHashableValue & e) {
-		assert(std::any_cast<int>(e.getValue()) == 3);
+template <typename T>
+struct MyDigest
+{
+	TheDigestTypeSuchAsSizeT operator() (const T & value) const {
+		// compute the digest of value and return the digest.
 	}
-);
-eventQueue.appendListener(
-	std::string("hello"),
-	[](const eventpp::AnyHashableValue & e) {
-		assert(std::any_cast<std::string>(e.getValue()) == "hello");
-	}
-);
+};
+```
+Note: the return type of the function call operator (here is TheDigestTypeSuchAsSizeT) must be the same for all T, it can't be different type for different T.  
 
-eventQueue.enqueue(3);
-eventQueue.process();
-eventQueue.dispatch(std::string("hello"));
+A typical implementation of `Storage`:  
+```c++
+struct MyStorage
+{
+	template <typename T>
+	MyStorage(const T & value) {
+		// store the value
+	}
+	
+	// any other member functions can be added, such as getting the underlying value.
+};
+```
+Or none template version:  
+```c++
+// In this version, only value of `int` and `std::string` can be stored.
+struct MyStorage
+{
+	MyStorage(const int value) {}
+	MyStorage(const std::string & value) {}
+	
+	// any other member functions can be added, such as getting the underlying value.
+};
 ```
 
-## When to use AnyHashable and AnyHashableValue?
+### Public types
+`DigestType`: the digest type that returned by `Digester`. If `Digester` is `std::hash`, `DigestType` is `std::size_t`.  
 
-Even though `AnyHashable` and `AnyHashableValue` look smart and very flexible, I highly don't encourage you to use them at all because that means the architecture has flaws. You should always prefer to single event type, such as `int`, or `std::string`, than mixing them.  
-If you want to use `AnyHashable` or `AnyHashableValue`, don't forget to take into account of the collision created by `std::hash`, and be sure your event IDs don't collide with each other.  
-If you find there are good reasons to mix the event types and there are good cases to use `AnyHashable` and `AnyHashableValue`, you can let me know.  
+### Member functions
+
+#### constructors
+```c++
+AnyId();
+
+template <typename T>
+AnyId(const T & value);
+```
+
+Any value can be converted to `AnyId` implicitly.
+
+#### getDigest
+```c++
+DigestType getDigest() const;
+```
+Return the digest for the value that passed in the constructor.
+
+```c++
+const Storage & getValue() const;
+```
+Return the value that's stored in `Storage`. The default `Storage` is an empty structure, so you can't get the real value from it.  
+If `std::any` is used as the `Storage` parameter when initializing the `AnyId` template, `getValue` returns the `std::any` thus the value can be obtained from the `std::any`.  
+
+## Global type AnyHashableId
+
+```c++
+using AnyHashableId = AnyId<>;
+```
+
+`AnyHashableId` is an initialization of `AnyId` with the default parameters. It can be used in place of the event ID in `EventDispatcher` or `EventQueue`.  
+In the example code in the beginning of this document, the `eventpp::AnyId<>` can be replaced with `eventpp::AnyHashableId`.  
+
+## Comparison AnyId
+
+`AnyId` supports `operator ==` for being used in `std::unordered_map`, and `operator <` for being used in `std::map` (which map is used depending on the policies), in `EventDispatcher` and `EventQueue`.  
+`AnyId` compares the digest first (the digest must be comparable).  
+If the `Storage` supports the operators, the values in the storage are compared. In this case, it doesn't matter if digest collides.
+If the `Storage` doesn't support the operators, only the digests are compared. In this case, if digest collides, the result is in collision.
+
+## When to use AnyId?
+
+Even though `AnyId` looks smart and very flexible, I highly don't encourage you to use it at all because that means the architecture has flaws. You should always prefer to single event type, such as `int`, or `std::string`, than mixing them.  
+If you want to use `AnyHashableId` (aka, `AnyId<>`), don't forget to take into account of the collision created by `std::hash`, and be sure your event IDs don't collide with each other.  
+If you find there are good reasons to mix the event types and there are good cases to use `AnyId`, you can let me know.  
