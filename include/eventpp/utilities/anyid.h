@@ -91,15 +91,15 @@ auto compareEqual(const T &, const T &)
 
 } //namespace anyid_internal_
 
-struct EmptyStorage
+struct EmptyAnyStorage
 {
-	EmptyStorage() {}
+	EmptyAnyStorage() {}
 
 	template <typename T>
-	EmptyStorage(const T &) {}
+	EmptyAnyStorage(const T &) {}
 };
 
-template <template <typename> class Digester = std::hash, typename Storage = EmptyStorage>
+template <template <typename> class Digester = std::hash, typename Storage = EmptyAnyStorage>
 class AnyId
 {
 public:

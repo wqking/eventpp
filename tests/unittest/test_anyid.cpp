@@ -138,14 +138,16 @@ TEST_CASE("AnyId<std::hash, StringStorage>")
 {
 	using MyAnyId = eventpp::AnyId<std::hash, StringStorage>;
 
-	eventpp::EventDispatcher<MyAnyId, void()> dispatcher;
+	eventpp::EventDispatcher<MyAnyId, void(const MyAnyId &)> dispatcher;
 
 	std::vector<int> dataList(3);
 
-	dispatcher.appendListener(3, [&dataList]() {
+	dispatcher.appendListener(3, [&dataList](const MyAnyId & e) {
+		REQUIRE(e.getValue().value == "3");
 		++dataList[0];
 	});
-	dispatcher.appendListener(std::string("hello"), [&dataList]() {
+	dispatcher.appendListener(std::string("hello"), [&dataList](const MyAnyId & e) {
+		REQUIRE(e.getValue().value == "hello");
 		++dataList[1];
 	});
 
