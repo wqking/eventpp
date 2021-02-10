@@ -1,13 +1,15 @@
 # Introduction to eventpp library
 
-eventpp includes three main classes, CallbackList, EventDispatcher, and EventQueue. Each class has a different purpose and usage.  
+eventpp includes three core classes, CallbackList, EventDispatcher, and EventQueue. Each class has a different purpose and usage.  
 
 ## Class CallbackList
 
 CallbackList is the fundamental class in eventpp. The other classes EventDispatcher and EventQueue are built on CallbackList.  
 
-CallbackList holds a list of callbacks. At the time of the call, CallbackList simply invokes each callback one by one. Consider CallbackList as the signal/slot system in Qt, or the callback function pointer in some Windows APIs (such as lpCompletionRoutine in `ReadFileEx`).  
+CallbackList holds a list of callbacks. When a CallbackList is being invoked, CallbackList simply invokes each callback one by one. Consider CallbackList as the signal/slot system in Qt, or the callback function pointer in some Windows APIs (such as lpCompletionRoutine in `ReadFileEx`).  
 The *callback* can be any callback target -- functions, pointers to functions, , pointers to member functions, lambda expressions, and function objects.  
+
+CallbackList equivalents the 'signal' in other event system such as Qt. There is no 'slot' (or callback) equivalence in eventpp. Any callable can be the slot (or to say, callback).
 
 CallbackList is ideal when there are very few kinds of events. Each event can have its own CallbackList, and each CallbackList can have a different prototype. For example,
 ```c++
@@ -48,13 +50,13 @@ eventpp::EventDispatcher<MyEventType, void(const MyEvent &), MyEventPolicies> di
 dispatcher.dispatch(MyEvent { MyEventType::redraw });
 ```
 (Note: if you are confused with MyEventPolicies in above sample, please read the [document of policies](policies.md), and just consider the dispatcher as `eventpp::EventDispatcher<MyEventType, void(const MyEvent &)> dispatcher` for now.)  
-The disadvantage of EventDispatcher is that all events must have the same callback prototype (`void(const MyEvent &)` in the sample code). The common solution is that the callback takes a base class of Event and all events derive their own event data from Event. In the sample code, MyEvent is the base event class, the callback takes an argument of `const reference to MyEvent`.  
+The disadvantage of EventDispatcher is that all events must have the same callback prototype (`void(const MyEvent &)` in the sample code). The common solution is that the callback takes a base class of Event and all events derive their own event data from Event. In the sample code, MyEvent is the base event class, the callback takes an argument of `const MyEvent &`.  
 
 ## Class EventQueue
 
 EventQueue includes all features of EventDispatcher and adds event queue features. Note: EventQueue doesn't inherit from EventDispatcher, don't try to cast EventQueue to EventDispatcher.  
 EventQueue is asynchronous. Events are cached in the queue when `EventQueue::enqueue` is called, and dispatched later when `EventQueue::process` is called.  
-EventQueue is equivalent to the event system (QEvent) in Qt, or the message processing in Windows.  
+EventQueue is equivalent to the event system (QEvent) in Qt, or the message processing in Windows API.  
 
 ```c++
 eventpp::EventQueue<int, void (const std::string &, const bool)> queue;

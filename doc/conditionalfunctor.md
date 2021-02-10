@@ -23,8 +23,6 @@ callbackList(2); // not trigger the callback
 callbackList(1); // trigger the callback
 ```
 
-# Utilities reference
-
 ## Header
 
 eventpp/utilities/conditionalfunctor.h

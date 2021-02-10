@@ -26,6 +26,7 @@ set(SRC_TEST
 	test_no_extra_copy_move.cpp
 	test_argumentadapter.cpp
 	test_conditionalfunctor.cpp
+	test_anyid.cpp
 )
 
 add_executable(
@@ -37,7 +38,7 @@ set(THREADS_PREFER_PTHREAD_FLAG ON)
 find_package(Threads REQUIRED)
 target_link_libraries(${TARGET_TEST} Threads::Threads)
 
-set_target_properties(${TARGET_TEST} PROPERTIES CXX_STANDARD 14)
+set_target_properties(${TARGET_TEST} PROPERTIES CXX_STANDARD 17)
 
 if(CMAKE_COMPILER_IS_GNUCXX)
 if(coverage)

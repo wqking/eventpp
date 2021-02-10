@@ -24,8 +24,6 @@ eventpp::EventDispatcher<int, void (const Event &)> dispatcher;
 dispatcher.appendListener(ON_MOUSE_DOWN, eventpp::argumentAdapter<void(const MouseEvent &)>([](const MouseEvent &) {}));
 ```
 
-# Utilities reference
-
 ## Header
 
 eventpp/utilities/argumentadapter.h
