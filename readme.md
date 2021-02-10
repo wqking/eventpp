@@ -136,7 +136,7 @@ queue.process();
     * [Utility class ConditionalRemover -- auto remove listeners when certain condition is satisfied](doc/conditionalremover.md)
     * [Utility class ScopedRemover -- auto remove listeners when out of scope](doc/scopedremover.md)
     * [Utility class OrderedQueueList -- make EventQueue ordered](doc/orderedqueuelist.md)
-    * [Utility class AnyId -- use various data types as EventType in EventDispatcher and EventQueue ordered](doc/anyid.md)
+    * [Utility class AnyId -- use various data types as EventType in EventDispatcher and EventQueue](doc/anyid.md)
     * [Utility header eventmaker.h -- auto generate event classes](doc/eventmaker.md)
     * [Document of utilitie functions](doc/eventutil.md)
 * Miscellaneous
