@@ -1,28 +1,28 @@
 # eventpp -- C++ library for event dispatcher and callback list
 
-eventpp is a C++ event library that provides tools that enable your application components to communicate with each other by dispatching events and listening for them. With eventpp you can easily implement signal/slot mechanism, or observer pattern.
+eventpp is a C++ event library for callbacks, event dispatcher, and event queue. With eventpp you can easily implement signal and slot mechanism, publisher and subscriber pattern, or observer pattern.
 
 ## Facts and features
 
 - **Powerful**
-  - Supports synchronous event dispatching and asynchronous event queue.
-  - Configurable and extensible with policies and mixins.
-  - Supports event filter via mixins.
+    - Supports synchronous event dispatching and asynchronous event queue.
+    - Configurable and extensible with policies and mixins.
+    - Supports event filter via mixins.
 - **Robust**
-  - Supports nested event. During the process of handling an event, a listener can safely dispatch event and append/prepend/insert/remove other listeners.
-  - Thread safety. Supports multi-threading.
-  - Exception safety. Most operations guarantee strong exception safety.
-  - Well tested. Backed by unit tests.
+    - Supports nested event. During the process of handling an event, a listener can safely dispatch event and append/prepend/insert/remove other listeners.
+    - Thread safety. Supports multi-threading.
+    - Exception safety. Most operations guarantee strong exception safety.
+    - Well tested. Backed by unit tests.
 - **Fast**
-  - The EventQueue can process 10M events in 1 second (10K events per millisecond).
-  - The CallbackList can invoke 100M callbacks in 1 second (100K callbacks per millisecond).
-  - The CallbackList can add/remove 5M callbacks in 1 second (5K callbacks per millisecond).
+    - The EventQueue can process 10M events in 1 second (10K events per millisecond).
+    - The CallbackList can invoke 100M callbacks in 1 second (100K callbacks per millisecond).
+    - The CallbackList can add/remove 5M callbacks in 1 second (5K callbacks per millisecond).
 - **Flexible and easy to use**
-  - Listeners and events can be of any type and do not need to be inherited from any base class.
-  - Utilities that can ease the usage, such as auto disconnecting, one shot listener, argument type adapter, etc.
-  - Header only, no source file, no need to build. Does not depend on other libraries.
-  - Requires C++ 11.
-  - Written in portable and standard C++, no hacks or quirks.
+    - Listeners and events can be of any type and do not need to be inherited from any base class.
+    - Utilities that can ease the usage, such as auto disconnecting, one shot listener, argument type adapter, etc.
+    - Header only, no source file, no need to build. Does not depend on other libraries.
+    - Requires C++ 11.
+    - Written in portable and standard C++, no hacks or quirks.
 
 ## License
 
@@ -61,7 +61,7 @@ In brief, MSVB, GCC, Clang that has well support for C++11, or released after 20
 
 `eventpp`
 
-### Use eventpp to your project
+### Use eventpp in your project
 
 eventpp is header only library. Just add the 'include' folder in eventpp to your project, then you can use the library.  
 You don't need to link to any source code.
@@ -153,7 +153,7 @@ queue.process();
 The library itself is header only and doesn't need building.  
 There are three parts of code to test the library,
 
-- unittests: tests the library. They require C++17 since it uses generic lambda (the library itself only requires C++11).
+- unittests: tests the library. They require C++17 since it uses generic lambda and `std::any` (the library itself only requires C++11).
 - tutorials: sample code to demonstrate how to use the library. They require C++11. If you want to have a quick study on how to use the library, you can look at the tutorials.
 - benchmarks: measure the library performance.
 
@@ -170,7 +170,7 @@ Go to folder `tests/build`, then run `make` with different target.
 
 ## Motivations
 
-I (wqking) am a big fan of observer pattern (publish/subscribe pattern), and I used this pattern extensively in my code. I either used GCallbackList in my [cpgf library](https://github.com/cpgf/cpgf) which is too simple and unsafe (not support multi-threading or nested events), or repeated coding event dispatching mechanism such as I did in my [Gincu game engine](https://github.com/wqking/gincu) (the latest version has be rewritten to use eventpp). Both or these methods are neither fun nor robust.  
+I (wqking) am a big fan of observer pattern (publish/subscribe pattern), and I used this pattern extensively in my code. I either used GCallbackList in my [cpgf library](https://github.com/cpgf/cpgf) which is too simple and unsafe (not support multi-threading or nested events), or repeated coding event dispatching mechanism such as I did in my [Gincu game engine](https://github.com/wqking/gincu) (the latest version has be rewritten to use eventpp). Both methods are not fun nor robust.  
 Thanking to C++11, now it's quite easy to write a reusable event library with beautiful syntax (it's a nightmare to simulate the variadic template in C++03), so here is `eventpp`.
 
 ## Change log
