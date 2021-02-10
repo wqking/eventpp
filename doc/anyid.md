@@ -43,7 +43,7 @@ eventpp/utilities/anyid.h
 template <template <typename> class Digester = std::hash, typename Storage = EmptyStorage>
 class AnyId;
 ```
-`Digester`: a template class that has one template parameter. It has a function call operator that receives one value and returns the digest of the value. The returned digest must be hashable, i.e, it must be able to be passed to `std::hash`. One of such `Digester` is `std::hash`. The parameter default value is `std::hash`. A event ID that's converted to `AnyId` must be able to pass to `Digester` function call operator. For exmaple, if `Digester` is `std::hash`, the event ID must be hashable, aka, it must be able to be passed to `std::hash`, so `int` and `std::string` works, but `const char *` not.  
+`Digester`: a template class that has one template parameter. It has a function call operator that receives one value and returns the digest of the value. The returned digest must be hashable, i.e, it must be able to be passed to `std::hash`. One of such `Digester` is `std::hash`. The parameter default value is `std::hash`. An event ID that's converted to `AnyId` must be able to pass to `Digester` function call operator. For exmaple, if `Digester` is `std::hash`, the event ID must be hashable, aka, it must be able to be passed to `std::hash`, so `int` and `std::string` works, but `const char *` not.  
 `Storage`: a class that can be constructed with any types of values which are going to be used in `AnyId`. One of such `Storage` is `std::any` (in C++17). The parameter default value is an empty storage class that can be constructed with any types and it doesn't hold the value.  
 
 `Digester` is used to convert any types to a specified type and `AnyId` stores the digest instead of the value itself.  
@@ -131,5 +131,5 @@ If the `Storage` doesn't support the operators, only the digests are compared. I
 ## When to use AnyId?
 
 Even though `AnyId` looks smart and very flexible, I highly don't encourage you to use it at all because that means the architecture has flaws. You should always prefer to single event type, such as `int`, or `std::string`, than mixing them.  
-If you want to use `AnyHashableId` (aka, `AnyId<>`), don't forget to take into account of the collision created by `std::hash`, and be sure your event IDs don't collide with each other.  
+If you want to use `AnyHashableId` (aka, `AnyId<>`), don't forget to take into account of the collision created by `std::hash`, and be sure your event IDs don't collide with each other. Instead of using `std::hash`, you may implement more safer digester, such as SHA256.  
 If you find there are good reasons to mix the event types and there are good cases to use `AnyId`, you can let me know.  
