@@ -45,7 +45,7 @@ If you find any back compatible issue which is not announced, please report a bu
 
 Tested with MSVC 2019, MinGW (Msys) GCC 7.2, Ubuntu GCC 5.4, and MacOS GCC.
 GCC 4.8.3 can compile the library, but we don't support GCC prior to GCC 5.
-In brief, MSVB, GCC, Clang that has well support for C++11, or released after 2019, should be able to compile the library.
+In brief, MSVC, GCC, Clang that has well support for C++11, or released after 2019, should be able to compile the library.
 
 ## C++ standard requirements
 * To Use the library  

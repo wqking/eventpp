@@ -17,7 +17,7 @@ struct MouseEvent : public Event
 
 eventpp::EventDispatcher<int, void (const Event &)> dispatcher;
 
-// Below line won't compile because the listener must `const Event &` can't be converted to `const MouseEvent &` explicitly.
+// Below line won't compile because the listener parameter `const Event &` can't be converted to `const MouseEvent &` explicitly.
 //dispatcher.appendListener(ON_MOUSE_DOWN, [](const MouseEvent &) {});
 
 // This line works.
