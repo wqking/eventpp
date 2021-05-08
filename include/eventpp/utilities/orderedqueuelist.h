@@ -59,6 +59,17 @@ private:
 	void doSort() {
 		auto compare = Compare();
 		this->sort([compare](const T & a, const T & b) {
+			// a and b may be empty if they are recycled to free list.
+			if(a.empty()) {
+				if(b.empty()) {
+					return false;
+				}
+				return true;
+			}
+			else if(b.empty()) {
+				return false;
+			}
+
 			return compare(a.get(), b.get());
 		});
 	}
