@@ -167,6 +167,16 @@ public:
 		return false;
 	}
 
+	bool hasAnyListener(const Event & event) const
+	{
+		const CallbackList_ * callableList = doFindCallableList(event);
+		if(callableList) {
+			return ! callableList->empty();
+		}
+
+		return false;
+	}
+
 	template <typename Func>
 	void forEach(const Event & event, Func && func) const
 	{

@@ -142,7 +142,7 @@ queue.process();
 * Miscellaneous
     * [Performance benchmarks](doc/benchmark.md)
     * [FAQs, tricks, and tips](doc/faq.md)
-* Heterogeneous classes and functions
+* Heterogeneous classes and functions, usually you don't need them
     * [Overview of heterogeneous classes](doc/heterogeneous.md)
     * [Class HeterCallbackList](doc/hetercallbacklist.md)
     * [Class HeterEventDispatcher](doc/hetereventdispatcher.md)

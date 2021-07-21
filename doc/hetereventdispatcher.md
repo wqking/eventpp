@@ -110,6 +110,15 @@ Remove the listener *handle* which listens to *event* from the dispatcher.
 Return true if the listener is removed successfully, false if the listener is not found.  
 The time complexity is O(1).  
 
+#### hasAnyListener
+
+```c++
+bool hasAnyListener(const Event & event) const;
+```  
+Return true if there is any listener for `event`, false if there is no listener.  
+Note: in multi threading, this function returning true doesn't guarantee there is any listener. The list may immediately become empty after the function returns true, and vice versa.
+The time complexity is O(1) plus time to look up the event in internal map.
+
 #### forEach
 
 ```c++

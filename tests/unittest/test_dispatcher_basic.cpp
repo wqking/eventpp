@@ -109,6 +109,51 @@ TEST_CASE("EventDispatcher, add/remove, int, void ()")
 	REQUIRE(! dispatcher.removeListener(event + 1, hb));
 }
 
+TEST_CASE("EventDispatcher, hasAnyListener, int, void ()")
+{
+	eventpp::EventDispatcher<int, void()> dispatcher;
+	constexpr int event1 = 3;
+	constexpr int event2 = 5;
+
+	decltype(dispatcher)::Handle ha, hb, hc;
+
+	REQUIRE(! dispatcher.hasAnyListener(event1));
+	REQUIRE(! dispatcher.hasAnyListener(event2));
+
+	ha = dispatcher.appendListener(event1, [](){});
+	REQUIRE(dispatcher.hasAnyListener(event1));
+	REQUIRE(! dispatcher.hasAnyListener(event2));
+
+	hb = dispatcher.appendListener(event1, [](){});
+	REQUIRE(dispatcher.hasAnyListener(event1));
+	REQUIRE(! dispatcher.hasAnyListener(event2));
+
+	hc = dispatcher.appendListener(event2, []() {});
+	REQUIRE(dispatcher.hasAnyListener(event1));
+	REQUIRE(dispatcher.hasAnyListener(event2));
+
+	dispatcher.removeListener(event1, ha);
+	REQUIRE(dispatcher.hasAnyListener(event1));
+	REQUIRE(dispatcher.hasAnyListener(event2));
+
+	dispatcher.removeListener(event1, ha); // not remove anything
+	REQUIRE(dispatcher.hasAnyListener(event1));
+	REQUIRE(dispatcher.hasAnyListener(event2));
+
+	dispatcher.removeListener(event1, hb);
+	REQUIRE(! dispatcher.hasAnyListener(event1));
+	REQUIRE(dispatcher.hasAnyListener(event2));
+
+	ha = dispatcher.appendListener(event1, [](){});
+	REQUIRE(dispatcher.hasAnyListener(event1));
+
+	dispatcher.removeListener(event2, hc);
+	REQUIRE(! dispatcher.hasAnyListener(event2));
+
+	dispatcher.removeListener(event1, ha);
+	REQUIRE(! dispatcher.hasAnyListener(event1));
+}
+
 TEST_CASE("EventDispatcher, add another listener inside a listener, int, void ()")
 {
 	eventpp::EventDispatcher<int, void ()> dispatcher;

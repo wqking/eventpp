@@ -181,6 +181,38 @@ TEST_CASE("HeterEventDispatcher, removeListener")
 	REQUIRE(dataList == std::vector<int>{ 5, 1, 3, 6, 4 });
 }
 
+TEST_CASE("HeterEventDispatcher, hasAnyListener, int, void ()")
+{
+	eventpp::HeterEventDispatcher<int, eventpp::HeterTuple<void(), void(int)> > dispatcher;
+	constexpr int event = 3;
+
+	std::vector<int> dataList(5);
+
+	REQUIRE(! dispatcher.hasAnyListener(event));
+
+	auto h1 = dispatcher.appendListener(event, [](){});
+	REQUIRE(dispatcher.hasAnyListener(event));
+	REQUIRE(! dispatcher.hasAnyListener(event + 1));
+
+	auto h2 = dispatcher.appendListener(event, [](int){});
+	REQUIRE(dispatcher.hasAnyListener(event));
+
+	dispatcher.removeListener(event, h1);
+	REQUIRE(dispatcher.hasAnyListener(event));
+
+	dispatcher.removeListener(event, h1); // not remove anything
+	REQUIRE(dispatcher.hasAnyListener(event));
+
+	dispatcher.removeListener(event, h2);
+	REQUIRE(! dispatcher.hasAnyListener(event));
+
+	h1 = dispatcher.appendListener(event, [](){});
+	REQUIRE(dispatcher.hasAnyListener(event));
+
+	dispatcher.removeListener(event, h1);
+	REQUIRE(! dispatcher.hasAnyListener(event));
+}
+
 TEST_CASE("HeterEventDispatcher, forEach")
 {
 	eventpp::HeterEventDispatcher<int, eventpp::HeterTuple<int (), int (int)> > dispatcher;
