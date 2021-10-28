@@ -125,15 +125,15 @@ Note: if `processOne()` is called from multiple threads simultaneously, the even
 #### processIf
 
 ```c++
-template <typename F>
-bool processIf(F && func);
+template <typename Predictor>
+bool processIf(Predictor && predictor);
 ```
-Process the event queue. Before processing an event, the event is passed to `func` and the event will be processed only if `func` returns true.  
-`func` takes exactly the same arguments as `EventQueue::enqueue`, and returns a boolean value.  
+Process the event queue. Before processing an event, the event is passed to `predictor` and the event will be processed only if `predictor` returns true.  
+`predictor` is a callable object that takes exactly the same arguments as `EventQueue::enqueue` or have no arguments, and returns a boolean value. eventpp will pass the arguments properly.
 `processIf` returns true if any event was dispatched, false if no event was dispatched.  
 `processIf` has some good use scenarios:  
 1. Process certain events in certain thread. For example, in a GUI application, the UI related events may be only desired to be processed in the main thread.  
-2. Process the events within certain duration. For example, in a game engine, the event process may be limited to only several milliseconds, the remaining events will be process in next game loop. In such situation, the `func` can return false when time out.  
+2. Process the events within certain duration. For example, in a game engine, the event process may be limited to only several milliseconds, the remaining events will be process in next game loop. In such situation, the `predictor` can return false when time out.  
 
 #### emptyQueue
 

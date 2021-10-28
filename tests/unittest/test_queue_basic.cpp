@@ -567,6 +567,111 @@ TEST_CASE("EventQueue, processIf")
 	REQUIRE(! queue.processIf([](const int /*event*/) -> bool { return true; }));
 }
 
+TEST_CASE("EventQueue, processIf, Predictor has no arguments")
+{
+	struct Predictor {
+		const int value;
+		int counter;
+		explicit Predictor(const int value) : value(value), counter(0){}
+		bool operator() () {
+			return counter++ == value;
+		}
+	};
+	eventpp::EventQueue<int, void (int)> queue;
+
+	std::vector<int> dataList(3);
+
+	queue.appendListener(5, [&dataList](int) {
+		++dataList[0];
+	});
+	queue.appendListener(6, [&dataList](int) {
+		++dataList[1];
+	});
+	queue.appendListener(7, [&dataList](int) {
+		++dataList[2];
+	});
+
+	REQUIRE(dataList == std::vector<int>{ 0, 0, 0 });
+
+	queue.enqueue(5);
+	queue.enqueue(6);
+	queue.enqueue(7);
+	queue.process();
+	REQUIRE(dataList == std::vector<int>{ 1, 1, 1 });
+
+	queue.enqueue(5);
+	queue.enqueue(6);
+	queue.enqueue(7);
+	REQUIRE(queue.processIf(Predictor(1)));
+	REQUIRE(dataList == std::vector<int>{ 1, 2, 1 });
+	// Now the queue contains 5, 7
+
+	queue.enqueue(5);
+	queue.enqueue(6);
+	queue.enqueue(7);
+	REQUIRE(queue.processIf(Predictor(0)));
+	REQUIRE(dataList == std::vector<int>{ 2, 2, 1 });
+	// Now the queue contains 7, 5, 6, 7
+
+	queue.process();
+	REQUIRE(dataList == std::vector<int>{ 3, 3, 3 });
+
+	REQUIRE(! queue.processIf([](const int /*event*/) -> bool { return true; }));
+}
+
+TEST_CASE("EventQueue, processIf, Predictor has no arguments, listeners has no arguments")
+{
+	struct Predictor {
+		const int value;
+		mutable int counter;
+		explicit Predictor(const int value) : value(value), counter(0){}
+		bool operator() () const {
+			return counter++ == value;
+		}
+	};
+
+	eventpp::EventQueue<int, void ()> queue;
+
+	std::vector<int> dataList(3);
+
+	queue.appendListener(5, [&dataList]() {
+		++dataList[0];
+	});
+	queue.appendListener(6, [&dataList]() {
+		++dataList[1];
+	});
+	queue.appendListener(7, [&dataList]() {
+		++dataList[2];
+	});
+
+	REQUIRE(dataList == std::vector<int>{ 0, 0, 0 });
+
+	queue.enqueue(5);
+	queue.enqueue(6);
+	queue.enqueue(7);
+	queue.process();
+	REQUIRE(dataList == std::vector<int>{ 1, 1, 1 });
+
+	queue.enqueue(5);
+	queue.enqueue(6);
+	queue.enqueue(7);
+	REQUIRE(queue.processIf(Predictor(1)));
+	REQUIRE(dataList == std::vector<int>{ 1, 2, 1 });
+	// Now the queue contains 5, 7
+
+	queue.enqueue(5);
+	queue.enqueue(6);
+	queue.enqueue(7);
+	REQUIRE(queue.processIf(Predictor(0)));
+	REQUIRE(dataList == std::vector<int>{ 2, 2, 1 });
+	// Now the queue contains 7, 5, 6, 7
+
+	queue.process();
+	REQUIRE(dataList == std::vector<int>{ 3, 3, 3 });
+
+	REQUIRE(! queue.processIf([]() -> bool { return true; }));
+}
+
 class MyInt
 {
 public:
