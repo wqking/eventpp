@@ -13,9 +13,12 @@
 <a id="a2_1"></a>
 ## Description
 
-OrderedQueueList is a utility class that sorts the events in an EventQueue in certain order.  
-With OrderedQueueList, we can dispatch events in certain order such as in priority order.  
-This class is used by the QueueList policy. See [document of policies](policies.md) for details.  
+`OrderedQueueList` is a utility class that sorts the events in an EventQueue in certain order.  
+With `OrderedQueueList`, we can dispatch events in certain order such as in priority order.  
+This class is used with the `QueueList` policy. See [document of policies](policies.md) for details and how to implement new `QueueList`.  
+
+Warning: `OrderedQueueList` is not efficient since it simply inherits from `std::list` and sorts the full list on each `splice`.
+To use it in performance critical applications, you should implement your own version with sophisticated algorithm.
 
 <a id="a2_2"></a>
 ## API reference
