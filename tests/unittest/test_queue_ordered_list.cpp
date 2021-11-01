@@ -96,6 +96,10 @@ TEST_CASE("EventQueue, ordered list, ascend")
 
 	REQUIRE(dataList != eventList);
 	REQUIRE(detectDataListOrder(dataList.begin(), dataList.end()) == 1);
+	
+	// Be sure OrderedQueueList is compilable in below calls.
+	queue.processOne();
+	queue.processIf([](){ return true; });
 }
 
 struct MyCompareDescend

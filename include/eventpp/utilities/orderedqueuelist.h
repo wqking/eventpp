@@ -42,6 +42,7 @@ public:
 	using super::empty;
 	using super::begin;
 	using super::end;
+	using super::front;
 	using super::swap;
 	using super::emplace_back;
 
