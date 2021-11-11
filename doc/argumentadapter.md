@@ -24,6 +24,8 @@ eventpp::EventDispatcher<int, void (const Event &)> dispatcher;
 dispatcher.appendListener(ON_MOUSE_DOWN, eventpp::argumentAdapter<void(const MouseEvent &)>([](const MouseEvent &) {}));
 ```
 
+Note: above code may not work with `EventQueue`, because `EventQueue` stores the arguments in memory, here is `Event`. Passing `MouseEvent` will be stored as `Event`. `std::shared_ptr` should be used in `EventQueue`. See the sample code `example3` in this document.
+
 ## Header
 
 eventpp/utilities/argumentadapter.h
@@ -236,6 +238,31 @@ eventDispatcher.dispatch(EventType::input, MouseEvent(3, 8));
 
 // listener 2 will receive this event, listener 1 will not.
 eventDispatcher.dispatch(EventType::input, KeyEvent(99));
+}
+
+void example3()
+{
+// Here we use std::shared_ptr as the callback parameter.
+
+// Note the argument can't be any reference to std::shared_ptr, such as 'const std::shared_ptr<Event> &',
+// because eventpp::argumentAdapter uses std::static_pointer_cast to cast the pointer and it doesn't
+// work on reference.
+eventpp::EventQueue<EventType, void(std::shared_ptr<Event>)> eventQueue;
+
+// This can't compile because a 'std::shared_ptr<Event>' can be passed to 'std::shared_ptr<MouseEvent>'
+//eventDispatcher.appendListener(mouseEventId, [](std::shared_ptr<MouseEvent> e) {});
+
+// This compiles. eventpp::argumentAdapter creates a functor object that static_cast 
+// 'std::shared_ptr<Event>' to 'std::shared_ptr<MouseEvent>' automatically.
+eventQueue.appendListener(
+	EventType::mouse,
+	eventpp::argumentAdapter<void(std::shared_ptr<MouseEvent>)>([](std::shared_ptr<MouseEvent> e) {
+		std::cout << "Received MouseEvent as std::shared_ptr, x=" << e->getX() << " y=" << e->getY() << std::endl;
+	})
+);
+
+eventQueue.enqueue(EventType::mouse, std::make_shared<MouseEvent>(3, 5));
+eventQueue.process();
 }
 
 ```
