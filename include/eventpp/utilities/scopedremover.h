@@ -83,17 +83,14 @@ public:
 		}
 		
 		std::unique_lock<std::mutex> lock(itemListMutex);
-
 		itemList.clear();
 	}
 	
 	void setDispatcher(DispatcherType & dispatcher)
 	{
 		if(this->dispatcher != &dispatcher) {
+			reset();
 			this->dispatcher = &dispatcher;
-			
-			std::unique_lock<std::mutex> lock(itemListMutex);
-			itemList.clear();
 		}
 	}
 	
@@ -217,6 +214,8 @@ public:
 				callbackList->remove(item.handle);
 			}
 		}
+
+		std::unique_lock<std::mutex> lock(itemListMutex);
 		itemList.clear();
 	}
 	
@@ -236,7 +235,12 @@ public:
 		Item item {
 			callbackList->append(callback)
 		};
-		itemList.push_back(item);
+
+		{
+			std::unique_lock<std::mutex> lock(itemListMutex);
+			itemList.push_back(item);
+		}
+
 		return item.handle;
 	}
 
@@ -248,7 +252,12 @@ public:
 		Item item {
 			callbackList->prepend(callback)
 		};
-		itemList.push_back(item);
+
+		{
+			std::unique_lock<std::mutex> lock(itemListMutex);
+			itemList.push_back(item);
+		}
+
 		return item.handle;
 	}
 
@@ -261,13 +270,19 @@ public:
 		Item item {
 			callbackList->insert(callback, before)
 		};
-		itemList.push_back(item);
+
+		{
+			std::unique_lock<std::mutex> lock(itemListMutex);
+			itemList.push_back(item);
+		}
+
 		return item.handle;
 	}
 
 private:
 	CallbackListType * callbackList;
 	std::vector<Item> itemList;
+	typename CallbackListType::Mutex itemListMutex;
 };
 
 
