@@ -62,9 +62,10 @@ EventDispatcher(const EventDispatcher & other);
 EventDispatcher(EventDispatcher && other) noexcept;
 EventDispatcher & operator = (const EventDispatcher & other);
 EventDispatcher & operator = (EventDispatcher && other) noexcept;
+void swap(EventDispatcher & other) noexcept;
 ```
 
-EventDispatcher can be copied, moved,  assigned, and move assigned.
+EventDispatcher can be copied, moved,  assigned, move assigned, and swapped.
 
 #### appendListener
 

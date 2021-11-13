@@ -47,12 +47,33 @@ public:
 		: dispatcher(&dispatcher)
 	{
 	}
+
+	ScopedRemover(ScopedRemover && other) noexcept
+		: dispatcher(std::move(other.dispatcher)), itemList(std::move(other.itemList))
+	{
+		other.reset();
+	}
+	
+	ScopedRemover & operator = (ScopedRemover && other) noexcept
+	{
+		dispatcher = std::move(other.dispatcher);
+		itemList = std::move(other.itemList);
+		other.reset();
+		return *this;
+	}
 	
 	~ScopedRemover()
 	{
 		reset();
 	}
 	
+	void swap(ScopedRemover & other) noexcept {
+		using std::swap;
+
+		swap(dispatcher, other.dispatcher);
+		swap(itemList, other.itemList);
+	}
+
 	void reset()
 	{
 		if(dispatcher != nullptr) {
@@ -163,11 +184,32 @@ public:
 	{
 	}
 	
+	ScopedRemover(ScopedRemover && other) noexcept
+		: callbackList(std::move(other.callbackList)), itemList(std::move(other.itemList))
+	{
+		other.reset();
+	}
+
+	ScopedRemover & operator = (ScopedRemover && other) noexcept
+	{
+		callbackList = std::move(other.callbackList);
+		itemList = std::move(other.itemList);
+		other.reset();
+		return *this;
+	}
+
 	~ScopedRemover()
 	{
 		reset();
 	}
 	
+	void swap(ScopedRemover & other) noexcept {
+		using std::swap;
+
+		swap(callbackList, other.callbackList);
+		swap(itemList, other.itemList);
+	}
+
 	void reset()
 	{
 		if(callbackList != nullptr) {

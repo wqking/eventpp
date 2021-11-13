@@ -39,10 +39,17 @@ class ScopedRemover;
 ### Member functions
 
 ```c++
+// for EventDispatcher, EventQueue, HeterEventDispatcher, or HeterEventQueue
 explicit ScopedRemover(DispatcherType & dispatcher);
+// for CallbackList or HeterCallbackList
+explicit ScopedRemover(CallbackListType & callbackList);
+
+ScopedRemover(ScopedRemover && other) noexcept;
+ScopedRemover & operator = (ScopedRemover && other) noexcept;
+void swap(ScopedRemover & other) noexcept;
 ```
 
-Constructs an instance of ScopedRemover.
+ScopedRemover can be moved, move assigned and swapped, but can't be copied or assigned.
 
 **Member functions for EventDispatcher and EventQueue**
 ```c++

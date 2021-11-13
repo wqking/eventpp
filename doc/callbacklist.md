@@ -60,9 +60,10 @@ CallbackList(const CallbackList & other);
 CallbackList(CallbackList && other) noexcept;
 CallbackList & operator = (const CallbackList & other);
 CallbackList & operator = (CallbackList && other) noexcept;
+void swap(CallbackList & other) noexcept;
 ```
 
-CallbackList can be copied, moved,  assigned, and move assigned.
+CallbackList can be copied, moved, assigned, move assigned, and swapped.
 
 #### empty
 
