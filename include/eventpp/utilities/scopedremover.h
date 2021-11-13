@@ -134,6 +134,27 @@ public:
 		return item.handle;
 	}
 
+	bool removeListener(const typename DispatcherType::Event & event, const typename DispatcherType::Handle handle)
+	{
+		if (!handle) return false;
+		if (auto handle_ptr = handle.lock())
+		{
+			std::unique_lock<std::mutex> lock(itemListMutex);
+
+			auto it = std::find_if(itemList.begin(), itemList.end(), 
+				[handle_ptr](Item& a)
+				{
+					return a.handle && a.handle.lock() == handle_ptr;
+				});
+			if (it != itemList.end())
+			{
+				itemList.erase(it);
+				return dispatcher->removeListener(event, handle);
+			}
+		}
+		return false;
+	}
+
 private:
 	DispatcherType * dispatcher;
 	std::vector<Item> itemList;
@@ -221,6 +242,25 @@ public:
 		};
 		itemList.push_back(item);
 		return item.handle;
+	}
+
+	bool remove(const typename CallbackListType::Handle handle)
+	{
+		if (!handle) return false;
+		if (auto handle_ptr = handle.lock())
+		{
+			auto it = std::find_if(itemList.begin(), itemList.end(), 
+			[handle_ptr](Item& a)
+			{
+				return a.handle && a.handle.lock() == handle_ptr;
+			});
+			if (it != itemList.end())
+			{
+				itemList.erase(it);
+				return callbackList->remove(handle);
+			}
+		}
+		return false;
 	}
 
 private:
