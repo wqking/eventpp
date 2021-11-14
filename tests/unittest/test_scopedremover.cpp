@@ -49,6 +49,23 @@ TEST_CASE("ScopedRemover, EventDispatcher")
 	
 	dispatcher.dispatch(event);
 	REQUIRE(dataList == std::vector<int> { 4, 3, 2, 1 });
+
+	{
+		ED dispatcher2;
+		int counter = 0;
+
+		Remover r(dispatcher2);
+		auto handle = r.appendListener(event, [&counter] {
+					++counter;
+				});
+		dispatcher2.dispatch(event);
+		REQUIRE(counter == 1);
+		REQUIRE(dispatcher2.hasAnyListener(event) == true);
+		r.removeListener(event, handle);
+		REQUIRE(dispatcher2.hasAnyListener(event) == false);
+		dispatcher2.dispatch(event);
+		REQUIRE(counter == 1);
+	}
 }
 
 TEST_CASE("ScopedRemover, CallbackList")
@@ -95,6 +112,19 @@ TEST_CASE("ScopedRemover, CallbackList")
 	
 	callbackList();
 	REQUIRE(dataList == std::vector<int> { 4, 3, 2, 1 });
+	{
+		CL callback_list2;
+		Remover r(callback_list2);
+		int counter = 0;
+		auto handle = r.append([&counter]{++counter;});
+		callback_list2();
+		REQUIRE(callbackList.empty() == false);
+		REQUIRE(counter == 1);
+		r.remove(handle);
+		callback_list2();
+		REQUIRE(callback_list2.empty() == true);
+		REQUIRE(counter == 1);
+	}
 }
 
 TEST_CASE("ScopedRemover, HeterEventDispatcher")
