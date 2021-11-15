@@ -21,6 +21,28 @@
 
 namespace eventpp {
 
+namespace internal_ {
+
+template <typename Item, typename Handle>
+bool removeHandleFromScopedRemoverItemList(std::vector<Item> & itemList, Handle & handle, std::mutex & mutex)
+{
+	if(! handle) {
+		return false;
+	}
+	auto handlePointer = handle.lock();
+	std::unique_lock<std::mutex> lock(mutex);
+	auto it = std::find_if(itemList.begin(), itemList.end(), [&handlePointer](Item & item) {
+		return item.handle && item.handle.lock() == handlePointer;
+	});
+	if(it != itemList.end()) {
+		itemList.erase(it);
+		return true;
+	}
+	return false;
+}
+
+} //namespace internal_
+
 template <typename DispatcherType, typename Enabled = void>
 class ScopedRemover;
 
@@ -154,21 +176,8 @@ public:
 
 	bool removeListener(const typename DispatcherType::Event & event, const typename DispatcherType::Handle handle)
 	{
-		if (!handle) return false;
-		if (auto handle_ptr = handle.lock())
-		{
-			std::unique_lock<std::mutex> lock(itemListMutex);
-
-			auto it = std::find_if(itemList.begin(), itemList.end(), 
-				[handle_ptr](Item& a)
-				{
-					return a.handle && a.handle.lock() == handle_ptr;
-				});
-			if (it != itemList.end())
-			{
-				itemList.erase(it);
-				return dispatcher->removeListener(event, handle);
-			}
+		if(internal_::removeHandleFromScopedRemoverItemList(itemList, handle, itemListMutex)) {
+			return dispatcher->removeListener(event, handle);
 		}
 		return false;
 	}
@@ -302,19 +311,8 @@ public:
 
 	bool remove(const typename CallbackListType::Handle handle)
 	{
-		if (!handle) return false;
-		if (auto handle_ptr = handle.lock())
-		{
-			auto it = std::find_if(itemList.begin(), itemList.end(), 
-			[handle_ptr](Item& a)
-			{
-				return a.handle && a.handle.lock() == handle_ptr;
-			});
-			if (it != itemList.end())
-			{
-				itemList.erase(it);
-				return callbackList->remove(handle);
-			}
+		if(internal_::removeHandleFromScopedRemoverItemList(itemList, handle, itemListMutex)) {
+			return callbackList->remove(handle);
 		}
 		return false;
 	}

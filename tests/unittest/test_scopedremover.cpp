@@ -49,23 +49,6 @@ TEST_CASE("ScopedRemover, EventDispatcher")
 	
 	dispatcher.dispatch(event);
 	REQUIRE(dataList == std::vector<int> { 4, 3, 2, 1 });
-
-	{
-		ED dispatcher2;
-		int counter = 0;
-
-		Remover r(dispatcher2);
-		auto handle = r.appendListener(event, [&counter] {
-					++counter;
-				});
-		dispatcher2.dispatch(event);
-		REQUIRE(counter == 1);
-		REQUIRE(dispatcher2.hasAnyListener(event) == true);
-		r.removeListener(event, handle);
-		REQUIRE(dispatcher2.hasAnyListener(event) == false);
-		dispatcher2.dispatch(event);
-		REQUIRE(counter == 1);
-	}
 }
 
 TEST_CASE("ScopedRemover, CallbackList")
@@ -112,19 +95,6 @@ TEST_CASE("ScopedRemover, CallbackList")
 	
 	callbackList();
 	REQUIRE(dataList == std::vector<int> { 4, 3, 2, 1 });
-	{
-		CL callback_list2;
-		Remover r(callback_list2);
-		int counter = 0;
-		auto handle = r.append([&counter]{++counter;});
-		callback_list2();
-		REQUIRE(callbackList.empty() == false);
-		REQUIRE(counter == 1);
-		r.remove(handle);
-		callback_list2();
-		REQUIRE(callback_list2.empty() == true);
-		REQUIRE(counter == 1);
-	}
 }
 
 TEST_CASE("ScopedRemover, HeterEventDispatcher")
@@ -449,3 +419,86 @@ TEST_CASE("ScopedRemover, CallbackList, swap")
 	REQUIRE(dataList == std::vector<int> { 5, 4, 1 });
 }
 
+TEST_CASE("ScopedRemover, EventDispatcher, removeListener")
+{
+	using ED = eventpp::EventDispatcher<int, void()>;
+	ED dispatcher;
+	using Remover = eventpp::ScopedRemover<ED>;
+	constexpr int event = 3;
+
+	std::vector<int> dataList(3);
+
+	decltype(dispatcher)::Handle ha;
+	decltype(dispatcher)::Handle hb;
+	decltype(dispatcher)::Handle hc;
+
+	Remover remover(dispatcher);
+	ha = remover.appendListener(event, [&dataList, event , &remover , &ha]() {
+		++dataList[0];
+		remover.removeListener(event, ha);
+	});
+	hb = dispatcher.appendListener(event, [&dataList]() {
+		++dataList[1];
+	});
+	hc = remover.appendListener(event, [&dataList]() {
+		++dataList[2];
+	});
+
+	REQUIRE(! remover.removeListener(event, hb));
+	
+	dispatcher.dispatch(event);
+	REQUIRE(dataList == std::vector<int> { 1, 1, 1 });
+	
+	dispatcher.dispatch(event);
+	REQUIRE(dataList == std::vector<int> { 1, 2, 2 });
+
+	REQUIRE(remover.removeListener(event, hc));
+	dispatcher.dispatch(event);
+	REQUIRE(dataList == std::vector<int> { 1, 3, 2 });
+
+	REQUIRE(! remover.removeListener(event, hc));
+	dispatcher.dispatch(event);
+	REQUIRE(dataList == std::vector<int> { 1, 4, 2 });
+}
+
+TEST_CASE("ScopedRemover, CallbackList, remove")
+{
+	using std::swap;
+	using CL = eventpp::CallbackList<void()>;
+	CL callbackList;
+	using Remover = eventpp::ScopedRemover<CL>;
+
+	std::vector<int> dataList(3);
+
+	decltype(callbackList)::Handle ha;
+	decltype(callbackList)::Handle hb;
+	decltype(callbackList)::Handle hc;
+
+	Remover remover(callbackList);
+	ha = remover.append([&dataList, &remover , &ha]() {
+		++dataList[0];
+		remover.remove(ha);
+	});
+	hb = callbackList.append([&dataList]() {
+		++dataList[1];
+	});
+	hc = remover.append([&dataList]() {
+		++dataList[2];
+	});
+
+	REQUIRE(! remover.remove(hb));
+	
+	callbackList();
+	REQUIRE(dataList == std::vector<int> { 1, 1, 1 });
+	
+	callbackList();
+	REQUIRE(dataList == std::vector<int> { 1, 2, 2 });
+
+	REQUIRE(remover.remove(hc));
+	callbackList();
+	REQUIRE(dataList == std::vector<int> { 1, 3, 2 });
+
+	REQUIRE(! remover.remove(hc));
+	callbackList();
+	REQUIRE(dataList == std::vector<int> { 1, 4, 2 });
+}
