@@ -39,10 +39,17 @@ class ScopedRemover;
 ### Member functions
 
 ```c++
+// for EventDispatcher, EventQueue, HeterEventDispatcher, or HeterEventQueue
 explicit ScopedRemover(DispatcherType & dispatcher);
+// for CallbackList or HeterCallbackList
+explicit ScopedRemover(CallbackListType & callbackList);
+
+ScopedRemover(ScopedRemover && other) noexcept;
+ScopedRemover & operator = (ScopedRemover && other) noexcept;
+void swap(ScopedRemover & other) noexcept;
 ```
 
-Constructs an instance of ScopedRemover.
+ScopedRemover can be moved, move assigned and swapped, but can't be copied or assigned.
 
 **Member functions for EventDispatcher and EventQueue**
 ```c++
@@ -65,6 +72,10 @@ typename DispatcherType::Handle insertListener(
 		const typename DispatcherType::Callback & listener,
 		const typename DispatcherType::Handle & before
 	);
+bool removeListener(
+		const typename DispatcherType::Event & event,
+		const typename DispatcherType::Handle handle
+	);
 ```
 
 **Member functions for CallbackList**
@@ -85,10 +96,14 @@ typename CallbackListType::Handle insert(
 		const typename CallbackListType::Callback & callback,
 		const typename CallbackListType::Handle & before
 	);
+bool remove(const typename CallbackListType::Handle handle);
 ```
 
 The function `reset()` removes all listeners which added by ScopedRemover from the dispatcher or callback list, as if the ScopedRemover object has gone out of scope.  
-The function `setDispatcher()` and `setCallbackList` sets the dispatcher or callback list, and reset the ScopedRemover object.  
+
+The functions `setDispatcher()` and `setCallbackList` sets the dispatcher or callback list, and reset the ScopedRemover object.  
+
+The functions `removeListener` and `remove` remove the listener, similar to the same name functions in the underlying class (CallbackList, EventDispatcher, or EventQueue). They are useful to remove the listeners without destorying the ScopedRemover object. The functions return `true` if the listener is removed successfully, `false` if the listener is not found.  
 
 The other member functions that have the same names with the corresponding underlying class (CallbackList, EventDispatcher, or EventQueue). Those functions add listener to the dispatcher.  
 

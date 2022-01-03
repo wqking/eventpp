@@ -62,9 +62,10 @@ EventDispatcher(const EventDispatcher & other);
 EventDispatcher(EventDispatcher && other) noexcept;
 EventDispatcher & operator = (const EventDispatcher & other);
 EventDispatcher & operator = (EventDispatcher && other) noexcept;
+void swap(EventDispatcher & other) noexcept;
 ```
 
-EventDispatcher can be copied, moved,  assigned, and move assigned.
+EventDispatcher can be copied, moved,  assigned, move assigned, and swapped.
 
 #### appendListener
 
@@ -76,7 +77,7 @@ The listener is added to the end of the listener list.
 Return a handle which represents the listener. The handle can be used to remove this listener or insert other listener before this listener.  
 If `appendListener` is called in another listener during a dispatching, the new listener is guaranteed not triggered during the same dispatching.  
 If the same callback is added twice, it results duplicated listeners.  
-The time complexity is O(1).
+The time complexity is O(1) plus time to look up the event in internal map.
 
 #### prependListener
 
@@ -87,7 +88,7 @@ Add the *callback* to the dispatcher to listen to *event*.
 The listener is added to the beginning of the listener list.  
 Return a handle which represents the listener. The handle can be used to remove this listener or insert other listener before this listener.  
 If `prependListener` is called in another listener during a dispatching, the new listener is guaranteed not triggered during the same dispatching.  
-The time complexity is O(1).
+The time complexity is O(1) plus time to look up the event in internal map.
 
 #### insertListener
 
@@ -97,7 +98,7 @@ Handle insertListener(const Event & event, const Callback & callback, const Hand
 Insert the *callback* to the dispatcher to listen to *event* before the listener handle *before*. If *before* is not found, *callback* is added at the end of the listener list.  
 Return a handle which represents the listener. The handle can be used to remove this listener or insert other listener before this listener.  
 If `insertListener` is called in another listener during a dispatching, the new listener is guaranteed not triggered during the same dispatching.  
-The time complexity is O(1).  
+The time complexity is O(1) plus time to look up the event in internal map.
 
 #### removeListener
 
@@ -106,7 +107,16 @@ bool removeListener(const Event & event, const Handle handle);
 ```  
 Remove the listener *handle* which listens to *event* from the dispatcher.  
 Return true if the listener is removed successfully, false if the listener is not found.  
-The time complexity is O(1).  
+The time complexity is O(1) plus time to look up the event in internal map.
+
+#### hasAnyListener
+
+```c++
+bool hasAnyListener(const Event & event) const;
+```  
+Return true if there is any listener for `event`, false if there is no listener.  
+Note: in multi threading, this function returning true doesn't guarantee there is any listener. The list may immediately become empty after the function returns true, and vice versa.
+The time complexity is O(1) plus time to look up the event in internal map.
 
 #### forEach
 

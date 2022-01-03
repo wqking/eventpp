@@ -422,6 +422,29 @@ TEST_CASE("CallbackList, swap with non-empty CallbackList")
 	REQUIRE(callbackList.tail->callback == 8);
 }
 
+// Test the compile bug found in https://github.com/wqking/eventpp/issues/29
+// Fixed compile error that eventpp::SingleThreading::Atomic::exchange was not defined.
+TEST_CASE("CallbackList, swap, SingleThreading")
+{
+	struct MyPolicies
+	{
+		using Threading = eventpp::SingleThreading;
+	};
+
+	using CL = eventpp::CallbackList<void(), MyPolicies>;
+	CL callbackList;
+	CL swappedList;
+	callbackList.currentCounter = 38;
+	swappedList.currentCounter = 99;
+	REQUIRE(callbackList.currentCounter.load() == 38);
+	REQUIRE(swappedList.currentCounter.load() == 99);
+	
+	using std::swap;
+	swap(swappedList, callbackList);
+	REQUIRE(callbackList.currentCounter.load() == 99);
+	REQUIRE(swappedList.currentCounter.load() == 38);
+}
+
 TEST_CASE("CallbackList, invoke, swap with non-empty CallbackList")
 {
 	using CL = eventpp::CallbackList<void()>;

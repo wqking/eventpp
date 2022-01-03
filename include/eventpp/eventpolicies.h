@@ -102,6 +102,13 @@ struct SingleThreading
 		{
 			return value;
 		}
+
+		T exchange(T desired, std::memory_order /*order*/ = std::memory_order_seq_cst) noexcept
+		{
+			const T previous = value;
+			value = desired;
+			return previous;
+		}
 		
 		T operator ++ () noexcept
 		{

@@ -16,6 +16,7 @@
 
 #include "eventpp/utilities/conditionalfunctor.h"
 #include "eventpp/eventdispatcher.h"
+#include "eventpp/eventqueue.h"
 #include "tutorial.h"
 
 #include <iostream>
@@ -172,21 +173,22 @@ TEST_CASE("ArgumentAdapter tutorial 2, arguments with std::shared_ptr")
 	// Note the argument can't be any reference to std::shared_ptr, such as 'const std::shared_ptr<Event> &',
 	// because eventpp::argumentAdapter uses std::static_pointer_cast to cast the pointer and it doesn't
 	// work on reference.
-	eventpp::EventDispatcher<EventType, void(std::shared_ptr<Event>)> eventDispatcher;
+	eventpp::EventQueue<EventType, void(std::shared_ptr<Event>)> eventQueue;
 
 	// This can't compile because a 'std::shared_ptr<Event>' can be passed to 'std::shared_ptr<MouseEvent>'
 	//eventDispatcher.appendListener(mouseEventId, [](std::shared_ptr<MouseEvent> e) {});
 
 	// This compiles. eventpp::argumentAdapter creates a functor object that static_cast 
 	// 'std::shared_ptr<Event>' to 'std::shared_ptr<MouseEvent>' automatically.
-	eventDispatcher.appendListener(
+	eventQueue.appendListener(
 		EventType::mouse,
 		eventpp::argumentAdapter<void(std::shared_ptr<MouseEvent>)>([](std::shared_ptr<MouseEvent> e) {
 			std::cout << "Received MouseEvent as std::shared_ptr, x=" << e->getX() << " y=" << e->getY() << std::endl;
 		})
 	);
 
-	eventDispatcher.dispatch(EventType::mouse, std::make_shared<MouseEvent>(3, 5));
+	eventQueue.enqueue(EventType::mouse, std::make_shared<MouseEvent>(3, 5));
+	eventQueue.process();
 }
 
 TEST_CASE("ArgumentAdapter tutorial 3, conditional adapter")

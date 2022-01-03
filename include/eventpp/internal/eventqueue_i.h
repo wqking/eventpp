@@ -46,6 +46,7 @@ void commonDtor(void * instance)
 	reinterpret_cast<T *>(instance)->~T();
 }
 
+// used by EventQueue
 template <typename T>
 class BufferedItem
 {
@@ -94,12 +95,17 @@ public:
 		dtor = nullptr;
 	}
 
+	bool empty() const {
+		return dtor == nullptr;
+	}
+
 private:
 	std::array<char, sizeof(T)> buffer;
 	DtorFunc dtor;
 };
 
 
+// used by HeterEventQueue
 template <size_t Size>
 class BufferedUnion
 {
@@ -147,6 +153,10 @@ public:
 
 		dtor(buffer.data());
 		dtor = nullptr;
+	}
+
+	bool empty() const {
+		return dtor == nullptr;
 	}
 
 private:

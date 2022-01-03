@@ -351,6 +351,7 @@ iterator begin();
 const_iterator begin() const;
 iterator end();
 const_iterator end() const;
+const_reference front() const;
 void swap(QueueList & other);
 void emplace_back();
 void splice(const_iterator pos, QueueList & other );

@@ -21,6 +21,28 @@
 
 namespace eventpp {
 
+namespace internal_ {
+
+template <typename Item, typename Handle>
+bool removeHandleFromScopedRemoverItemList(std::vector<Item> & itemList, Handle & handle, std::mutex & mutex)
+{
+	if(! handle) {
+		return false;
+	}
+	auto handlePointer = handle.lock();
+	std::unique_lock<std::mutex> lock(mutex);
+	auto it = std::find_if(itemList.begin(), itemList.end(), [&handlePointer](Item & item) {
+		return item.handle && item.handle.lock() == handlePointer;
+	});
+	if(it != itemList.end()) {
+		itemList.erase(it);
+		return true;
+	}
+	return false;
+}
+
+} //namespace internal_
+
 template <typename DispatcherType, typename Enabled = void>
 class ScopedRemover;
 
@@ -47,12 +69,33 @@ public:
 		: dispatcher(&dispatcher)
 	{
 	}
+
+	ScopedRemover(ScopedRemover && other) noexcept
+		: dispatcher(std::move(other.dispatcher)), itemList(std::move(other.itemList))
+	{
+		other.reset();
+	}
+	
+	ScopedRemover & operator = (ScopedRemover && other) noexcept
+	{
+		dispatcher = std::move(other.dispatcher);
+		itemList = std::move(other.itemList);
+		other.reset();
+		return *this;
+	}
 	
 	~ScopedRemover()
 	{
 		reset();
 	}
 	
+	void swap(ScopedRemover & other) noexcept {
+		using std::swap;
+
+		swap(dispatcher, other.dispatcher);
+		swap(itemList, other.itemList);
+	}
+
 	void reset()
 	{
 		if(dispatcher != nullptr) {
@@ -62,17 +105,14 @@ public:
 		}
 		
 		std::unique_lock<std::mutex> lock(itemListMutex);
-
 		itemList.clear();
 	}
 	
 	void setDispatcher(DispatcherType & dispatcher)
 	{
 		if(this->dispatcher != &dispatcher) {
+			reset();
 			this->dispatcher = &dispatcher;
-			
-			std::unique_lock<std::mutex> lock(itemListMutex);
-			itemList.clear();
 		}
 	}
 	
@@ -134,6 +174,14 @@ public:
 		return item.handle;
 	}
 
+	bool removeListener(const typename DispatcherType::Event & event, const typename DispatcherType::Handle handle)
+	{
+		if(internal_::removeHandleFromScopedRemoverItemList(itemList, handle, itemListMutex)) {
+			return dispatcher->removeListener(event, handle);
+		}
+		return false;
+	}
+
 private:
 	DispatcherType * dispatcher;
 	std::vector<Item> itemList;
@@ -163,11 +211,32 @@ public:
 	{
 	}
 	
+	ScopedRemover(ScopedRemover && other) noexcept
+		: callbackList(std::move(other.callbackList)), itemList(std::move(other.itemList))
+	{
+		other.reset();
+	}
+
+	ScopedRemover & operator = (ScopedRemover && other) noexcept
+	{
+		callbackList = std::move(other.callbackList);
+		itemList = std::move(other.itemList);
+		other.reset();
+		return *this;
+	}
+
 	~ScopedRemover()
 	{
 		reset();
 	}
 	
+	void swap(ScopedRemover & other) noexcept {
+		using std::swap;
+
+		swap(callbackList, other.callbackList);
+		swap(itemList, other.itemList);
+	}
+
 	void reset()
 	{
 		if(callbackList != nullptr) {
@@ -175,6 +244,8 @@ public:
 				callbackList->remove(item.handle);
 			}
 		}
+
+		std::unique_lock<std::mutex> lock(itemListMutex);
 		itemList.clear();
 	}
 	
@@ -194,7 +265,12 @@ public:
 		Item item {
 			callbackList->append(callback)
 		};
-		itemList.push_back(item);
+
+		{
+			std::unique_lock<std::mutex> lock(itemListMutex);
+			itemList.push_back(item);
+		}
+
 		return item.handle;
 	}
 
@@ -206,7 +282,12 @@ public:
 		Item item {
 			callbackList->prepend(callback)
 		};
-		itemList.push_back(item);
+
+		{
+			std::unique_lock<std::mutex> lock(itemListMutex);
+			itemList.push_back(item);
+		}
+
 		return item.handle;
 	}
 
@@ -219,13 +300,27 @@ public:
 		Item item {
 			callbackList->insert(callback, before)
 		};
-		itemList.push_back(item);
+
+		{
+			std::unique_lock<std::mutex> lock(itemListMutex);
+			itemList.push_back(item);
+		}
+
 		return item.handle;
+	}
+
+	bool remove(const typename CallbackListType::Handle handle)
+	{
+		if(internal_::removeHandleFromScopedRemoverItemList(itemList, handle, itemListMutex)) {
+			return callbackList->remove(handle);
+		}
+		return false;
 	}
 
 private:
 	CallbackListType * callbackList;
 	std::vector<Item> itemList;
+	typename CallbackListType::Mutex itemListMutex;
 };
 
 

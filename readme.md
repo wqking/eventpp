@@ -45,7 +45,7 @@ If you find any back compatible issue which is not announced, please report a bu
 
 Tested with MSVC 2019, MinGW (Msys) GCC 7.2, Ubuntu GCC 5.4, and MacOS GCC.
 GCC 4.8.3 can compile the library, but we don't support GCC prior to GCC 5.
-In brief, MSVB, GCC, Clang that has well support for C++11, or released after 2019, should be able to compile the library.
+In brief, MSVC, GCC, Clang that has well support for C++11, or released after 2019, should be able to compile the library.
 
 ## C++ standard requirements
 * To Use the library  
@@ -136,13 +136,13 @@ queue.process();
     * [Utility class ConditionalRemover -- auto remove listeners when certain condition is satisfied](doc/conditionalremover.md)
     * [Utility class ScopedRemover -- auto remove listeners when out of scope](doc/scopedremover.md)
     * [Utility class OrderedQueueList -- make EventQueue ordered](doc/orderedqueuelist.md)
-    * [Utility class AnyId -- use various data types as EventType in EventDispatcher and EventQueue ordered](doc/anyid.md)
+    * [Utility class AnyId -- use various data types as EventType in EventDispatcher and EventQueue](doc/anyid.md)
     * [Utility header eventmaker.h -- auto generate event classes](doc/eventmaker.md)
     * [Document of utilitie functions](doc/eventutil.md)
 * Miscellaneous
     * [Performance benchmarks](doc/benchmark.md)
     * [FAQs, tricks, and tips](doc/faq.md)
-* Heterogeneous classes and functions
+* Heterogeneous classes and functions, usually you don't need them
     * [Overview of heterogeneous classes](doc/heterogeneous.md)
     * [Class HeterCallbackList](doc/hetercallbacklist.md)
     * [Class HeterEventDispatcher](doc/hetereventdispatcher.md)
