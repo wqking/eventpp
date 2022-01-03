@@ -735,3 +735,56 @@ TEST_CASE("EventQueue, implicit cast with template constructor")
 	queue.process();
 	REQUIRE(dataList == std::vector<int>{ 1, 1, 1 });
 }
+
+TEST_CASE("EventQueue, processUntil")
+{
+	eventpp::EventQueue<int, void(int)> queue;
+
+	std::vector<int> dataList(3);
+
+	queue.appendListener(5, [&dataList](int) {
+		++dataList[0];
+		});
+	queue.appendListener(6, [&dataList](int) {
+		++dataList[1];
+		});
+	queue.appendListener(7, [&dataList](int) {
+		++dataList[2];
+		});
+
+	REQUIRE(dataList == std::vector<int>{ 0, 0, 0 });
+
+	queue.enqueue(5);
+	queue.enqueue(6);
+	queue.enqueue(7);
+	queue.process();
+	REQUIRE(dataList == std::vector<int>{ 1, 1, 1 });
+
+	int counter = 0;
+
+	queue.enqueue(5);
+	queue.enqueue(6);
+	queue.enqueue(7);
+	// Now the queue contains 5, 6, 7
+	// Only the first event will be processed, which is 5
+	REQUIRE(queue.processUntil([&counter](const int /*event*/) -> bool { return counter++ == 1; }));
+	REQUIRE(dataList == std::vector<int>{ 2, 1, 1 });
+	// Now the queue contains 6, 7
+
+	counter = 0;
+	queue.enqueue(5);
+	queue.enqueue(6);
+	queue.enqueue(7);
+	// Now the queue contains 6, 7, 5, 6, 7
+	// The first three events will be processed, which are 6, 7, 5
+	// The predicator can have no arguments
+	REQUIRE(queue.processUntil([&counter]() -> bool { return counter++ == 3; }));
+	REQUIRE(dataList == std::vector<int>{ 3, 2, 2 });
+	// Now the queue contains 6, 7
+
+	queue.process();
+	REQUIRE(dataList == std::vector<int>{ 3, 3, 3 });
+
+	REQUIRE(! queue.processUntil([]() -> bool { return true; }));
+}
+

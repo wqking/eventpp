@@ -340,6 +340,61 @@ public:
 		return false;
 	}
 	
+	template <typename Predictor>
+	bool processUntil(Predictor && predictor)
+	{
+		if(! queueList.empty()) {
+			BufferedItemList tempList;
+			BufferedItemList idleList;
+
+			// Use a counter to tell the queue list is not empty during processing
+			// even though queueList is swapped to empty.
+			CounterGuard<decltype(queueEmptyCounter)> counterGuard(queueEmptyCounter);
+
+			{
+				std::lock_guard<Mutex> queueListLock(queueListMutex);
+				std::swap(queueList, tempList);
+			}
+
+			if(! tempList.empty()) {
+				for(auto it = tempList.begin(); it != tempList.end(); ) {
+					if(doInvokeFuncWithQueuedEvent(
+							predictor,
+							it->get(),
+							typename MakeIndexSequence<sizeof...(Args)>::Type())
+						) {
+						break;
+					}
+					else {
+						doDispatchQueuedEvent(
+							it->get(),
+							typename MakeIndexSequence<sizeof...(Args)>::Type()
+						);
+						it->clear();
+						
+						auto tempIt = it;
+						++it;
+						idleList.splice(idleList.end(), tempList, tempIt);
+					}
+				}
+
+				if (! tempList.empty()) {
+					std::lock_guard<Mutex> queueListLock(queueListMutex);
+					queueList.splice(queueList.begin(), tempList);
+				}
+
+				if(! idleList.empty()) {
+					std::lock_guard<Mutex> queueListLock(freeListMutex);
+					freeList.splice(freeList.end(), idleList);
+					
+					return true;
+				}
+			}
+		}
+		
+		return false;
+	}
+	
 	void wait() const
 	{
 		std::unique_lock<Mutex> queueListLock(queueListMutex);

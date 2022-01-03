@@ -128,12 +128,20 @@ Note: if `processOne()` is called from multiple threads simultaneously, the even
 template <typename Predictor>
 bool processIf(Predictor && predictor);
 ```
-Process the event queue. Before processing an event, the event is passed to `predictor` and the event will be processed only if `predictor` returns true.  
+Process the event queue. Before processing an event, the event is passed to `predictor` and the event will be processed only if `predictor` returns true. If `predictor` returns false, the event will not be processed and be kept in the queue, then `processIf` will continue processing next event in the queue.  
 `predictor` is a callable object(function, lambda, etc) that takes exactly the same arguments as `EventQueue::enqueue` or have no arguments, and returns a boolean value. eventpp will pass the arguments properly.
 `processIf` returns true if any event was dispatched, false if no event was dispatched.  
 `processIf` has some good use scenarios:  
-1. Process certain events in certain thread. For example, in a GUI application, the UI related events may be only desired to be processed in the main thread.  
-2. Process the events within certain duration. For example, in a game engine, the event process may be limited to only several milliseconds, the remaining events will be process in next game loop. In such situation, the `predictor` can return false when time out.  
+1. Process certain events in certain thread. For example, in a GUI application, the UI related events may be only desired to be processed in the main thread. In such case, `predictor` may return true for any UI events, and return false for any non-UI events.  
+
+```c++
+template <typename Predictor>
+bool processUntil(Predictor && predictor);
+```
+Process the event queue. Before processing an event, the event is passed to `predictor`. If `predictor` returns true, `processUntil` stops any further processing and returns. If `predictor` returns false, `processUntil` will process the underlying events.  
+`predictor` is a callable object(function, lambda, etc) that takes exactly the same arguments as `EventQueue::enqueue` or have no arguments, and returns a boolean value. eventpp will pass the arguments properly.
+`processUntil` returns true if any event was dispatched, false if no event was dispatched.  
+`processUntil` has a good use case that limits the process time to simulate "timeout". For example, in a game engine, the event process may be limited to only several milliseconds, the remaining events will be processed in next game loop. In such situation, the `predictor` can return true when time out.  
 
 #### emptyQueue
 
