@@ -7,7 +7,7 @@ target_compile_features(eventpp INTERFACE cxx_std_11)
 target_include_directories(
   eventpp INTERFACE
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/eventpp>
-  $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/eventpp>
+  $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
 )
 
 # Installation
