@@ -63,8 +63,38 @@ In brief, MSVC, GCC, Clang that has well support for C++11, or released after 20
 
 ### Use eventpp in your project
 
-eventpp is header only library. Just add the 'include' folder in eventpp to your project, then you can use the library.  
-You don't need to link to any source code.
+There are two methods to use eventpp
+
+1, Include the source code in your project directly.
+
+eventpp is header only library. Just clone the source code, then add the 'include' folder inside eventpp to your project, then you can use the library.  
+You don't need to link to any source code.  
+
+2, Or install using CMake and use it in CMake
+
+If you are going to use eventpp in CMake managed project, you can install eventpp then use it in CMake.  
+In eventpp root folder, run the commands,  
+```
+mkdir build
+cd build
+cmake ..
+sudo make install
+```
+
+Then in the project CMakeLists.txt,   
+```
+# the project target is mytest, just for example
+add_executable(mytest test.cpp)
+
+find_package(eventpp)
+if(eventpp_FOUND)
+    target_link_libraries(mytest eventpp::eventpp)
+else(eventpp_FOUND)
+    message(FATAL_ERROR "eventpp library is not found")
+endif(eventpp_FOUND)
+```
+
+Note: the method 2 doesn't work well with MingW on Windows. It works well on Linux.
 
 ### Using CallbackList
 ```c++
