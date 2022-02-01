@@ -45,7 +45,7 @@ private:
 		template <typename ...Args>
 		auto operator() (Args && ...args) const
 			-> typename std::enable_if<internal_::CanInvoke<Condition, Args...>::value>::type {
-			if(data->shouldRemove(std::forward<Args>(args)...)) {
+			if(data->shouldRemove(args...)) {
 				data->dispatcher.removeListener(data->event, data->handle);
 			}
 			data->listener(std::forward<Args>(args)...);
@@ -140,7 +140,7 @@ private:
 		template <typename ...Args>
 		auto operator() (Args && ...args) const
 			-> typename std::enable_if<internal_::CanInvoke<Condition, Args...>::value>::type const {
-			if(data->shouldRemove(std::forward<Args>(args)...)) {
+			if(data->shouldRemove(args...)) {
 				data->callbackList.remove(data->handle);
 			}
 			data->listener(std::forward<Args>(args)...);

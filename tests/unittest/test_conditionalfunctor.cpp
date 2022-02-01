@@ -111,3 +111,21 @@ TEST_CASE("ConditionalFunctor, free function")
 	REQUIRE(dataList == std::vector<int>{ 1, 1, 1 });
 }
 
+TEST_CASE("ConditionalFunctor, std::shared_ptr")
+{
+	using Ptr = std::shared_ptr<int>;
+	eventpp::CallbackList<void(Ptr ptr)> callbackList;
+	callbackList.append(
+		eventpp::conditionalFunctor(
+			[](Ptr ptr) {
+				REQUIRE(ptr); // Be sure ptr is not moved
+				REQUIRE(*ptr == 5);
+			},
+			[](Ptr ptr) {
+				return *ptr == 5;
+			}
+		)
+	);
+	callbackList(std::make_shared<int>(2));
+	callbackList(std::make_shared<int>(5));
+}

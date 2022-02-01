@@ -26,7 +26,7 @@ struct ConditionalFunctor
 
 	template <typename ...A>
 	void operator() (A &&...args) {
-		if(condition(std::forward<A>(args)...)) {
+		if(condition(args...)) {
 			func(std::forward<A>(args)...);
 		}
 	}

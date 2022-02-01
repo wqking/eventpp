@@ -158,7 +158,7 @@ struct ForEachMixins <Root, MixinList<T, Args...>, Func>
 
 	template <typename ...A>
 	static bool forEach(A && ...args) {
-		if(Func::template forEach<Type>(std::forward<A>(args)...)) {
+		if(Func::template forEach<Type>(args...)) {
 			return ForEachMixins<Root, MixinList<Args...>, Func>::forEach(std::forward<A>(args)...);
 		}
 		return false;

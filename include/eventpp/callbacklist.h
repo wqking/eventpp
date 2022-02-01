@@ -258,11 +258,12 @@ public:
 #if !defined(__GNUC__) || __GNUC__ >= 5
 	void operator() (Args ...args) const
 	{
-		// We can't use std::forward here, because if we use std::forward,
-		// for arg that is passed by value, and the callback prototype accepts it by value,
-		// std::forward will move it and may cause the original value invalid.
-		// That happens on any value-to-value passing, no matter the callback moves it or not.
 		forEachIf([&args...](Callback & callback) -> bool {
+			// We can't use std::forward here, because if we use std::forward,
+			// for arg that is passed by value, and the callback prototype accepts it by value,
+			// std::forward will move it and may cause the original value invalid.
+			// That happens on any value-to-value passing, no matter the callback moves it or not.
+
 			callback(args...);
 			return CanContinueInvoking::canContinueInvoking(args...);
 		});
