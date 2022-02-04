@@ -43,10 +43,10 @@ Its default implementation `OrderedQueueListCompare` looks like,
 ```c++
 struct OrderedQueueListCompare
 {
-	template <typename T>
-	bool operator() (const T & a, const T & b) const {
-		return a.event < b.event;
-	}
+    template <typename T>
+    bool operator() (const T & a, const T & b) const {
+        return a.event < b.event;
+    }
 };
 ```
 The typename T is actually the `EventQueue::QueuedEvent`. But since `OrderedQueueList` is used in the policies that are used to construct the EventQueue, it's not possible to specify the actual type in `OrderedQueueListCompare`, so here we use a template operator.  
@@ -56,8 +56,8 @@ The typename T is actually the `EventQueue::QueuedEvent`. But since `OrderedQueu
 ```c++
 struct QueuedEvent
 {
-	EventType event;
-	std::tuple<Args> arguments;
+    EventType event;
+    std::tuple<Args> arguments;
 };
 ```
 `event` is the event sent to the queue.  
@@ -70,56 +70,56 @@ struct QueuedEvent
 // First let's define the event struct. e is the event type, priority determines the priority.
 struct MyEvent
 {
-	int e;
-	int priority;
+    int e;
+    int priority;
 };
 
 // The comparison function object used by eventpp::OrderedQueueList.
 // The function compares the event by priority.
 struct MyCompare
 {
-	template <typename T>
-	bool operator() (const T & a, const T & b) const {
-		return std::get<0>(a.arguments).priority > std::get<0>(b.arguments).priority;
-	}
+    template <typename T>
+    bool operator() (const T & a, const T & b) const {
+        return std::get<0>(a.arguments).priority > std::get<0>(b.arguments).priority;
+    }
 };
 
 // Define the EventQueue policy
 struct MyPolicy
 {
-	template <typename Item>
-	using QueueList = eventpp::OrderedQueueList<Item, MyCompare >;
+    template <typename Item>
+    using QueueList = eventpp::OrderedQueueList<Item, MyCompare >;
 
-	static int getEvent(const MyEvent & event) {
-		return event.e;
-	}
+    static int getEvent(const MyEvent & event) {
+        return event.e;
+    }
 };
 
 void main()
 {
-	using EQ = eventpp::EventQueue<int, void(const MyEvent &), MyPolicy>;
-	EQ queue;
+    using EQ = eventpp::EventQueue<int, void(const MyEvent &), MyPolicy>;
+    EQ queue;
 
-	queue.appendListener(3, [](const MyEvent & event) {
-		std::cout << "Get event " << event.e << "(should be 3)." << " priority: " << event.priority << std::endl;
-	});
-	queue.appendListener(5, [](const MyEvent & event) {
-		std::cout << "Get event " << event.e << "(should be 5)." << " priority: " << event.priority << std::endl;
-	});
-	queue.appendListener(7, [](const MyEvent & event) {
-		std::cout << "Get event " << event.e << "(should be 7)." << " priority: " << event.priority << std::endl;
-	});
+    queue.appendListener(3, [](const MyEvent & event) {
+        std::cout << "Get event " << event.e << "(should be 3)." << " priority: " << event.priority << std::endl;
+    });
+    queue.appendListener(5, [](const MyEvent & event) {
+        std::cout << "Get event " << event.e << "(should be 5)." << " priority: " << event.priority << std::endl;
+    });
+    queue.appendListener(7, [](const MyEvent & event) {
+        std::cout << "Get event " << event.e << "(should be 7)." << " priority: " << event.priority << std::endl;
+    });
 
-	// Add an event, the first number 5 is the event type, the second number 100 is the priority.
-	// After the queue processes, the events will be processed from higher priority to lower priority.
-	queue.enqueue(MyEvent{ 5, 100 });
-	queue.enqueue(MyEvent{ 5, 200 });
-	queue.enqueue(MyEvent{ 7, 300 });
-	queue.enqueue(MyEvent{ 7, 400 });
-	queue.enqueue(MyEvent{ 3, 500 });
-	queue.enqueue(MyEvent{ 3, 600 });
+    // Add an event, the first number 5 is the event type, the second number 100 is the priority.
+    // After the queue processes, the events will be processed from higher priority to lower priority.
+    queue.enqueue(MyEvent{ 5, 100 });
+    queue.enqueue(MyEvent{ 5, 200 });
+    queue.enqueue(MyEvent{ 7, 300 });
+    queue.enqueue(MyEvent{ 7, 400 });
+    queue.enqueue(MyEvent{ 3, 500 });
+    queue.enqueue(MyEvent{ 3, 600 });
 
-	queue.process();
+    queue.process();
 }
 
 ```

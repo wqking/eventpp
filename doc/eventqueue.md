@@ -33,9 +33,9 @@ eventpp/eventqueue.h
 
 ```c++
 template <
-	typename Event,
-	typename Prototype,
-	typename Policies = DefaultPolicies
+    typename Event,
+    typename Prototype,
+    typename Policies = DefaultPolicies
 >
 class EventQueue;
 ```
@@ -49,16 +49,16 @@ EventQueue has the exactly same template parameters with EventDispatcher. Please
 ```c++
 struct EventQueue::QueuedEvent
 {
-	EventType event;
-	std::tuple<ArgTypes...> arguments;
-	
-	// get the event
-	EventType getEvent() const;
+    EventType event;
+    std::tuple<ArgTypes...> arguments;
+    
+    // get the event
+    EventType getEvent() const;
 
-	// get the argument of index N
-	// same as std::get<N>(queuedEvent.arguments)
-	template <std::size_t N>
-	NthArgType getArgument() const;
+    // get the argument of index N
+    // same as std::get<N>(queuedEvent.arguments)
+    template <std::size_t N>
+    NthArgType getArgument() const;
 };
 ```
 `event` is the EventQueue::Event, `arguments` are the arguments passed in `enqueue`.  
@@ -170,8 +170,8 @@ Note: though `wait` has work around with spurious wakeup internally, the queue i
 `wait` is useful when a thread processes the event queue. A sampel usage is,
 ```c++
 for(;;) {
-	eventQueue.wait();
-	eventQueue.process();
+    eventQueue.wait();
+    eventQueue.process();
 }
 ```
 The code works even if it doesn't `wait`, but doing that will waste CPU power resource.
@@ -188,12 +188,12 @@ Return true if the queue is not empty, false if the return is caused by time out
 ```c++
 std::atomic<bool> shouldStop(false);
 for(;;) {
-	while(! eventQueue.waitFor(std::chrono::milliseconds(10)) && ! shouldStop.load()) ;
-	if(shouldStop.load()) {
-		break;
-	}
+    while(! eventQueue.waitFor(std::chrono::milliseconds(10)) && ! shouldStop.load()) ;
+    if(shouldStop.load()) {
+        break;
+    }
 
-	eventQueue.process();
+    eventQueue.process();
 }
 ```
 
@@ -206,8 +206,8 @@ Retrieve an event from the queue. The event is returned in `queuedEvent`.
 ```c++
 struct EventQueue::QueuedEvent
 {
-	TheEventType event;
-	std::tuple<ArgumentTypes...> arguments;
+    TheEventType event;
+    std::tuple<ArgumentTypes...> arguments;
 };
 ```
 `queuedEvent` is a EventQueue::QueuedEvent struct. `event` is the EventQueue::Event, `arguments` are the arguments passed in `enqueue`.  
@@ -245,10 +245,10 @@ Sample code
 using EQ = eventpp::EventQueue<int, void ()>;
 EQ queue;
 {
-	EQ::DisableQueueNotify disableNotify(&queue);
-	// any blocking threads will not be waken up by the below two lines.
-	queue.enqueue(1);
-	queue.enqueue(2);
+    EQ::DisableQueueNotify disableNotify(&queue);
+    // any blocking threads will not be waken up by the below two lines.
+    queue.enqueue(1);
+    queue.enqueue(2);
 }
 // any blocking threads are waken up here immediately.
 

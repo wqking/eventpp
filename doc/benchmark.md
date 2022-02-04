@@ -8,40 +8,40 @@ Time unit: milliseconds (unless explicitly specified)
 
 <table>
 <tr>
-	<th>Iterations</th>
-	<th>Queue size</th>
-	<th>Event count</th>
-	<th>Event Types</th>
-	<th>Listener count</th>
-	<th>Time of single threading</th>
-	<th>Time of multi threading</th>
+    <th>Iterations</th>
+    <th>Queue size</th>
+    <th>Event count</th>
+    <th>Event Types</th>
+    <th>Listener count</th>
+    <th>Time of single threading</th>
+    <th>Time of multi threading</th>
 </tr>
 <tr>
-	<td>100k</td>
-	<td>100</td>
-	<td>10M</td>
-	<td>100</td>
-	<td>100</td>
-	<td>401</td>
-	<td>1146</td>
+    <td>100k</td>
+    <td>100</td>
+    <td>10M</td>
+    <td>100</td>
+    <td>100</td>
+    <td>401</td>
+    <td>1146</td>
 </tr>
 <tr>
-	<td>100k</td>
-	<td>1000</td>
-	<td>100M</td>
-	<td>100</td>
-	<td>100</td>
-	<td>4012</td>
-	<td>11467</td>
+    <td>100k</td>
+    <td>1000</td>
+    <td>100M</td>
+    <td>100</td>
+    <td>100</td>
+    <td>4012</td>
+    <td>11467</td>
 </tr>
 <tr>
-	<td>100k</td>
-	<td>1000</td>
-	<td>100M</td>
-	<td>1000</td>
-	<td>1000</td>
-	<td>4102</td>
-	<td>11600</td>
+    <td>100k</td>
+    <td>1000</td>
+    <td>100M</td>
+    <td>1000</td>
+    <td>1000</td>
+    <td>4102</td>
+    <td>11600</td>
 </tr>
 <table>
 
@@ -53,107 +53,107 @@ The EventQueue is processed in one thread. The Single/Multi threading in the tab
 
 <table>
 <tr>
-	<th>Mutex</th>
-	<th>Enqueue threads</th>
-	<th>Process threads</th>
-	<th>Event count</th>
-	<th>Event Types</th>
-	<th>Listener count</th>
-	<th>Time</th>
+    <th>Mutex</th>
+    <th>Enqueue threads</th>
+    <th>Process threads</th>
+    <th>Event count</th>
+    <th>Event Types</th>
+    <th>Listener count</th>
+    <th>Time</th>
 </tr>
 <tr>
-	<td>std::mutex</td>
-	<td>1</td>
-	<td>1</td>
-	<td>10M</td>
-	<td>100</td>
-	<td>100</td>
-	<td>2283</td>
+    <td>std::mutex</td>
+    <td>1</td>
+    <td>1</td>
+    <td>10M</td>
+    <td>100</td>
+    <td>100</td>
+    <td>2283</td>
 </tr>
 <tr>
-	<td>SpinLock</td>
-	<td>1</td>
-	<td>1</td>
-	<td>10M</td>
-	<td>100</td>
-	<td>100</td>
-	<td>1692</td>
-</tr>
-
-<tr>
-	<td>std::mutex</td>
-	<td>1</td>
-	<td>3</td>
-	<td>10M</td>
-	<td>100</td>
-	<td>100</td>
-	<td>3446</td>
-</tr>
-<tr>
-	<td>SpinLock</td>
-	<td>1</td>
-	<td>3</td>
-	<td>10M</td>
-	<td>100</td>
-	<td>100</td>
-	<td>3025</td>
+    <td>SpinLock</td>
+    <td>1</td>
+    <td>1</td>
+    <td>10M</td>
+    <td>100</td>
+    <td>100</td>
+    <td>1692</td>
 </tr>
 
 <tr>
-	<td>std::mutex</td>
-	<td>2</td>
-	<td>2</td>
-	<td>10M</td>
-	<td>100</td>
-	<td>100</td>
-	<td>4000</td>
+    <td>std::mutex</td>
+    <td>1</td>
+    <td>3</td>
+    <td>10M</td>
+    <td>100</td>
+    <td>100</td>
+    <td>3446</td>
 </tr>
 <tr>
-	<td>SpinLock</td>
-	<td>2</td>
-	<td>2</td>
-	<td>10M</td>
-	<td>100</td>
-	<td>100</td>
-	<td>3076</td>
-</tr>
-
-<tr>
-	<td>std::mutex</td>
-	<td>4</td>
-	<td>4</td>
-	<td>10M</td>
-	<td>100</td>
-	<td>100</td>
-	<td>1971</td>
-</tr>
-<tr>
-	<td>SpinLock</td>
-	<td>4</td>
-	<td>4</td>
-	<td>10M</td>
-	<td>100</td>
-	<td>100</td>
-	<td>1755</td>
+    <td>SpinLock</td>
+    <td>1</td>
+    <td>3</td>
+    <td>10M</td>
+    <td>100</td>
+    <td>100</td>
+    <td>3025</td>
 </tr>
 
 <tr>
-	<td>std::mutex</td>
-	<td>16</td>
-	<td>16</td>
-	<td>10M</td>
-	<td>100</td>
-	<td>100</td>
-	<td>928</td>
+    <td>std::mutex</td>
+    <td>2</td>
+    <td>2</td>
+    <td>10M</td>
+    <td>100</td>
+    <td>100</td>
+    <td>4000</td>
 </tr>
 <tr>
-	<td>SpinLock</td>
-	<td>16</td>
-	<td>16</td>
-	<td>10M</td>
-	<td>100</td>
-	<td>100</td>
-	<td>2082</td>
+    <td>SpinLock</td>
+    <td>2</td>
+    <td>2</td>
+    <td>10M</td>
+    <td>100</td>
+    <td>100</td>
+    <td>3076</td>
+</tr>
+
+<tr>
+    <td>std::mutex</td>
+    <td>4</td>
+    <td>4</td>
+    <td>10M</td>
+    <td>100</td>
+    <td>100</td>
+    <td>1971</td>
+</tr>
+<tr>
+    <td>SpinLock</td>
+    <td>4</td>
+    <td>4</td>
+    <td>10M</td>
+    <td>100</td>
+    <td>100</td>
+    <td>1755</td>
+</tr>
+
+<tr>
+    <td>std::mutex</td>
+    <td>16</td>
+    <td>16</td>
+    <td>10M</td>
+    <td>100</td>
+    <td>100</td>
+    <td>928</td>
+</tr>
+<tr>
+    <td>SpinLock</td>
+    <td>16</td>
+    <td>16</td>
+    <td>10M</td>
+    <td>100</td>
+    <td>100</td>
+    <td>2082</td>
 </tr>
 </table>
 
@@ -172,123 +172,123 @@ Iterations: 100,000,000
 
 <table>
 <tr>
-	<th>Function</th>
-	<th>Compiler</th>
-	<th>Native invoking</th>
-	<th>CallbackList single threading</th>
-	<th>CallbackList multi threading</th>
+    <th>Function</th>
+    <th>Compiler</th>
+    <th>Native invoking</th>
+    <th>CallbackList single threading</th>
+    <th>CallbackList multi threading</th>
 </tr>
 
 <tr>
-	<td rowspan="2">Inline global function</td>
-	<td>MSVC 2017</td>
-	<td>217</td>
-	<td>1501</td>
-	<td>6921</td>
+    <td rowspan="2">Inline global function</td>
+    <td>MSVC 2017</td>
+    <td>217</td>
+    <td>1501</td>
+    <td>6921</td>
 </tr>
 <tr>
-	<td>GCC 7.2</td>
-	<td>187</td>
-	<td>1489</td>
-	<td>4463</td>
-</tr>
-
-<tr>
-	<td rowspan="2">Non-inline global function</td>
-	<td>MSVC 2017</td>
-	<td>241</td>
-	<td>1526</td>
-	<td>6544</td>
-</tr>
-<tr>
-	<td>GCC 7.2</td>
-	<td>233</td>
-	<td>1488</td>
-	<td>4787</td>
+    <td>GCC 7.2</td>
+    <td>187</td>
+    <td>1489</td>
+    <td>4463</td>
 </tr>
 
 <tr>
-	<td rowspan="2">Function object</td>
-	<td>MSVC 2017</td>
-	<td>194</td>
-	<td>1498</td>
-	<td>6433</td>
+    <td rowspan="2">Non-inline global function</td>
+    <td>MSVC 2017</td>
+    <td>241</td>
+    <td>1526</td>
+    <td>6544</td>
 </tr>
 <tr>
-	<td>GCC 7.2</td>
-	<td>212</td>
-	<td>1485</td>
-	<td>4951</td>
-</tr>
-
-<tr>
-	<td rowspan="2">Member virtual function</td>
-	<td>MSVC 2017</td>
-	<td>207</td>
-	<td>1533</td>
-	<td>6558</td>
-</tr>
-<tr>
-	<td>GCC 7.2</td>
-	<td>212</td>
-	<td>1485</td>
-	<td>4489</td>
+    <td>GCC 7.2</td>
+    <td>233</td>
+    <td>1488</td>
+    <td>4787</td>
 </tr>
 
 <tr>
-	<td rowspan="2">Member non-virtual function</td>
-	<td>MSVC 2017</td>
-	<td>214</td>
-	<td>1533</td>
-	<td>6390</td>
+    <td rowspan="2">Function object</td>
+    <td>MSVC 2017</td>
+    <td>194</td>
+    <td>1498</td>
+    <td>6433</td>
 </tr>
 <tr>
-	<td>GCC 7.2</td>
-	<td>211</td>
-	<td>1486</td>
-	<td>4872</td>
-</tr>
-
-<tr>
-	<td rowspan="2">Member non-inline virtual function</td>
-	<td>MSVC 2017</td>
-	<td>206</td>
-	<td>1522</td>
-	<td>6578</td>
-</tr>
-<tr>
-	<td>GCC 7.2</td>
-	<td>182</td>
-	<td>1666</td>
-	<td>4593</td>
+    <td>GCC 7.2</td>
+    <td>212</td>
+    <td>1485</td>
+    <td>4951</td>
 </tr>
 
 <tr>
-	<td rowspan="2">Member non-inline non-virtual function</td>
-	<td>MSVC 2017</td>
-	<td>206</td>
-	<td>1491</td>
-	<td>6992</td>
+    <td rowspan="2">Member virtual function</td>
+    <td>MSVC 2017</td>
+    <td>207</td>
+    <td>1533</td>
+    <td>6558</td>
 </tr>
 <tr>
-	<td>GCC 7.2</td>
-	<td>205</td>
-	<td>1486</td>
-	<td>4490</td>
+    <td>GCC 7.2</td>
+    <td>212</td>
+    <td>1485</td>
+    <td>4489</td>
 </tr>
 
 <tr>
-	<td rowspan="2">All functions</td>
-	<td>MSVC 2017</td>
-	<td>1374</td>
-	<td>10951</td>
-	<td>29973</td>
+    <td rowspan="2">Member non-virtual function</td>
+    <td>MSVC 2017</td>
+    <td>214</td>
+    <td>1533</td>
+    <td>6390</td>
 </tr>
 <tr>
-	<td>GCC 7.2</td>
-	<td>1223</td>
-	<td>9770</td>
-	<td>22958</td>
+    <td>GCC 7.2</td>
+    <td>211</td>
+    <td>1486</td>
+    <td>4872</td>
+</tr>
+
+<tr>
+    <td rowspan="2">Member non-inline virtual function</td>
+    <td>MSVC 2017</td>
+    <td>206</td>
+    <td>1522</td>
+    <td>6578</td>
+</tr>
+<tr>
+    <td>GCC 7.2</td>
+    <td>182</td>
+    <td>1666</td>
+    <td>4593</td>
+</tr>
+
+<tr>
+    <td rowspan="2">Member non-inline non-virtual function</td>
+    <td>MSVC 2017</td>
+    <td>206</td>
+    <td>1491</td>
+    <td>6992</td>
+</tr>
+<tr>
+    <td>GCC 7.2</td>
+    <td>205</td>
+    <td>1486</td>
+    <td>4490</td>
+</tr>
+
+<tr>
+    <td rowspan="2">All functions</td>
+    <td>MSVC 2017</td>
+    <td>1374</td>
+    <td>10951</td>
+    <td>29973</td>
+</tr>
+<tr>
+    <td>GCC 7.2</td>
+    <td>1223</td>
+    <td>9770</td>
+    <td>22958</td>
 </tr>
 
 </table>
@@ -306,40 +306,40 @@ volatile int globalValue = 0;
 
 void globalFunction(int a, const int b)
 {
-	globalValue += a + b;
+    globalValue += a + b;
 }
 
 NON_INLINE void nonInlineGlobalFunction(int a, const int b)
 {
-	globalValue += a + b;
+    globalValue += a + b;
 }
 
 struct FunctionObject
 {
-	void operator() (int a, const int b)
-	{
-		globalValue += a + b;
-	}
+    void operator() (int a, const int b)
+    {
+        globalValue += a + b;
+    }
 
-	virtual void virFunc(int a, const int b)
-	{
-		globalValue += a + b;
-	}
+    virtual void virFunc(int a, const int b)
+    {
+        globalValue += a + b;
+    }
 
-	void nonVirFunc(int a, const int b)
-	{
-		globalValue += a + b;
-	}
+    void nonVirFunc(int a, const int b)
+    {
+        globalValue += a + b;
+    }
 
-	NON_INLINE virtual void nonInlineVirFunc(int a, const int b)
-	{
-		globalValue += a + b;
-	}
+    NON_INLINE virtual void nonInlineVirFunc(int a, const int b)
+    {
+        globalValue += a + b;
+    }
 
-	NON_INLINE void nonInlineNonVirFunc(int a, const int b)
-	{
-		globalValue += a + b;
-	}
+    NON_INLINE void nonInlineNonVirFunc(int a, const int b)
+    {
+        globalValue += a + b;
+    }
 };
 
 #undef NON_INLINE

@@ -58,7 +58,7 @@ For example,
 class MyEventDispatcher : public EventDispatcher<blah blah>
 {
 public:
-	virtual ~MyEventDispatcher();
+    virtual ~MyEventDispatcher();
 };
 
 class MyClass : public MyEventDispatcher
@@ -86,22 +86,22 @@ eventpp::CallbackList<void ()> mainLoopTasks;
 
 void mainLoop()
 {
-	for(;;) {
-		// Do any stuff in the loop
-		
-		mainLoopTasks();
-	}
+    for(;;) {
+        // Do any stuff in the loop
+        
+        mainLoopTasks();
+    }
 }
 
 class MyEventQueue : public eventpp::EventQueue<blah blah>
 {
 public:
-	MyEventQueue()
-	{
-		mainLoopTasks.append([this]() {
-			process();
-		});
-	}
+    MyEventQueue()
+    {
+        mainLoopTasks.append([this]() {
+            process();
+        });
+    }
 };
 ```
 
@@ -118,25 +118,25 @@ eventpp::CallbackList<void ()> mainLoopTasks;
 
 void threadMain()
 {
-	while(! stopped) {
-		ioService.poll();
-		mainLoopTasks();
-		sleepSomeTime();
-	}
-	
-	ioService.run();
-	mainLoopTasks();
+    while(! stopped) {
+        ioService.poll();
+        mainLoopTasks();
+        sleepSomeTime();
+    }
+    
+    ioService.run();
+    mainLoopTasks();
 }
 
 class MyEventQueue : public eventpp::EventQueue<blah blah>
 {
 public:
-	MyEventQueue()
-	{
-		mainLoopTasks.append([this]() {
-			process();
-		});
-	}
+    MyEventQueue()
+    {
+        mainLoopTasks.append([this]() {
+            process();
+        });
+    }
 };
 ```
 

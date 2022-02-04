@@ -54,9 +54,9 @@ A typical implementation of `Digester`:
 template <typename T>
 struct MyDigest
 {
-	TheDigestTypeSuchAsSizeT operator() (const T & value) const {
-		// compute the digest of value and return the digest.
-	}
+    TheDigestTypeSuchAsSizeT operator() (const T & value) const {
+        // compute the digest of value and return the digest.
+    }
 };
 ```
 Note: the return type of the function call operator (here is TheDigestTypeSuchAsSizeT) must be the same for all T, it can't be different type for different T.  
@@ -65,12 +65,12 @@ A typical implementation of `Storage`:
 ```c++
 struct MyStorage
 {
-	template <typename T>
-	MyStorage(const T & value) {
-		// store the value
-	}
-	
-	// any other member functions can be added, such as getting the underlying value.
+    template <typename T>
+    MyStorage(const T & value) {
+        // store the value
+    }
+    
+    // any other member functions can be added, such as getting the underlying value.
 };
 ```
 Or none template version:  
@@ -78,10 +78,10 @@ Or none template version:
 // In this version, only value of `int` and `std::string` can be stored.
 struct MyStorage
 {
-	MyStorage(const int value) {}
-	MyStorage(const std::string & value) {}
-	
-	// any other member functions can be added, such as getting the underlying value.
+    MyStorage(const int value) {}
+    MyStorage(const std::string & value) {}
+    
+    // any other member functions can be added, such as getting the underlying value.
 };
 ```
 

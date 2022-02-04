@@ -13,15 +13,15 @@ Note if you are going to try the tutorial code, you'd better test the code under
 eventpp::EventQueue<int, void (const std::string &, std::unique_ptr<int> &)> queue;
 
 queue.appendListener(3, [](const std::string & s, std::unique_ptr<int> & n) {
-	std::cout << "Got event 3, s is " << s << " n is " << *n << std::endl;
+    std::cout << "Got event 3, s is " << s << " n is " << *n << std::endl;
 });
 // The listener prototype doesn't need to be exactly same as the dispatcher.
 // It would be find as long as the arguments is compatible with the dispatcher.
 queue.appendListener(5, [](std::string s, const std::unique_ptr<int> & n) {
-	std::cout << "Got event 5, s is " << s << " n is " << *n << std::endl;
+    std::cout << "Got event 5, s is " << s << " n is " << *n << std::endl;
 });
 queue.appendListener(5, [](const std::string & s, std::unique_ptr<int> & n) {
-	std::cout << "Got another event 5, s is " << s << " n is " << *n << std::endl;
+    std::cout << "Got another event 5, s is " << s << " n is " << *n << std::endl;
 });
 
 // Enqueue the events, the first argument is always the event type.
@@ -59,19 +59,19 @@ constexpr int otherEvent = 2;
 // Start a thread to process the event queue.
 // All listeners are invoked in that thread.
 std::thread thread([stopEvent, otherEvent, &queue]() {
-	volatile bool shouldStop = false;
-	queue.appendListener(stopEvent, [&shouldStop](int) {
-		shouldStop = true;
-	});
-	queue.appendListener(otherEvent, [](const int index) {
-		std::cout << "Got event, index is " << index << std::endl;
-	});
+    volatile bool shouldStop = false;
+    queue.appendListener(stopEvent, [&shouldStop](int) {
+        shouldStop = true;
+    });
+    queue.appendListener(otherEvent, [](const int index) {
+        std::cout << "Got event, index is " << index << std::endl;
+    });
 
-	while(! shouldStop) {
-		queue.wait();
+    while(! shouldStop) {
+        queue.wait();
 
-		queue.process();
-	}
+        queue.process();
+    }
 });
 
 // Enqueue an event from the main thread. After sleeping for 10 milliseconds,
@@ -85,20 +85,20 @@ std::this_thread::sleep_for(std::chrono::milliseconds(10));
 std::cout << "Should have triggered event with index = 2" << std::endl;
 
 {
-	// EventQueue::DisableQueueNotify is a RAII class that
-	// disables waking up any waiting threads.
-	// So no events should be triggered in this code block.
-	// DisableQueueNotify is useful when adding lots of events at the same time
-	// and only want to wake up the waiting threads after all events are added.
-	EQ::DisableQueueNotify disableNotify(&queue);
+    // EventQueue::DisableQueueNotify is a RAII class that
+    // disables waking up any waiting threads.
+    // So no events should be triggered in this code block.
+    // DisableQueueNotify is useful when adding lots of events at the same time
+    // and only want to wake up the waiting threads after all events are added.
+    EQ::DisableQueueNotify disableNotify(&queue);
 
-	queue.enqueue(otherEvent, 10);
-	std::this_thread::sleep_for(std::chrono::milliseconds(10));
-	std::cout << "Should NOT trigger event with index = 10" << std::endl;
-	
-	queue.enqueue(otherEvent, 11);
-	std::this_thread::sleep_for(std::chrono::milliseconds(10));
-	std::cout << "Should NOT trigger event with index = 11" << std::endl;
+    queue.enqueue(otherEvent, 10);
+    std::this_thread::sleep_for(std::chrono::milliseconds(10));
+    std::cout << "Should NOT trigger event with index = 10" << std::endl;
+    
+    queue.enqueue(otherEvent, 11);
+    std::this_thread::sleep_for(std::chrono::milliseconds(10));
+    std::cout << "Should NOT trigger event with index = 11" << std::endl;
 }
 // The DisableQueueNotify object is destroyed here, and has resumed
 // waking up waiting threads. So the events should be triggered.

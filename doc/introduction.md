@@ -28,22 +28,22 @@ EventDispatcher is ideal when there are many kinds of events, or the number of e
 ```c++
 enum class MyEventType
 {
-	redraw,
-	mouseDown,
-	mouseUp,
-	//... maybe 200 other events here
+    redraw,
+    mouseDown,
+    mouseUp,
+    //... maybe 200 other events here
 };
 
 struct MyEvent {
-	MyEventType type;
-	// data that all events may need
+    MyEventType type;
+    // data that all events may need
 };
 
 struct MyEventPolicies
 {
-	static MyEventType getEvent(const MyEvent & e) {
-		return e.type;
-	}
+    static MyEventType getEvent(const MyEvent & e) {
+        return e.type;
+    }
 };
 
 eventpp::EventDispatcher<MyEventType, void(const MyEvent &), MyEventPolicies> dispatcher;

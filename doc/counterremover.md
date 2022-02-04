@@ -48,42 +48,42 @@ Constructs an instance of CounterRemover.
 **Member functions for EventDispatcher and EventQueue**
 ```c++
 typename DispatcherType::Handle appendListener(
-		const typename DispatcherType::Event & event,
-		const typename DispatcherType::Callback & listener,
-		const int triggerCount = 1
-	);
+        const typename DispatcherType::Event & event,
+        const typename DispatcherType::Callback & listener,
+        const int triggerCount = 1
+    );
 
 typename DispatcherType::Handle prependListener(
-		const typename DispatcherType::Event & event,
-		const typename DispatcherType::Callback & listener,
-		const int triggerCount = 1
-	);
+        const typename DispatcherType::Event & event,
+        const typename DispatcherType::Callback & listener,
+        const int triggerCount = 1
+    );
 
 typename DispatcherType::Handle insertListener(
-		const typename DispatcherType::Event & event,
-		const typename DispatcherType::Callback & listener,
-		const typename DispatcherType::Handle & before,
-		const int triggerCount = 1
-	);
+        const typename DispatcherType::Event & event,
+        const typename DispatcherType::Callback & listener,
+        const typename DispatcherType::Handle & before,
+        const int triggerCount = 1
+    );
 ```
 
 **Member functions for CallbackList**
 ```c++
 typename CallbackListType::Handle append(
-		const typename CallbackListType::Callback & listener,
-		const int triggerCount = 1
-	);
+        const typename CallbackListType::Callback & listener,
+        const int triggerCount = 1
+    );
 
 typename CallbackListType::Handle prepend(
-		const typename CallbackListType::Callback & listener,
-		const int triggerCount = 1
-	);
+        const typename CallbackListType::Callback & listener,
+        const int triggerCount = 1
+    );
 
 typename CallbackListType::Handle insert(
-		const typename CallbackListType::Callback & listener,
-		const typename CallbackListType::Handle & before,
-		const int triggerCount = 1
-	);
+        const typename CallbackListType::Callback & listener,
+        const typename CallbackListType::Handle & before,
+        const int triggerCount = 1
+    );
 ```
 
 The member functions have the same names with the corresponding underlying class (CallbackList, EventDispatcher, or EventQueue), and also have the same parameters except there is one more parameter, `triggerCount`. `triggerCount` is decreased by one on each trigger, and when `triggerCount` is zero or negative, the listener will be removed.  
@@ -110,19 +110,19 @@ eventpp::EventDispatcher<int, void ()> dispatcher;
 constexpr int event = 3;
 
 dispatcher.appendListener(event, []() {
-	// listener A
+    // listener A
 });
 
 // Note the CounterRemover instance returned by counterRemover is invoked
 // prependListener and destroyed immediately.
 eventpp::counterRemover(dispatcher).prependListener(event, []() {
-	// listener B
+    // listener B
 });
 auto handle = eventpp::counterRemover(dispatcher).appendListener(event, []() {
-	// listener C
+    // listener C
 }, 2);
 eventpp::counterRemover(dispatcher).insertListener(event, []() {
-	// listener D
+    // listener D
 }, handle, 3);
 
 dispatcher.dispatch(event);

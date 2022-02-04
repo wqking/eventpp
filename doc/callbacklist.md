@@ -35,8 +35,8 @@ eventpp/callbacklist.h
 
 ```c++
 template <
-	typename Prototype,
-	typename Policies = DefaultPolicies
+    typename Prototype,
+    typename Policies = DefaultPolicies
 >
 class CallbackList;
 ```

@@ -10,14 +10,14 @@ For example,
 eventpp::CallbackList<void(int)> callbackList;
 
 callbackList.append(
-	eventpp::conditionalFunctor(
-		[](const int value) {
-			std::cout << "We should get value 1." << here;
-		},
-		[](const int value) {
-			return value == 1;
-		}
-	)
+    eventpp::conditionalFunctor(
+        [](const int value) {
+            std::cout << "We should get value 1." << here;
+        },
+        [](const int value) {
+            return value == 1;
+        }
+    )
 );
 callbackList(2); // not trigger the callback
 callbackList(1); // trigger the callback
@@ -44,34 +44,34 @@ eventpp::CallbackList<void(int)> callbackList;
 
 std::vector<int> dataList(3);
 callbackList.append(
-	eventpp::conditionalFunctor(
-		[&dataList](const int index) {
-			++dataList[index];
-		},
-		[](const int index) {
-			return index == 0;
-		}
-	)
+    eventpp::conditionalFunctor(
+        [&dataList](const int index) {
+            ++dataList[index];
+        },
+        [](const int index) {
+            return index == 0;
+        }
+    )
 );
 callbackList.append(
-	eventpp::conditionalFunctor(
-		[&dataList](const int index) {
-			++dataList[index];
-		},
-		[](const int index) {
-			return index == 1;
-		}
-	)
+    eventpp::conditionalFunctor(
+        [&dataList](const int index) {
+            ++dataList[index];
+        },
+        [](const int index) {
+            return index == 1;
+        }
+    )
 );
 callbackList.append(
-	eventpp::conditionalFunctor(
-		[&dataList](const int index) {
-			++dataList[index];
-		},
-		[](const int index) {
-			return index == 2;
-		}
-	)
+    eventpp::conditionalFunctor(
+        [&dataList](const int index) {
+            ++dataList[index];
+        },
+        [](const int index) {
+            return index == 2;
+        }
+    )
 );
 
 REQUIRE(dataList == std::vector<int>{ 0, 0, 0 });

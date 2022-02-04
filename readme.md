@@ -52,8 +52,8 @@ In brief, MSVC, GCC, Clang that has well support for C++11, or released after 20
     * The library: C++11.  
 * To develop the library
     * Unit tests: C++17.
-	* Tutorials: C++11.
-	* Benchmakrs: C++11.
+    * Tutorials: C++11.
+    * Benchmakrs: C++11.
 
 ## Quick start
 
@@ -101,10 +101,10 @@ Note: the method 2 doesn't work well with MingW on Windows. It works well on Lin
 #include "eventpp/callbacklist.h"
 eventpp::CallbackList<void (const std::string &, const bool)> callbackList;
 callbackList.append([](const std::string & s, const bool b) {
-	std::cout << std::boolalpha << "Got callback 1, s is " << s << " b is " << b << std::endl;
+    std::cout << std::boolalpha << "Got callback 1, s is " << s << " b is " << b << std::endl;
 });
 callbackList.append([](std::string s, int b) {
-	std::cout << std::boolalpha << "Got callback 2, s is " << s << " b is " << b << std::endl;
+    std::cout << std::boolalpha << "Got callback 2, s is " << s << " b is " << b << std::endl;
 });
 callbackList("Hello world", true);
 ```
@@ -114,13 +114,13 @@ callbackList("Hello world", true);
 #include "eventpp/eventdispatcher.h"
 eventpp::EventDispatcher<int, void ()> dispatcher;
 dispatcher.appendListener(3, []() {
-	std::cout << "Got event 3." << std::endl;
+    std::cout << "Got event 3." << std::endl;
 });
 dispatcher.appendListener(5, []() {
-	std::cout << "Got event 5." << std::endl;
+    std::cout << "Got event 5." << std::endl;
 });
 dispatcher.appendListener(5, []() {
-	std::cout << "Got another event 5." << std::endl;
+    std::cout << "Got another event 5." << std::endl;
 });
 // dispatch event 3
 dispatcher.dispatch(3);
@@ -133,10 +133,10 @@ dispatcher.dispatch(5);
 eventpp::EventQueue<int, void (const std::string &, const bool)> queue;
 
 queue.appendListener(3, [](const std::string s, bool b) {
-	std::cout << std::boolalpha << "Got event 3, s is " << s << " b is " << b << std::endl;
+    std::cout << std::boolalpha << "Got event 3, s is " << s << " b is " << b << std::endl;
 });
 queue.appendListener(5, [](const std::string s, bool b) {
-	std::cout << std::boolalpha << "Got event 5, s is " << s << " b is " << b << std::endl;
+    std::cout << std::boolalpha << "Got event 5, s is " << s << " b is " << b << std::endl;
 });
 
 // The listeners are not triggered during enqueue.

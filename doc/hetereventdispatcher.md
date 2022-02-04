@@ -31,9 +31,9 @@ eventpp/hetereventdispatcher.h
 
 ```c++
 template <
-	typename Event,
-	typename PrototypeList,
-	typename Policies = DefaultPolicies
+    typename Event,
+    typename PrototypeList,
+    typename Policies = DefaultPolicies
 >
 class HeterEventDispatcher;
 ```

@@ -30,22 +30,22 @@ eventpp/hetereventqueue.h
 
 ```c++
 template <
-	typename PrototypeList,
-	typename Policies = DefaultPolicies
+    typename PrototypeList,
+    typename Policies = DefaultPolicies
 >
 class HeterCallbackList;
 
 template <
-	typename Event,
-	typename PrototypeList,
-	typename Policies = DefaultPolicies
+    typename Event,
+    typename PrototypeList,
+    typename Policies = DefaultPolicies
 >
 class HeterEventDispatcher;
 
 template <
-	typename Event,
-	typename PrototypeList,
-	typename Policies = DefaultPolicies
+    typename Event,
+    typename PrototypeList,
+    typename Policies = DefaultPolicies
 >
 class HeterEventQueue;
 ```
@@ -54,22 +54,22 @@ For comparison, below are the template parameters for the homogeneous counterpar
 
 ```c++
 template <
-	typename Prototype,
-	typename Policies = DefaultPolicies
+    typename Prototype,
+    typename Policies = DefaultPolicies
 >
 class CallbackList;
 
 template <
-	typename Event,
-	typename Prototype,
-	typename Policies = DefaultPolicies
+    typename Event,
+    typename Prototype,
+    typename Policies = DefaultPolicies
 >
 class EventDispatcher;
 
 template <
-	typename Event,
-	typename Prototype,
-	typename Policies = DefaultPolicies
+    typename Event,
+    typename Prototype,
+    typename Policies = DefaultPolicies
 >
 class EventQueue;
 ```

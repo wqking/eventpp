@@ -34,9 +34,9 @@ eventpp/eventdispatcher.h
 
 ```c++
 template <
-	typename Event,
-	typename Prototype,
-	typename Policies = DefaultPolicies
+    typename Event,
+    typename Prototype,
+    typename Policies = DefaultPolicies
 >
 class EventDispatcher;
 ```

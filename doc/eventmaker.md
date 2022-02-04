@@ -15,23 +15,23 @@ class Event
 class EventMouseDown : public Event
 {
 public:
-	int getX() const;
-	int getY() const;
-	int getButton() const;
-	
+    int getX() const;
+    int getY() const;
+    int getButton() const;
+    
 private:
-	int x;
-	int y;
-	int button;
+    int x;
+    int y;
+    int button;
 };
 
 class EventKeyDown : public Event
 {
 public:
-	int getKey() const;
-	
+    int getKey() const;
+    
 private:
-	int key;
+    int key;
 };
 
 ```
@@ -62,8 +62,8 @@ The macro always generates a default constructor and a constructor that takes al
 Code examples:  
 ```c++
 EVENTPP_MAKE_EVENT(
-	EventDraw, Event, EventType::draw,
-	(std::string, getText, setText), (int, getX), (double, getSize)
+    EventDraw, Event, EventType::draw,
+    (std::string, getText, setText), (int, getX), (double, getSize)
 );
 ```
 Generates class like (in pseudo code),
@@ -71,45 +71,45 @@ Generates class like (in pseudo code),
 class EventDraw : public Event
 {
 public:
-	EventDraw(const std::string & text, const int x, const double size)
-		: Event(EventType::draw), text(text), x(x), size(size)
-	{
-	}
-	
-	const std::string & getText() const {
-		return text;
-	}
-	
-	void setText(const std::string & value) {
-		text = value;
-	}
-	
-	const int getX() const {
-		return x;
-	}
-	
-	const double getSize() const {
-		return size;
-	}
+    EventDraw(const std::string & text, const int x, const double size)
+        : Event(EventType::draw), text(text), x(x), size(size)
+    {
+    }
+    
+    const std::string & getText() const {
+        return text;
+    }
+    
+    void setText(const std::string & value) {
+        text = value;
+    }
+    
+    const int getX() const {
+        return x;
+    }
+    
+    const double getSize() const {
+        return size;
+    }
 
 private:
-	std::string text;
-	int x;
-	double size;
+    std::string text;
+    int x;
+    double size;
 };
 
 ```
 
 ```c++
 EVENTPP_MAKE_EVENT(EventDraw, (Event<int, char>), EventType::draw,
-	(std::string, getText, setText), (int, getX), (double, getSize)
+    (std::string, getText, setText), (int, getX), (double, getSize)
 );
 ```
 Similar to above example, except the base class is `Event<int, char>`.  
 
 ```c++
 EVENTPP_MAKE_EVENT(EventDraw, (Event<int, char>), (EventType::draw, 5),
-	(std::string, getText, setText), (int, getX), (double, getSize)
+    (std::string, getText, setText), (int, getX), (double, getSize)
 );
 ```
 Similar to above example, except the base class is constructed with `(EventType::draw, 5)` instead of `(EventType::draw)`.  

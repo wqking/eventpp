@@ -32,8 +32,8 @@ eventpp/hetercallbacklist.h
 
 ```c++
 template <
-	typename PrototypeList,
-	typename Policies = DefaultPolicies
+    typename PrototypeList,
+    typename Policies = DefaultPolicies
 >
 class HeterCallbackList;
 ```

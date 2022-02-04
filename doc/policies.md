@@ -42,39 +42,39 @@ Sample code
 ```c++
 // Define an Event to hold all parameters.
 struct MyEvent {
-	int type;
-	std::string message;
-	int param;
+    int type;
+    std::string message;
+    int param;
 };
 
 // Define policies to let the dispatcher knows how to
 // extract the event type.
 struct MyEventPolicies
 {
-	static int getEvent(const MyEvent & e, bool /*b*/) {
-		return e.type;
-	}
+    static int getEvent(const MyEvent & e, bool /*b*/) {
+        return e.type;
+    }
 };
 
 // Pass MyEventPolicies as the third template argument of EventDispatcher.
 // Note: the first template argument is the event type type int, not MyEvent.
 eventpp::EventDispatcher<
-	int,
-	void (const MyEvent &, bool),
-	MyEventPolicies
+    int,
+    void (const MyEvent &, bool),
+    MyEventPolicies
 > dispatcher;
 
 // Add a listener.
 // Note: the first argument is the event type of type int, not MyEvent.
 dispatcher.appendListener(3, [](const MyEvent & e, bool b) {
-	std::cout
-		<< std::boolalpha
-		<< "Got event 3" << std::endl
-		<< "Event::type is " << e.type << std::endl
-		<< "Event::message is " << e.message << std::endl
-		<< "Event::param is " << e.param << std::endl
-		<< "b is " << b << std::endl
-	;
+    std::cout
+        << std::boolalpha
+        << "Got event 3" << std::endl
+        << "Event::type is " << e.type << std::endl
+        << "Event::message is " << e.message << std::endl
+        << "Event::param is " << e.param << std::endl
+        << "b is " << b << std::endl
+    ;
 });
 
 // Dispatch the event.
@@ -93,35 +93,35 @@ Sample code
 
 ```c++
 struct MyEvent {
-	MyEvent() : type(0), canceled(false) {
-	}
-	explicit MyEvent(const int type)
-		: type(type), canceled(false) {
-	}
+    MyEvent() : type(0), canceled(false) {
+    }
+    explicit MyEvent(const int type)
+        : type(type), canceled(false) {
+    }
 
-	int type;
-	mutable bool canceled;
+    int type;
+    mutable bool canceled;
 };
 
 struct MyEventPolicies
 {
-	static int getEvent(const MyEvent & e) {
-		return e.type;
-	}
+    static int getEvent(const MyEvent & e) {
+        return e.type;
+    }
 
-	static bool canContinueInvoking(const MyEvent & e) {
-		return ! e.canceled;
-	}
+    static bool canContinueInvoking(const MyEvent & e) {
+        return ! e.canceled;
+    }
 };
 
 eventpp::EventDispatcher<int, void (const MyEvent &), MyEventPolicies> dispatcher;
 
 dispatcher.appendListener(3, [](const MyEvent & e) {
-	std::cout << "Got event 3" << std::endl;
-	e.canceled = true;
+    std::cout << "Got event 3" << std::endl;
+    e.canceled = true;
 });
 dispatcher.appendListener(3, [](const MyEvent & e) {
-	std::cout << "Should not get this event 3" << std::endl;
+    std::cout << "Should not get this event 3" << std::endl;
 });
 
 dispatcher.dispatch(MyEvent(3));
@@ -158,12 +158,12 @@ A typical `Threading` type looks like
 ```c++
 struct MultipleThreading
 {
-	using Mutex = std::mutex;
+    using Mutex = std::mutex;
 
-	template <typename T>
-	using Atomic = std::atomic<T>;
+    template <typename T>
+    using Atomic = std::atomic<T>;
 
-	using ConditionVariable = std::condition_variable;
+    using ConditionVariable = std::condition_variable;
 };
 ```
 For `SingleThreading`, all the types `Mutex`, `Atomic`, and `ConditionVariable` are dummy types that don't do anything.  
@@ -177,15 +177,15 @@ Below is the sample code for how to use `SpinLock`
 ```c++
 struct MultipleThreadingSpinLock
 {
-	using Mutex = eventpp::SpinLock;
+    using Mutex = eventpp::SpinLock;
 
-	template <typename T>
-	using Atomic = std::atomic<T>;
+    template <typename T>
+    using Atomic = std::atomic<T>;
 
-	using ConditionVariable = std::condition_variable;
+    using ConditionVariable = std::condition_variable;
 };
 struct MyEventPolicies {
-	using Threading = MultipleThreadingSpinLock;
+    using Threading = MultipleThreadingSpinLock;
 };
 eventpp::EventDispatcher<int, void (), MyEventPolicies> dispatcher;
 eventpp::CallbackList<void (), MyEventPolicies> callbackList;
@@ -194,18 +194,18 @@ eventpp::CallbackList<void (), MyEventPolicies> callbackList;
 `eventpp` provides a shortcut template class to customize the threading.  
 ```c++
 template <
-	typename Mutex_,
-	template <typename > class Atomic_ = std::atomic,
-	typename ConditionVariable_ = std::condition_variable
+    typename Mutex_,
+    template <typename > class Atomic_ = std::atomic,
+    typename ConditionVariable_ = std::condition_variable
 >
 struct GeneralThreading
 {
-	using Mutex = Mutex_;
+    using Mutex = Mutex_;
 
-	template <typename T>
-	using Atomic = Atomic_<T>;
+    template <typename T>
+    using Atomic = Atomic_<T>;
 
-	using ConditionVariable = ConditionVariable_;
+    using ConditionVariable = ConditionVariable_;
 };
 ```
 
@@ -213,7 +213,7 @@ So the previous sample code for spinlock can be rewritten as
 
 ```c++
 struct MyEventPolicies {
-	using Threading = eventpp::GeneralThreading<eventpp::SpinLock>;
+    using Threading = eventpp::GeneralThreading<eventpp::SpinLock>;
 };
 eventpp::EventDispatcher<int, void (), MyEventPolicies> dispatcher;
 eventpp::CallbackList<void (), MyEventPolicies> callbackList;
@@ -270,12 +270,12 @@ Examples to demonstrate argument passing mode
 ```c++
 struct MyPolicies
 {
-	using ArgumentPassingMode = ArgumentPassingAutoDetect;
+    using ArgumentPassingMode = ArgumentPassingAutoDetect;
 };
 eventpp::EventDispatcher<
-	int,
-	void(int, const std::string &),
-	MyPolicies
+    int,
+    void(int, const std::string &),
+    MyPolicies
 > dispatcher;
 // or just
 //eventpp::EventDispatcher<int, void(int, const std::string &)> dispatcher;
@@ -286,12 +286,12 @@ dispatcher.dispatch(3, 8, "hello"); // Compile OK
 ```c++
 struct MyPolicies
 {
-	using ArgumentPassingMode = ArgumentPassingIncludeEvent;
+    using ArgumentPassingMode = ArgumentPassingIncludeEvent;
 };
 eventpp::EventDispatcher<
-	int,
-	void(int, const std::string &),
-	MyPolicies
+    int,
+    void(int, const std::string &),
+    MyPolicies
 > dispatcher;
 dispatcher.dispatch(3, "hello"); // Compile OK
 //dispatcher.dispatch(3, 8, "hello"); // Compile failure
@@ -300,12 +300,12 @@ dispatcher.dispatch(3, "hello"); // Compile OK
 ```c++
 struct MyPolicies
 {
-	using ArgumentPassingMode = ArgumentPassingExcludeEvent;
+    using ArgumentPassingMode = ArgumentPassingExcludeEvent;
 };
 eventpp::EventDispatcher<
-	int,
-	void(int, const std::string &),
-	MyPolicies
+    int,
+    void(int, const std::string &),
+    MyPolicies
 > dispatcher;
 //dispatcher.dispatch(3, "hello"); // Compile failure
 dispatcher.dispatch(3, 8, "hello"); // Compile OK
@@ -367,10 +367,10 @@ To use policies, declare a struct, define the policies in it, and pass the struc
 ```c++
 struct MyPolicies //the struct name doesn't matter
 {
-	template <typename ...Args>
-	static int getEvent(const MyEvent & e, const Args &...) {
-		return e.type;
-	}
+    template <typename ...Args>
+    static int getEvent(const MyEvent & e, const Args &...) {
+        return e.type;
+    }
 };
 EventDispatcher<int, void(const MyEvent &), MyPolicies> dispatcher;
 ```

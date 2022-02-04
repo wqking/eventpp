@@ -49,47 +49,47 @@ Constructs an instance of ConditionalRemover.
 ```c++
 template <typename Condition>
 typename DispatcherType::Handle appendListener(
-		const typename DispatcherType::Event & event,
-		const typename DispatcherType::Callback & listener,
-		const Condition & condition
-	);
+        const typename DispatcherType::Event & event,
+        const typename DispatcherType::Callback & listener,
+        const Condition & condition
+    );
 
 template <typename Condition>
 typename DispatcherType::Handle prependListener(
-		const typename DispatcherType::Event & event,
-		const typename DispatcherType::Callback & listener,
-		const Condition & condition
-	);
+        const typename DispatcherType::Event & event,
+        const typename DispatcherType::Callback & listener,
+        const Condition & condition
+    );
 
 template <typename Condition>
 typename DispatcherType::Handle insertListener(
-		const typename DispatcherType::Event & event,
-		const typename DispatcherType::Callback & listener,
-		const typename DispatcherType::Handle & before,
-		const Condition & condition
-	);
+        const typename DispatcherType::Event & event,
+        const typename DispatcherType::Callback & listener,
+        const typename DispatcherType::Handle & before,
+        const Condition & condition
+    );
 ```
 
 **Member functions for CallbackList**
 ```c++
 template <typename Condition>
 typename CallbackListType::Handle append(
-		const typename CallbackListType::Callback & listener,
-		const Condition & condition
-	);
+        const typename CallbackListType::Callback & listener,
+        const Condition & condition
+    );
 
 template <typename Condition>
 typename CallbackListType::Handle prepend(
-		const typename CallbackListType::Callback & listener,
-		const Condition & condition
-	);
+        const typename CallbackListType::Callback & listener,
+        const Condition & condition
+    );
 
 template <typename Condition>
 typename CallbackListType::Handle insert(
-		const typename CallbackListType::Callback & listener,
-		const typename CallbackListType::Handle & before,
-		const Condition & condition
-	);
+        const typename CallbackListType::Callback & listener,
+        const typename CallbackListType::Handle & before,
+        const Condition & condition
+    );
 ```
 
 The member functions have the same names with the corresponding underlying class (CallbackList, EventDispatcher, or EventQueue), and also have the same parameters except there is one more parameter, `condition`. `condition` is a predicate function that returns a bool value. It's invoked after each trigger, if it returns true, the listener will be removed.  
@@ -126,26 +126,26 @@ eventpp::EventDispatcher<int, void ()> dispatcher;
 constexpr int event = 3;
 
 dispatcher.appendListener(event, []() {
-	// listener A
+    // listener A
 });
 
 // Note the ConditionalRemover instance returned by conditionalRemover is invoked
 // prependListener and destroyed immediately.
 std::string removeWho;
 eventpp::conditionalRemover(dispatcher).prependListener(event, [&dataList]() {
-	// listener B
+    // listener B
 }, [&removeWho]() -> bool {
-	return removeWho == "removeB";
+    return removeWho == "removeB";
 });
 auto handle = eventpp::conditionalRemover(dispatcher).appendListener(event, [&dataList]() {
-	// listener C
+    // listener C
 }, [&removeWho]() -> bool {
-	return removeWho == "removeC";
+    return removeWho == "removeC";
 });
 eventpp::conditionalRemover(dispatcher).insertListener(event, [&dataList]() {
-	// listener D
+    // listener D
 }, handle, [&removeWho]() -> bool {
-	return removeWho == "removeD";
+    return removeWho == "removeD";
 });
 
 dispatcher.dispatch(event);

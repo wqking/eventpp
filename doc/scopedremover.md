@@ -58,24 +58,24 @@ void reset();
 void setDispatcher(DispatcherType & dispatcher);
 
 typename DispatcherType::Handle appendListener(
-		const typename DispatcherType::Event & event,
-		const typename DispatcherType::Callback & listener
-	);
+        const typename DispatcherType::Event & event,
+        const typename DispatcherType::Callback & listener
+    );
 
 typename DispatcherType::Handle prependListener(
-		const typename DispatcherType::Event & event,
-		const typename DispatcherType::Callback & listener
-	);
+        const typename DispatcherType::Event & event,
+        const typename DispatcherType::Callback & listener
+    );
 
 typename DispatcherType::Handle insertListener(
-		const typename DispatcherType::Event & event,
-		const typename DispatcherType::Callback & listener,
-		const typename DispatcherType::Handle & before
-	);
+        const typename DispatcherType::Event & event,
+        const typename DispatcherType::Callback & listener,
+        const typename DispatcherType::Handle & before
+    );
 bool removeListener(
-		const typename DispatcherType::Event & event,
-		const typename DispatcherType::Handle handle
-	);
+        const typename DispatcherType::Event & event,
+        const typename DispatcherType::Handle handle
+    );
 ```
 
 **Member functions for CallbackList**
@@ -85,17 +85,17 @@ void reset();
 void setCallbackList(CallbackListType & callbackList);
 
 typename CallbackListType::Handle append(
-		const typename CallbackListType::Callback & callback
-	);
+        const typename CallbackListType::Callback & callback
+    );
 
 typename CallbackListType::Handle prepend(
-		const typename CallbackListType::Callback & callback
-	);
+        const typename CallbackListType::Callback & callback
+    );
 
 typename CallbackListType::Handle insert(
-		const typename CallbackListType::Callback & callback,
-		const typename CallbackListType::Handle & before
-	);
+        const typename CallbackListType::Callback & callback,
+        const typename CallbackListType::Handle & before
+    );
 bool remove(const typename CallbackListType::Handle handle);
 ```
 
@@ -119,39 +119,39 @@ using Remover = eventpp::ScopedRemover<eventpp::EventDispatcher<int, void ()> >;
 constexpr int event = 3;
 
 dispatcher.appendListener(event, [&dataList]() {
-	// listener A
+    // listener A
 });
 
 {
-	Remover r1(dispatcher);
-	r1.prependListener(event, [&dataList]() {
-		// listener B
-	});
-	{
-		Remover r2(dispatcher);
-		auto handle = r2.appendListener(event, [&dataList]() {
-			// listener C
-		});
-		{
-			Remover r3(dispatcher);
-			r3.insertListener(event, [&dataList]() {
-				// listener D
-			}, handle);
+    Remover r1(dispatcher);
+    r1.prependListener(event, [&dataList]() {
+        // listener B
+    });
+    {
+        Remover r2(dispatcher);
+        auto handle = r2.appendListener(event, [&dataList]() {
+            // listener C
+        });
+        {
+            Remover r3(dispatcher);
+            r3.insertListener(event, [&dataList]() {
+                // listener D
+            }, handle);
 
-			dispatcher.dispatch(event);
-			// All listeners were triggered.
-		}
-		
-		// listener D was removed
+            dispatcher.dispatch(event);
+            // All listeners were triggered.
+        }
+        
+        // listener D was removed
 
-		dispatcher.dispatch(event);
-		// Listeners A, B, C were triggered.
-	}
+        dispatcher.dispatch(event);
+        // Listeners A, B, C were triggered.
+    }
 
-	// listener C was removed
+    // listener C was removed
 
-	dispatcher.dispatch(event);
-	// Listeners A, B were triggered.
+    dispatcher.dispatch(event);
+    // Listeners A, B were triggered.
 }
 
 // listener B was removed
@@ -173,12 +173,12 @@ SomeDispatcher someDispatcher;
 
 class MyClass
 {
-	MyClass()
-	{
-		someDispatcher.appendListener(SomeEvent, callback of myListener);
-	}
-	
-	void myListener() {}
+    MyClass()
+    {
+        someDispatcher.appendListener(SomeEvent, callback of myListener);
+    }
+    
+    void myListener() {}
 };
 ```
 
@@ -191,14 +191,14 @@ SomeDispatcher someDispatcher;
 
 class MyClass
 {
-	MyClass() : scopedRemover(someDispatcher)
-	{
-		scopedRemover.appendListener(SomeEvent, callback of myListener);
-	}
-	
-	void myListener() {}
+    MyClass() : scopedRemover(someDispatcher)
+    {
+        scopedRemover.appendListener(SomeEvent, callback of myListener);
+    }
+    
+    void myListener() {}
 
-	eventpp::ScopedRemover<SomeDispatcher> scopedRemover;
+    eventpp::ScopedRemover<SomeDispatcher> scopedRemover;
 };
 ```
 

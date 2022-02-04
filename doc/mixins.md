@@ -47,7 +47,7 @@ class MyMixin : public Base
 To enable mixins, add them to the `Mixins` type in the policies class. For example, to enable `MixinFilter`, define the dispatcher as,   
 ```c++
 struct MyPolicies {
-	using Mixins = eventpp::MixinList<eventpp::MixinFilter>;
+    using Mixins = eventpp::MixinList<eventpp::MixinFilter>;
 };
 eventpp::EventDispatcher<int, void (), MyPolicies> dispatcher;
 ```
@@ -121,19 +121,19 @@ Return true if the filter is removed successfully.
 **Code**  
 ```c++
 struct MyPolicies {
-	using Mixins = eventpp::MixinList<eventpp::MixinFilter>;
+    using Mixins = eventpp::MixinList<eventpp::MixinFilter>;
 };
 eventpp::EventDispatcher<int, void (int e, int i, std::string), MyPolicies> dispatcher;
 
 dispatcher.appendListener(3, [](const int e, const int i, const std::string & s) {
-	std::cout
-		<< "Got event 3, i was 1 but actural is " << i
-		<< " s was Hello but actural is " << s
-		<< std::endl
-	;
+    std::cout
+        << "Got event 3, i was 1 but actural is " << i
+        << " s was Hello but actural is " << s
+        << std::endl
+    ;
 });
 dispatcher.appendListener(5, [](const int e, const int i, const std::string & s) {
-	std::cout << "Shout not got event 5" << std::endl;
+    std::cout << "Shout not got event 5" << std::endl;
 });
 
 // Add three event filters.
@@ -141,27 +141,27 @@ dispatcher.appendListener(5, [](const int e, const int i, const std::string & s)
 // The first filter modifies the input arguments to other values, then the subsequence filters
 // and listeners will see the modified values.
 dispatcher.appendFilter([](const int e, int & i, std::string & s) -> bool {
-	std::cout << "Filter 1, e is " << e << " passed in i is " << i << " s is " << s << std::endl;
-	i = 38;
-	s = "Hi";
-	std::cout << "Filter 1, changed i is " << i << " s is " << s << std::endl;
-	return true;
+    std::cout << "Filter 1, e is " << e << " passed in i is " << i << " s is " << s << std::endl;
+    i = 38;
+    s = "Hi";
+    std::cout << "Filter 1, changed i is " << i << " s is " << s << std::endl;
+    return true;
 });
 
 // The second filter filters out all event of 5. So no listeners on event 5 can be triggered.
 // The third filter is not invoked on event 5 also.
 dispatcher.appendFilter([](const int e, int & i, std::string & s) -> bool {
-	std::cout << "Filter 2, e is " << e << " passed in i is " << i << " s is " << s << std::endl;
-	if(e == 5) {
-		return false;
-	}
-	return true;
+    std::cout << "Filter 2, e is " << e << " passed in i is " << i << " s is " << s << std::endl;
+    if(e == 5) {
+        return false;
+    }
+    return true;
 });
 
 // The third filter just prints the input arguments.
 dispatcher.appendFilter([](const int e, int & i, std::string & s) -> bool {
-	std::cout << "Filter 3, e is " << e << " passed in i is " << i << " s is " << s << std::endl;
-	return true;
+    std::cout << "Filter 3, e is " << e << " passed in i is " << i << " s is " << s << std::endl;
+    return true;
 });
 
 // Dispatch the events, the first argument is always the event type.

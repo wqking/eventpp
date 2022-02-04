@@ -22,13 +22,13 @@ eventpp::EventDispatcher<int, void ()> dispatcher;
 // Lambda is not required, any function or std::function
 // or whatever function object with the required prototype is fine.
 dispatcher.appendListener(3, []() {
-	std::cout << "Got event 3." << std::endl;
+    std::cout << "Got event 3." << std::endl;
 });
 dispatcher.appendListener(5, []() {
-	std::cout << "Got event 5." << std::endl;
+    std::cout << "Got event 5." << std::endl;
 });
 dispatcher.appendListener(5, []() {
-	std::cout << "Got another event 5." << std::endl;
+    std::cout << "Got another event 5." << std::endl;
 });
 
 // Dispatch the events, the first argument is always the event type.
@@ -53,7 +53,7 @@ The *prototype* is C++ function type, such as `void (int)`, `void (const std::st
 Now let's add a listener.  
 ```c++
 dispatcher.appendListener(3, []() {
-	std::cout << "Got event 3." << std::endl;
+    std::cout << "Got event 3." << std::endl;
 });
 ```
 Function `appendListener` takes at least two arguments. The first argument is the *event* of type *event type*, here is `int`. The second is the *callback*.  
@@ -76,15 +76,15 @@ During the dispatching, all listeners of that event will be invoked one by one i
 eventpp::EventDispatcher<int, void (const std::string &, const bool)> dispatcher;
 
 dispatcher.appendListener(3, [](const std::string & s, const bool b) {
-	std::cout << std::boolalpha << "Got event 3, s is " << s << " b is " << b << std::endl;
+    std::cout << std::boolalpha << "Got event 3, s is " << s << " b is " << b << std::endl;
 });
 // The listener prototype doesn't need to be exactly same as the dispatcher.
 // It would be find as long as the arguments is compatible with the dispatcher.
 dispatcher.appendListener(5, [](std::string s, int b) {
-	std::cout << std::boolalpha << "Got event 5, s is " << s << " b is " << b << std::endl;
+    std::cout << std::boolalpha << "Got event 5, s is " << s << " b is " << b << std::endl;
 });
 dispatcher.appendListener(5, [](const std::string & s, const bool b) {
-	std::cout << std::boolalpha << "Got another event 5, s is " << s << " b is " << b << std::endl;
+    std::cout << std::boolalpha << "Got another event 5, s is " << s << " b is " << b << std::endl;
 });
 
 // Dispatch the events, the first argument is always the event type.
@@ -107,39 +107,39 @@ The listener's prototype is not required to be same as the dispatcher, it's fine
 ```c++
 // Define an Event to hold all parameters.
 struct MyEvent {
-	int type;
-	std::string message;
-	int param;
+    int type;
+    std::string message;
+    int param;
 };
 
 // Define policies to let the dispatcher knows how to
 // extract the event type.
 struct MyEventPolicies
 {
-	static int getEvent(const MyEvent & e, bool /*b*/) {
-		return e.type;
-	}
+    static int getEvent(const MyEvent & e, bool /*b*/) {
+        return e.type;
+    }
 };
 
 // Pass MyEventPolicies as the third template argument of EventDispatcher.
 // Note: the first template argument is the event type type int, not MyEvent.
 eventpp::EventDispatcher<
-	int,
-	void (const MyEvent &, bool),
-	MyEventPolicies
+    int,
+    void (const MyEvent &, bool),
+    MyEventPolicies
 > dispatcher;
 
 // Add a listener.
 // Note: the first argument is the event type of type int, not MyEvent.
 dispatcher.appendListener(3, [](const MyEvent & e, bool b) {
-	std::cout
-		<< std::boolalpha
-		<< "Got event 3" << std::endl
-		<< "Event::type is " << e.type << std::endl
-		<< "Event::message is " << e.message << std::endl
-		<< "Event::param is " << e.param << std::endl
-		<< "b is " << b << std::endl
-	;
+    std::cout
+        << std::boolalpha
+        << "Got event 3" << std::endl
+        << "Event::type is " << e.type << std::endl
+        << "Event::message is " << e.message << std::endl
+        << "Event::param is " << e.param << std::endl
+        << "b is " << b << std::endl
+    ;
 });
 
 // Dispatch the event.
