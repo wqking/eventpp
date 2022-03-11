@@ -206,7 +206,7 @@ Thanking to C++11, now it's quite easy to write a reusable event library with be
 
 ## Change log
 
-**Version 0.1.2**  Mar 11, 2022
+**Version 0.1.2**  Mar 11, 2022  
 Bug fix.  
 Added more unit tests.  
 Added utilities argumentAdapter and conditionalFunctor.  
