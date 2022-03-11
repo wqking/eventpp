@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.2)
-project(eventpp VERSION 0.1.1)
+project(eventpp VERSION 0.1.2)
 
 add_library(eventpp INTERFACE)
 set(CMAKE_CXX_STANDARD 11)

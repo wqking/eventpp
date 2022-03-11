@@ -28,12 +28,13 @@ eventpp is a C++ event library for callbacks, event dispatcher, and event queue.
 
 Apache License, Version 2.0  
 
-## Version 0.1.1
+## Version 0.1.2
 ![CI](https://github.com/wqking/eventpp/workflows/CI/badge.svg)
 
 The master branch is usable and stable.  
 There are some releases on Github, but usually the releases are far behind the latest code.  
-You shold prefer to clone or fork the master branch instead of downloading the releases.  
+You should prefer to clone or fork the master branch instead of downloading the releases.  
+Don't worry about the large timespan between commits and releases. The library is actively maintained.  
 The master branch is currently fully back compatible with the first version. So your project won't get any back compatible issues.  
 If you find any back compatible issue which is not announced, please report a bug.
 
@@ -205,7 +206,7 @@ Thanking to C++11, now it's quite easy to write a reusable event library with be
 
 ## Change log
 
-**Version 0.1.2**  Latest  
+**Version 0.1.2**  Mar 11, 2022
 Bug fix.  
 Added more unit tests.  
 Added utilities argumentAdapter and conditionalFunctor.  
