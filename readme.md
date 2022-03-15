@@ -1,5 +1,23 @@
 # eventpp -- C++ library for event dispatcher and callback list
 
+- [eventpp -- C++ library for event dispatcher and callback list](#eventpp----c-library-for-event-dispatcher-and-callback-list)
+  - [Facts and features](#facts-and-features)
+  - [License](#license)
+  - [Version 0.1.2](#version-012)
+  - [Source code](#source-code)
+  - [Supported compilers](#supported-compilers)
+  - [C++ standard requirements](#c-standard-requirements)
+  - [Quick start](#quick-start)
+    - [Namespace](#namespace)
+    - [Use eventpp in your project](#use-eventpp-in-your-project)
+    - [Using CallbackList](#using-callbacklist)
+    - [Using EventDispatcher](#using-eventdispatcher)
+    - [Using EventQueue](#using-eventqueue)
+  - [Documentations](#documentations)
+  - [Build the test code](#build-the-test-code)
+  - [Motivations](#motivations)
+  - [Change log](#change-log)
+
 eventpp is a C++ event library for callbacks, event dispatcher, and event queue. With eventpp you can easily implement signal and slot mechanism, publisher and subscriber pattern, or observer pattern.
 
 ## Facts and features
@@ -54,7 +72,7 @@ In brief, MSVC, GCC, Clang that has well support for C++11, or released after 20
 * To develop the library
     * Unit tests: C++17.
     * Tutorials: C++11.
-    * Benchmakrs: C++11.
+    * Benchmarks: C++11.
 
 ## Quick start
 
@@ -64,14 +82,36 @@ In brief, MSVC, GCC, Clang that has well support for C++11, or released after 20
 
 ### Use eventpp in your project
 
-There are two methods to use eventpp
+There are various methods to use eventpp
 
 1, Include the source code in your project directly.
 
-eventpp is header only library. Just clone the source code, then add the 'include' folder inside eventpp to your project, then you can use the library.  
+eventpp is header only library. Just clone the source code, then add the 'include' folder inside eventpp to your project include directory, then you can use the library.  
 You don't need to link to any source code.  
 
-2, Or install using CMake and use it in CMake
+2, Or use vcpkg
+
+```
+vcpkg install eventpp
+```
+
+Then in your project CMakeLists.txt file, put below code, remember to replace ${TARGET} with your target,
+
+```
+find_package(eventpp CONFIG REQUIRED)
+target_link_libraries(${TARGET} PRIVATE eventpp::eventpp)
+find_path(EVENTPP_INCLUDE_DIR eventpp/eventqueue.h)
+include_directories(${EVENTPP_INCLUDE_DIR})
+```
+
+Then run cmake, note you need -DCMAKE_TOOLCHAIN_FILE to specifiy vcpkg, and replace -G with your generator
+```
+cmake .. -DCMAKE_TOOLCHAIN_FILE=VCPKGDIR/vcpkg/scripts/buildsystems/vcpkg.cmake -G"MinGW Makefiles"
+```
+
+Note with vcpkg, only the released version can be used, which may be behind the latest update. You can't use the minor update on the master branch.
+
+3, Or install using CMake and use it in CMake
 
 If you are going to use eventpp in CMake managed project, you can install eventpp then use it in CMake.  
 In eventpp root folder, run the commands,  
@@ -169,7 +209,7 @@ queue.process();
     * [Utility class OrderedQueueList -- make EventQueue ordered](doc/orderedqueuelist.md)
     * [Utility class AnyId -- use various data types as EventType in EventDispatcher and EventQueue](doc/anyid.md)
     * [Utility header eventmaker.h -- auto generate event classes](doc/eventmaker.md)
-    * [Document of utilitie functions](doc/eventutil.md)
+    * [Document of utilities functions](doc/eventutil.md)
 * Miscellaneous
     * [Performance benchmarks](doc/benchmark.md)
     * [FAQs, tricks, and tips](doc/faq.md)
