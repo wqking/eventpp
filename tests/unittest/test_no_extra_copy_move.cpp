@@ -12,10 +12,7 @@
 // limitations under the License.
 
 #include "test.h"
-#include "eventpp/callbacklist.h"
 #include "eventpp/eventdispatcher.h"
-
-#include <memory>
 
 class CopyMoveCounter
 {

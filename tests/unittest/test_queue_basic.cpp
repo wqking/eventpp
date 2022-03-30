@@ -14,8 +14,6 @@
 #include "test.h"
 #include "eventpp/eventqueue.h"
 
-#include <functional>
-
 TEST_CASE("EventQueue, std::string, void (const std::string &)")
 {
 	eventpp::EventQueue<std::string, void (const std::string &)> queue;

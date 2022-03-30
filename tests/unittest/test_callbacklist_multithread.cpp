@@ -14,7 +14,6 @@
 #include "test_callbacklist_util.h"
 
 #include <thread>
-#include <chrono>
 #include <random>
 
 TEST_CASE("CallbackList, multi threading, append")

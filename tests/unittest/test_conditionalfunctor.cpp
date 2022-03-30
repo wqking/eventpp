@@ -15,8 +15,6 @@
 #include "eventpp/utilities/conditionalfunctor.h"
 #include "eventpp/callbacklist.h"
 
-#include <vector>
-
 TEST_CASE("ConditionalFunctor, lambda")
 {
 	eventpp::CallbackList<void(int)> callbackList;

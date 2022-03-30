@@ -13,8 +13,6 @@
 
 #include "test.h"
 #include "eventpp/hetereventdispatcher.h"
-#include "eventpp/mixins/mixinfilter.h"
-#include "eventpp/mixins/mixinheterfilter.h"
 
 TEST_CASE("HeterEventDispatcher, appendListener")
 {

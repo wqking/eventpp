@@ -14,8 +14,6 @@
 #include "test.h"
 #include "eventpp/hetercallbacklist.h"
 
-#include <vector>
-
 TEST_CASE("HeterCallbackList, empty")
 {
 	using CL = eventpp::HeterCallbackList<eventpp::HeterTuple<void (), void (int)> >;
