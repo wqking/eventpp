@@ -18,6 +18,7 @@
 
 #include <memory>
 #include <vector>
+#include <algorithm>
 
 namespace eventpp {
 

@@ -14,6 +14,8 @@
 #ifndef CONDITIONALFUNCTOR_H_828958739581
 #define CONDITIONALFUNCTOR_H_828958739581
 
+#include <utility>
+
 namespace eventpp {
 
 template <typename Func, typename Condition>
