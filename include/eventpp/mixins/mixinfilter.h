@@ -15,10 +15,6 @@
 #define MIXINFILTER_H_713231680355
 
 #include "../callbacklist.h"
-#include "../internal/typeutil_i.h"
-
-#include <functional>
-#include <type_traits>
 
 namespace eventpp {
 

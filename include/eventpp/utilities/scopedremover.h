@@ -16,7 +16,6 @@
 
 #include "../eventpolicies.h"
 
-#include <memory>
 #include <vector>
 #include <algorithm>
 

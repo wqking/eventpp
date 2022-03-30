@@ -15,14 +15,9 @@
 #define CALLBACKLIST_H_588722158669
 
 #include "eventpolicies.h"
-#include "internal/typeutil_i.h"
 
-#include <atomic>
-#include <condition_variable>
 #include <functional>
-#include <memory>
 #include <mutex>
-#include <utility>
 
 namespace eventpp {
 

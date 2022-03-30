@@ -16,9 +16,7 @@
 
 #include "../eventpolicies.h"
 
-#include <memory>
 #include <list>
-#include <algorithm>
 
 namespace eventpp {
 

@@ -15,10 +15,6 @@
 #define MIXINHETERFILTER_H_990158796753
 
 #include "../hetercallbacklist.h"
-#include "../internal/typeutil_i.h"
-
-#include <functional>
-#include <type_traits>
 
 namespace eventpp {
 

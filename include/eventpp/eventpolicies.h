@@ -16,7 +16,6 @@
 
 #include "internal/typeutil_i.h"
 
-#include <mutex>
 #include <atomic>
 #include <condition_variable>
 #include <map>

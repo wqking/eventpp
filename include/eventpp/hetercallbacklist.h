@@ -18,11 +18,7 @@
 #include "callbacklist.h"
 
 #include <array>
-#include <functional>
-#include <type_traits>
 #include <mutex>
-#include <memory>
-#include <tuple>
 
 namespace eventpp {
 
