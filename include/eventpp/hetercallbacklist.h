@@ -52,6 +52,8 @@ protected:
 	class HomoCallbackListTypeBase
 	{
 	public:
+		virtual ~HomoCallbackListTypeBase() {}
+
 		virtual bool empty() = 0;
 		virtual bool doRemove(const HeterHandle_ & handle) = 0;
 		virtual std::shared_ptr<HomoCallbackListTypeBase> doClone() = 0;
