@@ -108,11 +108,11 @@ public:
 		itemList.clear();
 	}
 	
-	void setDispatcher(DispatcherType & dispatcher)
+	void setDispatcher(DispatcherType & dispatcher_)
 	{
-		if(this->dispatcher != &dispatcher) {
+		if(this->dispatcher != &dispatcher_) {
 			reset();
-			this->dispatcher = &dispatcher;
+			this->dispatcher = &dispatcher_;
 		}
 	}
 	
@@ -249,11 +249,11 @@ public:
 		itemList.clear();
 	}
 	
-	void setCallbackList(CallbackListType & callbackList)
+	void setCallbackList(CallbackListType & callbackList_)
 	{
-		if(this->callbackList != &callbackList) {
+		if(this->callbackList != &callbackList_) {
 			reset();
-			this->callbackList = &callbackList;
+			this->callbackList = &callbackList_;
 		}
 	}
 	
