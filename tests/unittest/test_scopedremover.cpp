@@ -56,8 +56,9 @@ TEST_CASE("ScopedRemover, CallbackList")
 	using CL = eventpp::CallbackList<void ()>;
 	CL callbackList;
 	using Remover = eventpp::ScopedRemover<CL>;
+	Remover r4;
 	
-	std::vector<int> dataList(4);
+	std::vector<int> dataList(5);
 	
 	callbackList.append([&dataList]() {
 		++dataList[0];
@@ -78,23 +79,33 @@ TEST_CASE("ScopedRemover, CallbackList")
 				r3.insert([&dataList]() {
 					++dataList[3];
 				}, handle);
+				{
+					r4.setCallbackList(callbackList);
+					r4.append([&dataList]() {
+						++dataList[4];
+					});
 
-				REQUIRE(dataList == std::vector<int> { 0, 0, 0, 0 });
+					REQUIRE(dataList == std::vector<int> { 0, 0, 0, 0, 0 });
+					
+					callbackList();
+					REQUIRE(dataList == std::vector<int> { 1, 1, 1, 1, 1 });
+					r4.reset();
+				}
 				
 				callbackList();
-				REQUIRE(dataList == std::vector<int> { 1, 1, 1, 1 });
+				REQUIRE(dataList == std::vector<int> { 2, 2, 2, 2, 1 });
 			}
 
 			callbackList();
-			REQUIRE(dataList == std::vector<int> { 2, 2, 2, 1 });
+			REQUIRE(dataList == std::vector<int> { 3, 3, 3, 2, 1 });
 		}
 
 		callbackList();
-		REQUIRE(dataList == std::vector<int> { 3, 3, 2, 1 });
+		REQUIRE(dataList == std::vector<int> { 4, 4, 3, 2, 1 });
 	}
 	
 	callbackList();
-	REQUIRE(dataList == std::vector<int> { 4, 3, 2, 1 });
+	REQUIRE(dataList == std::vector<int> { 5, 4, 3, 2, 1 });
 }
 
 TEST_CASE("ScopedRemover, HeterEventDispatcher")
