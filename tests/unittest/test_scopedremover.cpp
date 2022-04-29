@@ -10,8 +10,9 @@ TEST_CASE("ScopedRemover, EventDispatcher")
 	ED dispatcher;
 	using Remover = eventpp::ScopedRemover<ED>;
 	constexpr int event = 3;
+	Remover r4;
 	
-	std::vector<int> dataList(4);
+	std::vector<int> dataList(5);
 	
 	dispatcher.appendListener(event, [&dataList]() {
 		++dataList[0];
@@ -32,23 +33,33 @@ TEST_CASE("ScopedRemover, EventDispatcher")
 				r3.insertListener(event, [&dataList]() {
 					++dataList[3];
 				}, handle);
+				{
+					r4.setDispatcher(dispatcher);
+					r4.appendListener(event, [&dataList]() {
+						++dataList[4];
+					});
 
-				REQUIRE(dataList == std::vector<int> { 0, 0, 0, 0 });
-				
+					REQUIRE(dataList == std::vector<int> { 0, 0, 0, 0, 0 });
+
+					dispatcher.dispatch(event);
+					REQUIRE(dataList == std::vector<int> { 1, 1, 1, 1, 1 });
+					r4.reset();
+				}
+
 				dispatcher.dispatch(event);
-				REQUIRE(dataList == std::vector<int> { 1, 1, 1, 1 });
+				REQUIRE(dataList == std::vector<int> { 2, 2, 2, 2, 1 });
 			}
 
 			dispatcher.dispatch(event);
-			REQUIRE(dataList == std::vector<int> { 2, 2, 2, 1 });
+			REQUIRE(dataList == std::vector<int> { 3, 3, 3, 2, 1 });
 		}
 
 		dispatcher.dispatch(event);
-		REQUIRE(dataList == std::vector<int> { 3, 3, 2, 1 });
+		REQUIRE(dataList == std::vector<int> { 4, 4, 3, 2, 1 });
 	}
 	
 	dispatcher.dispatch(event);
-	REQUIRE(dataList == std::vector<int> { 4, 3, 2, 1 });
+	REQUIRE(dataList == std::vector<int> { 5, 4, 3, 2, 1 });
 }
 
 TEST_CASE("ScopedRemover, CallbackList")
