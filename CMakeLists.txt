@@ -12,13 +12,22 @@ target_include_directories(
 
 add_library(eventpp::eventpp ALIAS eventpp)
 
+# Checks if eventpp is the main project or if it is
+# being built as a subproject (using add_subdirectory/FetchContent).
+set(MAIN_PROJECT OFF)
+if (CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
+    set(MAIN_PROJECT ON)
+endif()
+
 # Installation
 # ------------
 include(GNUInstallDirs)
 if (POLICY CMP0077)
+	# Allow CMake 3.13+ to override options when using add_subdirectory/FetchContent.
 	cmake_policy(SET CMP0077 NEW)
 endif (POLICY CMP0077)
-option(EVENTPP_INSTALL "Enable installation (Projects embedding eventpp may want to turn this OFF)." ON)
+
+option(EVENTPP_INSTALL "Enable installation" ${MAIN_PROJECT})
 
 if (EVENTPP_INSTALL)
 	# Install the library
