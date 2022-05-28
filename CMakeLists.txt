@@ -12,59 +12,74 @@ target_include_directories(
 
 add_library(eventpp::eventpp ALIAS eventpp)
 
+# Checks if eventpp is the main project or if it is
+# being built as a subproject (using add_subdirectory/FetchContent).
+set(MAIN_PROJECT OFF)
+if (CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
+    set(MAIN_PROJECT ON)
+endif()
+
 # Installation
 # ------------
 include(GNUInstallDirs)
+if (POLICY CMP0077)
+	# Allow CMake 3.13+ to override options when using add_subdirectory/FetchContent.
+	cmake_policy(SET CMP0077 NEW)
+endif (POLICY CMP0077)
 
-# Install the library
-install(
-	TARGETS eventpp
-	EXPORT eventppTargets
-	LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-	ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
-)
+option(EVENTPP_INSTALL "Enable installation" ${MAIN_PROJECT})
 
-# Install the headers
-install(
-	DIRECTORY include/
-	DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
-)
+if (EVENTPP_INSTALL)
+	# Install the library
+	install(
+		TARGETS eventpp
+		EXPORT eventppTargets
+		LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+		ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+	)
 
-# (Generate and) install the target import file
-install(
-	EXPORT eventppTargets
-	NAMESPACE eventpp::
-	DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/eventpp
-)
+	# Install the headers
+	install(
+		DIRECTORY include/
+		DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+	)
 
-# Generate the package version file
-include(CMakePackageConfigHelpers)
-write_basic_package_version_file(
-	${CMAKE_CURRENT_BINARY_DIR}/eventppConfigVersion.cmake
-	VERSION ${PROJECT_VERSION}
-	COMPATIBILITY AnyNewerVersion
-)
+	# (Generate and) install the target import file
+	install(
+		EXPORT eventppTargets
+		NAMESPACE eventpp::
+		DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/eventpp
+	)
 
-# Generate the package configuration file, that allows other
-# CMake projects to find the library with find_package()
-configure_package_config_file(
-	cmake/eventppConfig.cmake.in
-	${CMAKE_CURRENT_BINARY_DIR}/eventppConfig.cmake
-	INSTALL_DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/eventpp
-)
+	# Generate the package version file
+	include(CMakePackageConfigHelpers)
+	write_basic_package_version_file(
+		${CMAKE_CURRENT_BINARY_DIR}/eventppConfigVersion.cmake
+		VERSION ${PROJECT_VERSION}
+		COMPATIBILITY AnyNewerVersion
+	)
 
-# Install the package version and configuration files
-install(
-	FILES
-	${CMAKE_CURRENT_BINARY_DIR}/eventppConfig.cmake
-	${CMAKE_CURRENT_BINARY_DIR}/eventppConfigVersion.cmake
-	DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/eventpp
-)
+	# Generate the package configuration file, that allows other
+	# CMake projects to find the library with find_package()
+	configure_package_config_file(
+		cmake/eventppConfig.cmake.in
+		${CMAKE_CURRENT_BINARY_DIR}/eventppConfig.cmake
+		INSTALL_DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/eventpp
+	)
 
-# Install readme and license
-install(
-	FILES
-	readme.md
-	license
-	DESTINATION ${CMAKE_INSTALL_DATADIR}/eventpp
-)
+	# Install the package version and configuration files
+	install(
+		FILES
+		${CMAKE_CURRENT_BINARY_DIR}/eventppConfig.cmake
+		${CMAKE_CURRENT_BINARY_DIR}/eventppConfigVersion.cmake
+		DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/eventpp
+	)
+
+	# Install readme and license
+	install(
+		FILES
+		readme.md
+		license
+		DESTINATION ${CMAKE_INSTALL_DATADIR}/eventpp
+	)
+endif()
