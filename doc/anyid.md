@@ -1,5 +1,19 @@
 # Class AnyId reference
+<!--begintoc-->
+## Table Of Contents
 
+* [Description](#a2_1)
+* [API reference](#a2_2)
+  * [Header](#a3_1)
+  * [Class AnyId template parameters](#a3_2)
+  * [Public types](#a3_3)
+  * [Member functions](#a3_4)
+* [Global type AnyHashableId](#a2_3)
+* [Comparison AnyId](#a2_4)
+* [When to use AnyId?](#a2_5)
+<!--endtoc-->
+
+<a id="a2_1"></a>
 ## Description
 
 The template class `AnyId` can be used as the event ID type in `EventDispatcher` and `EventQueue`, then any types can be used as the event type.
@@ -31,23 +45,26 @@ For an `int` event type, we can't use `std::string` as the event ID.
 
 With `AnyId` in previous example code, we can pass any types as the event ID.
 
+<a id="a2_2"></a>
 ## API reference
 
+<a id="a3_1"></a>
 ### Header
 
 eventpp/utilities/anyid.h  
 
+<a id="a3_2"></a>
 ### Class AnyId template parameters
 
 ```c++
 template <template <typename> class Digester = std::hash, typename Storage = EmptyStorage>
 class AnyId;
 ```
-`Digester`: a template class that has one template parameter. It has a function call operator that receives one value and returns the digest of the value. The returned digest must be hashable, i.e, it must be able to be passed to `std::hash`. One of such `Digester` is `std::hash`. The parameter default value is `std::hash`. An event ID that's converted to `AnyId` must be able to pass to `Digester` function call operator. For exmaple, if `Digester` is `std::hash`, the event ID must be hashable, aka, it must be able to be passed to `std::hash`, so `int` and `std::string` works, but `const char *` not.  
+`Digester`: a template class that has one template parameter. It has a function call operator that receives one value and returns the digest of the value. The returned digest must be hashable, i.e, it must be able to be passed to `std::hash`. One of such `Digester` is `std::hash`. The parameter default value is `std::hash`. An event ID that's converted to `AnyId` must be able to pass to `Digester` function call operator. For example, if `Digester` is `std::hash`, the event ID must be hashable, aka, it must be able to be passed to `std::hash`, so `int` and `std::string` works, but `const char *` not.  
 `Storage`: a class that can be constructed with any types of values which are going to be used in `AnyId`. One of such `Storage` is `std::any` (in C++17). The parameter default value is an empty storage class that can be constructed with any types and it doesn't hold the value.  
 
 `Digester` is used to convert any types to a specified type and `AnyId` stores the digest instead of the value itself.  
-`Storage` is used to store the actural value.  
+`Storage` is used to store the actual value.  
 
 A typical implementation of `Digester`:  
 ```c++
@@ -85,9 +102,11 @@ struct MyStorage
 };
 ```
 
+<a id="a3_3"></a>
 ### Public types
 `DigestType`: the digest type that returned by `Digester`. If `Digester` is `std::hash`, `DigestType` is `std::size_t`.  
 
+<a id="a3_4"></a>
 ### Member functions
 
 #### constructors
@@ -112,6 +131,7 @@ const Storage & getValue() const;
 Return the value that's stored in `Storage`. The default `Storage` is an empty structure, so you can't get the real value from it.  
 If `std::any` is used as the `Storage` parameter when instantiating the `AnyId` template, `getValue` returns the `std::any` thus the value can be obtained from the `std::any`.  
 
+<a id="a2_3"></a>
 ## Global type AnyHashableId
 
 ```c++
@@ -121,6 +141,7 @@ using AnyHashableId = AnyId<>;
 `AnyHashableId` is an instantiation of `AnyId` with the default parameters. It can be used in place of the event ID in `EventDispatcher` or `EventQueue`.  
 In the example code in the beginning of this document, the `eventpp::AnyId<>` can be replaced with `eventpp::AnyHashableId`.  
 
+<a id="a2_4"></a>
 ## Comparison AnyId
 
 `AnyId` supports `operator ==` for being used in `std::unordered_map`, and `operator <` for being used in `std::map` (which map is used depending on the policies), in `EventDispatcher` and `EventQueue`.  
@@ -128,6 +149,7 @@ In the example code in the beginning of this document, the `eventpp::AnyId<>` ca
 If the `Storage` supports the operators, the values in the storage are compared. In this case, it doesn't matter if digest collides.  
 If the `Storage` doesn't support the operators, only the digests are compared. In this case, if digest collides, the result is in collision.  
 
+<a id="a2_5"></a>
 ## When to use AnyId?
 
 Even though `AnyId` looks smart and very flexible, I highly don't encourage you to use it at all because that means the architecture has flaws. You should always prefer to single event type, such as `int`, or `std::string`, than mixing them.  

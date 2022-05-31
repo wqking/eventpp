@@ -41,7 +41,7 @@ Function `argumentAdapter` receives a function `func`, and return a functor obje
 If `func` is a `std::function`, or a pointer to free function, `argumentAdapter` can deduce the parameter types of func, then `argumentAdapter` can be called without any template parameter.  
 If `func` is a functor object that `argumentAdapter` can't deduce the parameter types, `argumentAdapter` needs a template parameter which is the prototype of `func`.  
 `ArgumentAdapter` converts argument types using `static_cast`. For `std::shared_ptr`, `std::static_pointer_cast` is used. If `static_cast` or `std::static_pointer_cast` can't convert the types, compile errors are issued.  
-Caveat: Sucessful type casting doesn't mean correct. For example (pseudo code),  
+Caveat: Successful type casting doesn't mean correct. For example (pseudo code),  
 
 ```c++
 class A;

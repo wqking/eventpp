@@ -127,8 +127,8 @@ eventpp::EventDispatcher<int, void (int e, int i, std::string), MyPolicies> disp
 
 dispatcher.appendListener(3, [](const int e, const int i, const std::string & s) {
     std::cout
-        << "Got event 3, i was 1 but actural is " << i
-        << " s was Hello but actural is " << s
+        << "Got event 3, i was 1 but actual is " << i
+        << " s was Hello but actual is " << s
         << std::endl
     ;
 });
@@ -174,7 +174,7 @@ dispatcher.dispatch(5, 2, "World");
 > Filter 1, changed i is 38 s is Hi  
 > Filter 2, e is 3 passed in i is 38 s is Hi  
 > Filter 3, e is 3 passed in i is 38 s is Hi  
-> Got event 3, i was 1 but actural is 38 s was Hello but actural is Hi  
+> Got event 3, i was 1 but actual is 38 s was Hello but actual is Hi  
 > Filter 1, e is 5 passed in i is 2 s is World  
 > Filter 1, changed i is 38 s is Hi  
 > Filter 2, e is 5 passed in i is 38 s is Hi  

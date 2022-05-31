@@ -134,7 +134,7 @@ void wait() const;
 ```
 `wait` causes the current thread to block until there is new event arrives in the queue.  
 Note: though `wait` has work around with spurious wakeup internally, the queue is not guaranteed not empty after `wait` returns.  
-`wait` is useful when a thread processes the event queue. A sampel usage is,
+`wait` is useful when a thread processes the event queue. A sample usage is,
 ```c++
 for(;;) {
     eventQueue.wait();

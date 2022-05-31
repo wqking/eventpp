@@ -103,7 +103,7 @@ The function `reset()` removes all listeners which added by ScopedRemover from t
 
 The functions `setDispatcher()` and `setCallbackList` sets the dispatcher or callback list, and reset the ScopedRemover object.  
 
-The functions `removeListener` and `remove` remove the listener, similar to the same name functions in the underlying class (CallbackList, EventDispatcher, or EventQueue). They are useful to remove the listeners without destorying the ScopedRemover object. The functions return `true` if the listener is removed successfully, `false` if the listener is not found.  
+The functions `removeListener` and `remove` remove the listener, similar to the same name functions in the underlying class (CallbackList, EventDispatcher, or EventQueue). They are useful to remove the listeners without destroying the ScopedRemover object. The functions return `true` if the listener is removed successfully, `false` if the listener is not found.  
 
 The other member functions that have the same names with the corresponding underlying class (CallbackList, EventDispatcher, or EventQueue). Those functions add listener to the dispatcher.  
 

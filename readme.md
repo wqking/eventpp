@@ -104,7 +104,7 @@ find_path(EVENTPP_INCLUDE_DIR eventpp/eventqueue.h)
 include_directories(${EVENTPP_INCLUDE_DIR})
 ```
 
-Then run cmake, note you need -DCMAKE_TOOLCHAIN_FILE to specifiy vcpkg, and replace -G with your generator
+Then run cmake, note you need -DCMAKE_TOOLCHAIN_FILE to specify vcpkg, and replace -G with your generator
 ```
 cmake .. -DCMAKE_TOOLCHAIN_FILE=VCPKGDIR/vcpkg/scripts/buildsystems/vcpkg.cmake -G"MinGW Makefiles"
 ```

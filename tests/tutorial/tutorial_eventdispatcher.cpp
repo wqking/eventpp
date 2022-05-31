@@ -175,8 +175,8 @@ TEST_CASE("EventDispatcher tutorial 5, event filter")
 
 	dispatcher.appendListener(3, [](const int /*e*/, const int i, const std::string & s) {
 		std::cout
-			<< "Got event 3, i was 1 but actural is " << i
-			<< " s was Hello but actural is " << s
+			<< "Got event 3, i was 1 but actual is " << i
+			<< " s was Hello but actual is " << s
 			<< std::endl
 		;
 	});
