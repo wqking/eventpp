@@ -7,7 +7,7 @@ set(CMAKE_CXX_STANDARD 11)
 target_include_directories(
 	eventpp INTERFACE
 	$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-	$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
+	$<INSTALL_INTERFACE:include>
 )
 
 add_library(eventpp::eventpp ALIAS eventpp)
