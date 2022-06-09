@@ -4,10 +4,7 @@ project(eventpp VERSION 0.1.2)
 add_library(eventpp INTERFACE)
 set(CMAKE_CXX_STANDARD 11)
 
-if("${CMAKE_INSTALL_INCLUDEDIR}" STREQUAL "")
-	set(CMAKE_INSTALL_INCLUDEDIR include)
-endif()
-
+include(GNUInstallDirs)
 target_include_directories(
 	eventpp INTERFACE
 	$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
@@ -25,7 +22,6 @@ endif()
 
 # Installation
 # ------------
-include(GNUInstallDirs)
 if (POLICY CMP0077)
 	# Allow CMake 3.13+ to override options when using add_subdirectory/FetchContent.
 	cmake_policy(SET CMP0077 NEW)
