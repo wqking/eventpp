@@ -413,6 +413,31 @@ TEST_CASE("CallbackList, insert")
 	}
 }
 
+TEST_CASE("CallbackList, ownsHandle")
+{
+	eventpp::CallbackList<void()> callbackList1;
+	eventpp::CallbackList<void()> callbackList2;
+
+	decltype(callbackList1)::Handle emptyHandle;
+	REQUIRE(! callbackList1.ownsHandle(emptyHandle));
+	REQUIRE(! callbackList2.ownsHandle(emptyHandle));
+
+	auto h11 = callbackList1.append([]() {});
+	auto h12 = callbackList1.append([]() {});
+	auto h21 = callbackList2.append([]() {});
+	auto h22 = callbackList2.append([]() {});
+
+	REQUIRE(callbackList1.ownsHandle(h11));
+	REQUIRE(callbackList1.ownsHandle(h12));
+	REQUIRE(! callbackList1.ownsHandle(h21));
+	REQUIRE(! callbackList1.ownsHandle(h22));
+
+	REQUIRE(callbackList2.ownsHandle(h21));
+	REQUIRE(callbackList2.ownsHandle(h22));
+	REQUIRE(! callbackList2.ownsHandle(h11));
+	REQUIRE(! callbackList2.ownsHandle(h12));
+}
+
 TEST_CASE("CallbackList, remove")
 {
 	using CL = eventpp::CallbackList<void(), FakeCallbackListPolicies>;

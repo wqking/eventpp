@@ -153,6 +153,41 @@ TEST_CASE("EventDispatcher, hasAnyListener, int, void ()")
 	REQUIRE(! dispatcher.hasAnyListener(event1));
 }
 
+TEST_CASE("EventDispatcher, ownsHandle, int, void ()")
+{
+	eventpp::EventDispatcher<int, void()> dispatcher1;
+	eventpp::EventDispatcher<int, void()> dispatcher2;
+	constexpr int event1 = 3;
+	constexpr int event2 = 5;
+	constexpr int event3 = 7;
+
+	decltype(dispatcher1)::Handle emptyHandle;
+
+	REQUIRE(! dispatcher1.ownsHandle(event1, emptyHandle));
+	REQUIRE(! dispatcher2.ownsHandle(event2, emptyHandle));
+
+	auto h11 = dispatcher1.appendListener(event1, [](){});
+	auto h12 = dispatcher1.appendListener(event2, [](){});
+	auto h13 = dispatcher1.appendListener(event3, [](){});
+	auto h21 = dispatcher2.appendListener(event1, [](){});
+	auto h22 = dispatcher2.appendListener(event2, [](){});
+
+	REQUIRE(dispatcher1.ownsHandle(event1, h11));
+	REQUIRE(dispatcher1.ownsHandle(event2, h12));
+	REQUIRE(dispatcher1.ownsHandle(event3, h13));
+	REQUIRE(dispatcher2.ownsHandle(event1, h21));
+	REQUIRE(dispatcher2.ownsHandle(event2, h22));
+
+	REQUIRE(! dispatcher1.ownsHandle(event1, h12));
+	REQUIRE(! dispatcher1.ownsHandle(event2, h13));
+	REQUIRE(! dispatcher1.ownsHandle(event3, h11));
+	REQUIRE(! dispatcher1.ownsHandle(event1, h21));
+	REQUIRE(! dispatcher1.ownsHandle(event2, h22));
+
+	REQUIRE(! dispatcher2.ownsHandle(event1, h11));
+	REQUIRE(! dispatcher2.ownsHandle(event2, h12));
+}
+
 TEST_CASE("EventDispatcher, add another listener inside a listener, int, void ()")
 {
 	eventpp::EventDispatcher<int, void ()> dispatcher;

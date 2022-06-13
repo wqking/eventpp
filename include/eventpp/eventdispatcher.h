@@ -171,6 +171,16 @@ public:
 		return false;
 	}
 
+	bool ownsHandle(const Event & event, const Handle & handle) const
+	{
+		const CallbackList_ * callableList = doFindCallableList(event);
+		if(callableList) {
+			return callableList->ownsHandle(handle);
+		}
+
+		return false;
+	}
+
 	template <typename Func>
 	void forEach(const Event & event, Func && func) const
 	{

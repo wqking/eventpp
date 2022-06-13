@@ -18,6 +18,7 @@
 
 #include <functional>
 #include <mutex>
+#include <cassert>
 
 namespace eventpp {
 
@@ -207,6 +208,8 @@ public:
 
 	Handle insert(const Callback & callback, const Handle & before)
 	{
+		assert(before.expired() || ownsHandle(before));
+
 		NodePtr beforeNode = before.lock();
 		if(beforeNode) {
 			NodePtr node(doAllocateNode(callback));
@@ -223,11 +226,29 @@ public:
 
 	bool remove(const Handle & handle)
 	{
+		assert(handle.expired() || ownsHandle(handle));
+
+		// It looks like the lock can be put inside the `if` below,
+		// but that doesn't work in multi-threading and cause related unit tests fail.
 		std::lock_guard<Mutex> lockGuard(mutex);
+
 		auto node = handle.lock();
 		if(node) {
 			doFreeNode(node);
 			return true;
+		}
+
+		return false;
+	}
+
+	bool ownsHandle(const Handle & handle) const
+	{
+		auto node = handle.lock();
+		if(node) {
+			while(node->previous) {
+				node = node->previous;
+			}
+			return node == head;
 		}
 
 		return false;

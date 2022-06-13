@@ -100,6 +100,11 @@ Return a handle which represents the listener. The handle can be used to remove 
 If `insertListener` is called in another listener during a dispatching, the new listener is guaranteed not triggered during the same dispatching.  
 The time complexity is O(1) plus time to look up the event in internal map.
 
+Note: the caller must ensure the handle `before` is created by `this` EventDispatcher. If the caller can't ensure it, `ownsHandle` can be used
+to check if the handle `before` belongs to `this` EventDispatcher. The function `insert` can only be called if `ownsHandle(before)`
+returns true, otherwise, it's undefined behavior and it causes weird bugs.  
+`insertListener` only `assert(ownsHandle(before))` in the underlying callback list, but there is no check in release code for performance reason.  
+
 #### removeListener
 
 ```c++
@@ -109,6 +114,8 @@ Remove the listener *handle* which listens to *event* from the dispatcher.
 Return true if the listener is removed successfully, false if the listener is not found.  
 The time complexity is O(1) plus time to look up the event in internal map.
 
+Note: the `handle` must be created by `this` EventDispatcher. See the note in function `insertListener` for details.
+
 #### hasAnyListener
 
 ```c++
@@ -117,6 +124,13 @@ bool hasAnyListener(const Event & event) const;
 Return true if there is any listener for `event`, false if there is no listener.  
 Note: in multi threading, this function returning true doesn't guarantee there is any listener. The list may immediately become empty after the function returns true, and vice versa.
 The time complexity is O(1) plus time to look up the event in internal map.
+
+#### ownsHandle
+```c++
+bool ownsHandle(const Event & event, const Handle & handle) const;
+```  
+Return true if the `handle` is created for `event` by the EventDispatcher, false if not.  
+The time complexity is O(N).  
 
 #### forEach
 

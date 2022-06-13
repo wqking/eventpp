@@ -106,20 +106,34 @@ The time complexity is O(1).
 #### insert
 
 ```c++
-Handle insert(const Callback & callback, const Handle before);
+Handle insert(const Callback & callback, const Handle & before);
 ```  
 Insert the *callback* to the callback list before the callback handle *before*. If *before* is not found, *callback* is added at the end of the callback list.  
 Return a handle that represents the callback. The handle can be used to remove this callback or to insert additional callbacks before this callback.  
 If `insert` is called in another callback during the invoking of the callback list, the new callback is guaranteed not to be triggered during the same callback list invoking.  
 The time complexity is O(1).  
 
+Note: the caller must ensure the handle `before` is created by `this` CallbackList. If the caller can't ensure it, `ownsHandle` can be used
+to check if the handle `before` belongs to `this` CallbackList. The function `insert` can only be called if `ownsHandle(before)` returns true,
+otherwise, it's undefined behavior and it causes weird bugs.  
+`insert` only `assert(ownsHandle(before))`, but there is no check in release code for performance reason.  
+
 #### remove
 ```c++
-bool remove(const Handle handle);
+bool remove(const Handle & handle);
 ```  
 Remove the callback *handle* from the callback list.  
 Return true if the callback is removed successfully, false if the callback is not found.  
 The time complexity is O(1).  
+
+Note: the `handle` must be created by `this` CallbackList. See the note in function `insert` for details.
+
+#### ownsHandle
+```c++
+bool ownsHandle(const Handle & handle) const;
+```  
+Return true if the `handle` is created by the CallbackList, false if not.  
+The time complexity is O(N).  
 
 #### forEach
 
