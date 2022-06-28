@@ -141,6 +141,19 @@ endif(eventpp_FOUND)
 
 Note: when using the method 3 with MingW on Windows, by default CMake will install eventpp in system folder which is not writable. You should specify another folder to install. To do so, replace `cmake ..` with `cmake .. -DCMAKE_INSTALL_PREFIX="YOUR_NEW_LIB_FOLDER"`.
 
+4, If you use Hunter package manager
+
+You may follow the example code on [Hunter document](https://hunter.readthedocs.io/en/latest/packages/pkg/eventpp.html). Below is the code snippet I grabbed from that link,  
+
+```
+hunter_add_package(eventpp)
+find_package(eventpp CONFIG REQUIRED)
+
+add_executable(main main.cpp)
+target_link_libraries(main eventpp::eventpp)
+include_directories(${EVENTPP_INCLUDE_DIR})
+```
+
 ### Using CallbackList
 ```c++
 #include "eventpp/callbacklist.h"
