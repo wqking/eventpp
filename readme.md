@@ -17,6 +17,7 @@
   - [Build the test code](#build-the-test-code)
   - [Motivations](#motivations)
   - [Change log](#change-log)
+  - [Contributors](#contributors)
 
 eventpp is a C++ event library for callbacks, event dispatcher, and event queue. With eventpp you can easily implement signal and slot mechanism, publisher and subscriber pattern, or observer pattern.
 
@@ -276,3 +277,43 @@ Added HeterCallbackList, HeterEventDispatcher, and HeterEventQueue.
 **Version 0.1.0**  Sep 1, 2018  
 First version.  
 Added CallbackList, EventDispatcher, EventQueue, CounterRemover, ConditionalRemover, ScopedRemover, and utilities.
+
+## Contributors
+
+<table>
+<tr>
+<td align="center"><a href="https://github.com/wqking/"><img alt="wqking" src="https://github.com/wqking.png?s=100" width="100px;" /></a><span>wqking</span></td>
+<td align="center"><a href="https://github.com/rotolof/"><img alt="rotolof" src="https://github.com/rotolof.png?s=100" width="100px;" /></a><span>rotolof</span></td>
+<td align="center"><a href="https://github.com/OlivierLDff/"><img alt="OlivierLDff" src="https://github.com/OlivierLDff.png?s=100" width="100px;" /></a><span>OlivierLDff</span></td>
+<td align="center"><a href="https://github.com/devbharat/"><img alt="devbharat" src="https://github.com/devbharat.png?s=100" width="100px;" /></a><span>devbharat</span></td>
+<td align="center"><a href="https://github.com/mpiccolino-tealblue/"><img alt="mpiccolino-tealblue" src="https://github.com/mpiccolino-tealblue.png?s=100" width="100px;" /></a><span>mpiccolino-tealblue</span></td>
+<td align="center"><a href="https://github.com/bazfp/"><img alt="bazfp" src="https://github.com/bazfp.png?s=100" width="100px;" /></a><span>bazfp</span></td>
+<td align="center"><a href="https://github.com/Martinii89/"><img alt="Martinii89" src="https://github.com/Martinii89.png?s=100" width="100px;" /></a><span>Martinii89</span></td>
+</tr>
+<tr>
+<td align="center"><a href="https://github.com/ludekvodicka/"><img alt="ludekvodicka" src="https://github.com/ludekvodicka.png?s=100" width="100px;" /></a><span>ludekvodicka</span></td>
+<td align="center"><a href="https://github.com/Volatus/"><img alt="Volatus" src="https://github.com/Volatus.png?s=100" width="100px;" /></a><span>Volatus</span></td>
+<td align="center"><a href="https://github.com/wallel/"><img alt="wallel" src="https://github.com/wallel.png?s=100" width="100px;" /></a><span>wallel</span></td>
+<td align="center"><a href="https://github.com/mangrooveforest/"><img alt="mangrooveforest" src="https://github.com/mangrooveforest.png?s=100" width="100px;" /></a><span>mangrooveforest</span></td>
+<td align="center"><a href="https://github.com/haberturdeur/"><img alt="haberturdeur" src="https://github.com/haberturdeur.png?s=100" width="100px;" /></a><span>haberturdeur</span></td>
+<td align="center"><a href="https://github.com/shellinspector/"><img alt="shellinspector" src="https://github.com/shellinspector.png?s=100" width="100px;" /></a><span>shellinspector</span></td>
+<td align="center"><a href="https://github.com/bd1es/"><img alt="bd1es" src="https://github.com/bd1es.png?s=100" width="100px;" /></a><span>bd1es</span></td>
+</tr>
+<tr>
+<td align="center"><a href="https://github.com/qgyhd1234/"><img alt="qgyhd1234" src="https://github.com/qgyhd1234.png?s=100" width="100px;" /></a><span>qgyhd1234</span></td>
+<td align="center"><a href="https://github.com/frostius/"><img alt="frostius" src="https://github.com/frostius.png?s=100" width="100px;" /></a><span>frostius</span></td>
+<td align="center"><a href="https://github.com/gelijian/"><img alt="gelijian" src="https://github.com/gelijian.png?s=100" width="100px;" /></a><span>gelijian</span></td>
+<td align="center"><a href="https://github.com/MH2033/"><img alt="MH2033" src="https://github.com/MH2033.png?s=100" width="100px;" /></a><span>MH2033</span></td>
+<td align="center"><a href="https://github.com/zhllxt/"><img alt="zhllxt" src="https://github.com/zhllxt.png?s=100" width="100px;" /></a><span>zhllxt</span></td>
+</tr>
+</table>
+
+I (wqking) would like to sincerely thank all participants for the contributions. Your contributions makes `eventpp` better and bright future.
+I maintain the contributors list manually, according to the criteria below,
+
+1. Your Pull Request is approved and merged to any branch.
+2. Or there is commit or work related to your reported issue. That's to say, the bug you reported is fixed, or the advice you suggested is adopted.
+
+If you  think you should be on the contributors list, such as I miss out your work, or you have work not technology related but can help
+`eventpp` growing (such as posting review in social network with large amount of readers), please contact me, I'm happy to get the contributors
+list larger.
