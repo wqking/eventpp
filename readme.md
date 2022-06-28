@@ -20,6 +20,11 @@
 
 eventpp is a C++ event library for callbacks, event dispatcher, and event queue. With eventpp you can easily implement signal and slot mechanism, publisher and subscriber pattern, or observer pattern.
 
+![C++](https://img.shields.io/badge/C%2B%2B-11-blue)
+![Compilers](https://img.shields.io/badge/Compilers-GCC%2FMSVC%2FClang%2FIntel-blue)
+![License](https://img.shields.io/badge/License-Apache--2.0-blue)
+![CI](https://github.com/wqking/eventpp/workflows/CI/badge.svg)
+
 ## Facts and features
 
 - **Powerful**
@@ -47,7 +52,6 @@ eventpp is a C++ event library for callbacks, event dispatcher, and event queue.
 Apache License, Version 2.0  
 
 ## Version 0.1.2
-![CI](https://github.com/wqking/eventpp/workflows/CI/badge.svg)
 
 The master branch is usable and stable.  
 There are some releases on Github, but usually the releases are far behind the latest code.  
