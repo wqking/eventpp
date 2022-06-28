@@ -17,7 +17,6 @@
   - [Build the test code](#build-the-test-code)
   - [Motivations](#motivations)
   - [Change log](#change-log)
-  - [Contributors](#contributors)
 
 eventpp is a C++ event library for callbacks, event dispatcher, and event queue. With eventpp you can easily implement signal and slot mechanism, publisher and subscriber pattern, or observer pattern.
 
@@ -277,61 +276,3 @@ Added HeterCallbackList, HeterEventDispatcher, and HeterEventQueue.
 **Version 0.1.0**  Sep 1, 2018  
 First version.  
 Added CallbackList, EventDispatcher, EventQueue, CounterRemover, ConditionalRemover, ScopedRemover, and utilities.
-
-## Contributors
-
-<html>
-<style>
-.contravatar {
-    display: inline-block;
-    width: 100px;
-    overflow: hidden;
-}
-.contravatar img {
-    width: 100%;
-    border-radius: 50%;
-}
-.contravatar span {
-    overflow: hidden;
-    display: block;
-    width: 100%;
-    text-align: center;
-    white-space: nowrap;
-    text-overflow: ellipsis;
-    line-height: 24px;
-    font-size: 16px;
-    margin-top: -8px;
-}
-</style>
-
-<div class="contravatar"><a href="https://github.com/wqking/"><img alt="wqking" src="https://github.com/wqking.png" /></a><span>wqking</span></div>
-<div class="contravatar"><a href="https://github.com/rotolof/"><img alt="rotolof" src="https://github.com/rotolof.png" /></a><span>rotolof</span></div>
-<div class="contravatar"><a href="https://github.com/OlivierLDff/"><img alt="OlivierLDff" src="https://github.com/OlivierLDff.png" /></a><span>OlivierLDff</span></div>
-<div class="contravatar"><a href="https://github.com/devbharat/"><img alt="devbharat" src="https://github.com/devbharat.png" /></a><span>devbharat</span></div>
-<div class="contravatar"><a href="https://github.com/mpiccolino-tealblue/"><img alt="mpiccolino-tealblue" src="https://github.com/mpiccolino-tealblue.png" /></a><span>mpiccolino-tealblue</span></div>
-<div class="contravatar"><a href="https://github.com/bazfp/"><img alt="bazfp" src="https://github.com/bazfp.png" /></a><span>bazfp</span></div>
-<div class="contravatar"><a href="https://github.com/Martinii89/"><img alt="Martinii89" src="https://github.com/Martinii89.png" /></a><span>Martinii89</span></div>
-<div class="contravatar"><a href="https://github.com/ludekvodicka/"><img alt="ludekvodicka" src="https://github.com/ludekvodicka.png" /></a><span>ludekvodicka</span></div>
-<div class="contravatar"><a href="https://github.com/Volatus/"><img alt="Volatus" src="https://github.com/Volatus.png" /></a><span>Volatus</span></div>
-<div class="contravatar"><a href="https://github.com/wallel/"><img alt="wallel" src="https://github.com/wallel.png" /></a><span>wallel</span></div>
-<div class="contravatar"><a href="https://github.com/mangrooveforest/"><img alt="mangrooveforest" src="https://github.com/mangrooveforest.png" /></a><span>mangrooveforest</span></div>
-<div class="contravatar"><a href="https://github.com/haberturdeur/"><img alt="haberturdeur" src="https://github.com/haberturdeur.png" /></a><span>haberturdeur</span></div>
-<div class="contravatar"><a href="https://github.com/shellinspector/"><img alt="shellinspector" src="https://github.com/shellinspector.png" /></a><span>shellinspector</span></div>
-<div class="contravatar"><a href="https://github.com/bd1es/"><img alt="bd1es" src="https://github.com/bd1es.png" /></a><span>bd1es</span></div>
-<div class="contravatar"><a href="https://github.com/qgyhd1234/"><img alt="qgyhd1234" src="https://github.com/qgyhd1234.png" /></a><span>qgyhd1234</span></div>
-<div class="contravatar"><a href="https://github.com/frostius/"><img alt="frostius" src="https://github.com/frostius.png" /></a><span>frostius</span></div>
-<div class="contravatar"><a href="https://github.com/gelijian/"><img alt="gelijian" src="https://github.com/gelijian.png" /></a><span>gelijian</span></div>
-<div class="contravatar"><a href="https://github.com/MH2033/"><img alt="MH2033" src="https://github.com/MH2033.png" /></a><span>MH2033</span></div>
-<div class="contravatar"><a href="https://github.com/zhllxt/"><img alt="zhllxt" src="https://github.com/zhllxt.png" /></a><span>zhllxt</span></div>
-
-</html>
-
-I (wqking) would like to sincerely thank all participants for the contributions. Your contributions makes `eventpp` better and bright future.
-I maintain the contributors list manually, according to the criteria below,
-
-1. Your Pull Request is approved and merged to any branch.
-2. Or there is commit or work related to your reported issue. That's to say, the bug you reported is fixed, or the advice you suggested is adopted.
-
-If you  think you should be on the contributors list, such as I miss out your work, or you have work not technology related but can help
-`eventpp` growing (such as posting review in social network with large amount of readers), please contact me, I'm happy to get the contributors
-list larger.
