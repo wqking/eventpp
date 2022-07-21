@@ -159,7 +159,14 @@ callbackList();
 ```
 
 **Output**  
-> Got callback 1.  
-> Got callback 3.  
+
+> forEach(Handle, Callback), invoked 0
+> forEach(Handle, Callback), invoked 1
+> forEach(Handle, Callback), removed second callback
+> forEach(Handle, Callback), invoked 2
+> forEach(Callback), invoked
+> forEach(Callback), invoked
+> Got callback 1.
+> Got callback 3.
 
 **Remarks**  
