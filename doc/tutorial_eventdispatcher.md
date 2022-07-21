@@ -94,7 +94,7 @@ dispatcher.dispatch(5, "World", false);
 
 **Output**  
 > Got event 3, s is Hello b is true  
-> Got event 5, s is World b is false  
+> Got event 5, s is World b is 0  
 > Got another event 5, s is World b is false  
 
 **Remarks**  
