@@ -236,6 +236,8 @@ queue.process();
     * [Class HeterCallbackList](doc/hetercallbacklist.md)
     * [Class HeterEventDispatcher](doc/hetereventdispatcher.md)
     * [Class HeterEventQueue](doc/hetereventqueue.md)
+* Translated documents
+    * [Chinese version 中文版](doc/cn/readme.md), thanks @marsCatXdu for the translation.
 
 ## Build the test code
 
