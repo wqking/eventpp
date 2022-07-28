@@ -53,7 +53,8 @@ eventDispatcher.dispatch(3, C());
 ```
 
 The code can compile successfully, but the listener will receive a C object which is wrongly casted to B, that's a serious problem that most likely will crash the program.
-To avoid such mistake, be very careful that the correct types are passed to the corresponding listener. It's usually safe that in an event system, each event type has its own event class, such as a `mouseDown` event has `MouseDown` event class.  
+To avoid such mistake, be very careful that the correct types are passed to the corresponding listener.  
+It's usually safe that in an event system, each event type has its own event class, such as an event type of `mouseDown` has `MouseDown` event class, because in such case, `MouseDown` event is always dispatched to the listener of `mouseDown`, which is ready to receive `mouseDown`.  
 Or you can use [conditionalFunctor](conditionalfunctor.md) to check in advance if the event type matches the desired class. The example2 in below example code shows how to use conditionalFunctor.  
 
 Below is the example code to demonstrate how to use `argumentAdapter`. There are full compile-able example code in file 'tests/tutorial/tutorial_argumentadapter.cpp '.  
