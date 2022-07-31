@@ -6,6 +6,7 @@ set(SRC_TUTORIAL
 	tutorial_eventdispatcher.cpp
 	tutorial_eventqueue.cpp
 	tutorial_hetercallbacklist.cpp
+	tutorial_hetereventdispatcher.cpp
 	tutorial_argumentadapter.cpp
 )
 

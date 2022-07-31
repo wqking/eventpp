@@ -21,6 +21,8 @@
 
 #include <iostream>
 
+namespace {
+
 // In the tutorials here, we define an event class hierarchy, Event is the base class.
 // The callback prototype in EventDispatcher is reference or pointer to Event,
 // then we should only be able to add listeners that only accept reference or pointer to Event,
@@ -231,3 +233,5 @@ TEST_CASE("ArgumentAdapter tutorial 3, conditional adapter")
 	eventDispatcher.dispatch(EventType::input, KeyEvent(99));
 }
 
+
+} // namespace
