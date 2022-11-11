@@ -26,7 +26,7 @@ callbackList();
 
 **输出**
 
-> Got callback 1.
+> Got callback 1.  
 > Got callback 2.
 
 **解读**
@@ -37,7 +37,7 @@ callbackList();
 eventpp::CallbackList<void ()> callbackList;
 ```
 
-CallbackList 需要至少一个模板参数，作为回调函数的“原型”（ prototype ）。
+CallbackList 需要至少一个模板参数，作为回调函数的“原型”（ prototype ）。  
 “原型”指 C++ 函数类型，例如 `void (int)`, `void (const std::string &, const MyClass &, int, bool)`
 
 然后，添加一个回调函数
@@ -48,7 +48,7 @@ callbackList.append([]() {
 });
 ```
 
-`append` 函数接收一个回调函数作为参数。
+`append` 函数接收一个回调函数作为参数。  
 回调函数可以使任何回调目标——函数、函数指针、指向成员函数的指针、lambda 表达式、函数对象等。该回调函数必须可以使用 `callbackList` 中声明的原型调用。
 
 接下来启动回调列表
@@ -82,12 +82,12 @@ callbackList("Hello world", true);
 
 **输出**
 
-> Got callback 1, s is Hello world b is true
+> Got callback 1, s is Hello world b is true  
 > Got callback 2, s is Hello world b is 1
 
 **解读**
 
-本例中，回调函数列表的回调函数原型接收两个参数： `const std::string &` 和 `const bool`。
+本例中，回调函数列表的回调函数原型接收两个参数： `const std::string &` 和 `const bool`。  
 回调函数的原型并不需要和回调完全一致，只要两个函数中的参数能够兼容即可。正如上面例子中的第二个回调函数，其参数为 `[](std::string s, int b)`，其原型与回调列表中的并不相同。
 
 ### CallbackList 教程 3, 移除
@@ -119,7 +119,7 @@ callbackList();
 
 **输出**
 
-> Got callback 1.
+> Got callback 1.  
 > Got callback 3.
 
 ### CallbackList 教程 4, for each
@@ -165,11 +165,11 @@ callbackList();
 
 **输出**
 
-> forEach(Handle, Callback), invoked 0
-> forEach(Handle, Callback), invoked 1
-> forEach(Handle, Callback), removed second callback
-> forEach(Handle, Callback), invoked 2
-> forEach(Callback), invoked
-> forEach(Callback), invoked
-> Got callback 1.
+> forEach(Handle, Callback), invoked 0  
+> forEach(Handle, Callback), invoked 1  
+> forEach(Handle, Callback), removed second callback  
+> forEach(Handle, Callback), invoked 2  
+> forEach(Callback), invoked  
+> forEach(Callback), invoked  
+> Got callback 1.  
 > Got callback 3.

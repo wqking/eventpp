@@ -31,15 +31,15 @@ queue.process();
 
 **输出**
 
-> Got event 3, s is Hello n is 38
-> Got event 5, s is World n is 58
-> Got another event 5, s is World n is 58
+> Got event 3, s is Hello n is 38  
+> Got event 5, s is World n is 58  
+> Got another event 5, s is World n is 58  
 
 **解读**
-`EventDispatcher<>::dispatch()` 触发监听器的动作是同步的。但异步事件队列在某些场景下能发挥更大的作用（例如 Windows 消息队列、游戏中的消息队列等）。EventQueue 就是用于满足该类需求的事件队列。
-`EventQueue<>::enqueue()` 将事件加入队列，其参数和 `dispatch` 的参数完全相同。
-`EventQueue<>::process()` 用于分发队列中的事件。不调用 process ，事件就不会被分发。
-事件队列的典型用例：在 GUI 应用中，每个组件都调用 `EventQueue<>::enqueue()` 来发布事件，然后主事件循环调用 `EventQueue<>()::process()` 来 dispatch 所有队列中的事件。
+`EventDispatcher<>::dispatch()` 触发监听器的动作是同步的。但异步事件队列在某些场景下能发挥更大的作用（例如 Windows 消息队列、游戏中的消息队列等）。EventQueue 就是用于满足该类需求的事件队列。  
+`EventQueue<>::enqueue()` 将事件加入队列，其参数和 `dispatch` 的参数完全相同。  
+`EventQueue<>::process()` 用于分发队列中的事件。不调用 process ，事件就不会被分发。  
+事件队列的典型用例：在 GUI 应用中，每个组件都调用 `EventQueue<>::enqueue()` 来发布事件，然后主事件循环调用 `EventQueue<>()::process()` 来 dispatch 所有队列中的事件。  
 `EventQueue` 支持将不可拷贝对象作为事件参数，例如上面例子中的 unique_ptr
 
 ### 教程 2 —— 多线程
@@ -104,13 +104,13 @@ thread.join();
 
 **输出**
 
-> Got event, index is 1
-> Should have triggered event with index = 1
-> Got event, index is 2
-> Should have triggered event with index = 2
-> Should NOT trigger event with index = 10
-> Should NOT trigger event with index = 11
-> Got event, index is 10
-> Got event, index is 11
+> Got event, index is 1  
+> Should have triggered event with index = 1  
+> Got event, index is 2  
+> Should have triggered event with index = 2  
+> Should NOT trigger event with index = 10  
+> Should NOT trigger event with index = 11  
+> Got event, index is 10  
+> Got event, index is 11  
 > Should have triggered events with index = 10 and 11
 
