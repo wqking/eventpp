@@ -32,8 +32,8 @@ dispatcher.dispatch(5);
 
 **输出**
 
-> Got event 3.
-> Got event 5.
+> Got event 3.  
+> Got event 5.  
 > Got another event 5.
 
 **解读**
@@ -44,8 +44,8 @@ dispatcher.dispatch(5);
 eventpp::EventDispatcher<int, void ()> dispatcher;
 ```
 
-EventDispatcher 类接收两个模板参数。第一个是*事件类型*，此处是 `int` 。第二个是监听器的*原型*。
-*事件类型* 必须能够用作 `std::map` 的 key。也就是说该类型必须支持 `operator <`。
+EventDispatcher 类接收两个模板参数。第一个是*事件类型*，此处是 `int` 。第二个是监听器的*原型*。  
+*事件类型* 必须能够用作 `std::map` 的 key。也就是说该类型必须支持 `operator <`。  
 *原型* 是 C++ 函数类型，例如 `void (int)`, `void (const std::string &, const MyClass &, int, bool)`
 
 然后添加一个监听器
@@ -56,8 +56,8 @@ dispatcher.appendListener(3, []() {
 });
 ```
 
-`appendListener` 函数接收两个参数。第一个是 *事件类型* 的 *事件* （译注：此处的“事件类型”指的是用于区分事件的数据类型，此处为 int 。“事件”则是具体的时间值，此处为整数 3 ），此处为 `int` 类型。第二个参数是*回调函数*。
-回调函数可以是任何能够回调的目标——函数、函数指针、成员函数指针、lambda表达式、函数对象等。其必须能够被 `dispatcher` 中声明的 *原型* 调用。
+`appendListener` 函数接收两个参数。第一个是 *事件类型* 的 *事件* （译注：此处的“事件类型”指的是用于区分事件的数据类型，此处为 int 。“事件”则是具体的时间值，此处为整数 3 ），此处为 `int` 类型。第二个参数是*回调函数*。  
+回调函数可以是任何能够回调的目标——函数、函数指针、成员函数指针、lambda表达式、函数对象等。其必须能够被 `dispatcher` 中声明的 *原型* 调用。  
 在上面这段代码的下面，我们还为 事件5 添加了两个监听器。
 
 接下来，使用下面的代码分发事件
@@ -67,7 +67,7 @@ dispatcher.dispatch(3);
 dispatcher.dispatch(5);
 ```
 
-这里分发了两个事件，分别是事件 3 和 5 。
+这里分发了两个事件，分别是事件 3 和 5 。  
 在事件分发的过程中，所有对应事件的监听器都会按照它们被添加进 EventDispatcher 的顺序逐个执行。
 
 ### 教程 2 —— 带参数的监听器
@@ -96,13 +96,13 @@ dispatcher.dispatch(5, "World", false);
 
 **输出** 
 
-> Got event 3, s is Hello b is true
-> Got event 5, s is World b is 0
+> Got event 3, s is Hello b is true  
+> Got event 5, s is World b is 0  
 > Got another event 5, s is World b is false
 
 **解读**
 
-此处的 dispatcher 回调函数原型接收两个参数：`const std::string &` 和 `const bool`。
+此处的 dispatcher 回调函数原型接收两个参数：`const std::string &` 和 `const bool`。  
 监听器原型不需要和 dispatcher 完全一致，只要参数类型能够兼容即可。例如第二个监听器，`[](std::string s, int b)`，其原型和 dispatcher 并不相同
 
 ### 教程 3 —— 自定义事件结构
@@ -151,10 +151,10 @@ dispatcher.dispatch(MyEvent { 3, "Hello world", 38 }, true);
 
 **输出**
 
-> Got event 3
-> Event::type is 3
-> Event::message is Hello world
-> Event::param is 38
+> Got event 3  
+> Event::type is 3  
+> Event::message is Hello world  
+> Event::param is 38  
 > b is true
 
 **解读**
