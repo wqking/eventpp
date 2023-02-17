@@ -92,10 +92,10 @@ EventQueue 可以拷贝、移动、赋值和移动赋值
 
 ```cpp
 template <typename ...A>
-void enqueue(A ...args);
+void enqueue(A && ...args);
 
 template <typename T, typename ...A>
-void enqueue(T && first, A ...args);
+void enqueue(T && first, A && ...args);
 ```
 
 将一个事件加入事件队列。事件的类型包含在传给 `enqueue` 函数的实参中。

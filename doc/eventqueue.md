@@ -83,10 +83,10 @@ Note: the queued events are not copied, moved, assigned, or move assigned, only 
 
 ```c++
 template <typename ...A>
-void enqueue(A ...args);
+void enqueue(A && ...args);
 
 template <typename T, typename ...A>
-void enqueue(T && first, A ...args);
+void enqueue(T && first, A && ...args);
 ```  
 Put an event into the event queue. The event type is deducted from the arguments of `enqueue`.  
 All copyable arguments are copied to internal data structure. All non-copyable but movable arguments are moved.  
