@@ -344,6 +344,48 @@ TEST_CASE("EventQueue, non-copyable but movable unique_ptr")
 	}
 }
 
+TEST_CASE("EventQueue, copyable event object")
+{
+	struct MyCopyable {
+		MyCopyable(int * counter, const int value) : counter(counter), value(value) {
+		}
+
+		MyCopyable(const MyCopyable & other) : counter(other.counter), value(other.value) {
+			++*counter;
+		}
+
+		MyCopyable(MyCopyable && other) : counter(other.counter), value(other.value) {
+		}
+
+		MyCopyable & operator = (const MyCopyable & other) {
+			counter = other.counter;
+			value = other.value;
+			++*counter;
+			return *this;
+		}
+
+		int * counter;
+		int value;
+	};
+
+	using EQ = eventpp::EventQueue<int, void (const MyCopyable &)>;
+	EQ queue;
+
+	// This is to ensure changing EventQueue::enqueue(A ...args) to EventQueue::enqueue(A && ...args) works properly
+	SECTION("For enqueue by r-value, there should be no copy/assignment") {
+		int copiedCount = 0;
+		queue.appendListener(3, [&copiedCount](const MyCopyable & object) {
+			REQUIRE(*object.counter == 0);
+			REQUIRE(copiedCount == 0);
+			REQUIRE(object.value == 5);
+		});
+
+		queue.enqueue(3, MyCopyable(&copiedCount, 5));
+		queue.process();
+		REQUIRE(copiedCount == 0);
+	}
+}
+
 TEST_CASE("EventQueue, peekEvent/takeEvent/dispatch")
 {
 	using SP = std::shared_ptr<int>;

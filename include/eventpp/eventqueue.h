@@ -155,7 +155,7 @@ public:
 	}
 
 	template <typename ...A>
-	auto enqueue(A ...args) -> typename std::enable_if<sizeof...(A) == sizeof...(Args), void>::type
+	auto enqueue(A && ...args) -> typename std::enable_if<sizeof...(A) == sizeof...(Args), void>::type
 	{
 		static_assert(super::ArgumentPassingMode::canIncludeEventType, "Enqueuing arguments count doesn't match required (Event type should be included).");
 
@@ -172,7 +172,7 @@ public:
 	}
 
 	template <typename T, typename ...A>
-	auto enqueue(T && first, A ...args) -> typename std::enable_if<sizeof...(A) == sizeof...(Args), void>::type
+	auto enqueue(T && first, A && ...args) -> typename std::enable_if<sizeof...(A) == sizeof...(Args), void>::type
 	{
 		static_assert(super::ArgumentPassingMode::canExcludeEventType, "Enqueuing arguments count doesn't match required (Event type should NOT be included).");
 

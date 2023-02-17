@@ -308,10 +308,11 @@ Added CallbackList, EventDispatcher, EventQueue, CounterRemover, ConditionalRemo
 <td align="center"><a href="https://github.com/MH2033/"><img alt="MH2033" src="https://github.com/MH2033.png?s=100" width="100px;" /></a><span>MH2033</span></td>
 <td align="center"><a href="https://github.com/zhllxt/"><img alt="zhllxt" src="https://github.com/zhllxt.png?s=100" width="100px;" /></a><span>zhllxt</span></td>
 <td align="center"><a href="https://github.com/marsCatXdu/"><img alt="marsCatXdu" src="https://github.com/marsCatXdu.png?s=100" width="100px;" /></a><span>marsCatXdu</span></td>
+<td align="center"><a href="https://github.com/Chaojimengnan/"><img alt="Chaojimengnan" src="https://github.com/Chaojimengnan.png?s=100" width="100px;" /></a><span>Chaojimengnan</span></td>
 </tr>
 </table>
 
-I (wqking) would like to sincerely thank all participants for the contributions. Your contributions makes `eventpp` better and bright future.
+I (wqking) would like to sincerely thank all participants for the contributions. Your contributions make `eventpp` better and bright future.
 I maintain the contributors list manually, according to the criteria below,
 
 1. Your Pull Request is approved and merged to any branch.
