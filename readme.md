@@ -310,6 +310,9 @@ Added CallbackList, EventDispatcher, EventQueue, CounterRemover, ConditionalRemo
 <td align="center"><a href="https://github.com/marsCatXdu/"><img alt="marsCatXdu" src="https://github.com/marsCatXdu.png?s=100" width="100px;" /></a><span>marsCatXdu</span></td>
 <td align="center"><a href="https://github.com/Chaojimengnan/"><img alt="Chaojimengnan" src="https://github.com/Chaojimengnan.png?s=100" width="100px;" /></a><span>Chaojimengnan</span></td>
 </tr>
+<tr>
+<td align="center"><a href="https://github.com/henaiguo/"><img alt="henaiguo" src="https://github.com/henaiguo.png?s=100" width="100px;" /></a><span>henaiguo</span></td>
+</tr>
 </table>
 
 I (wqking) would like to sincerely thank all participants for the contributions. Your contributions make `eventpp` better and bright future.
