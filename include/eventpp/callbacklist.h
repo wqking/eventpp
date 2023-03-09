@@ -243,6 +243,8 @@ public:
 
 	bool ownsHandle(const Handle & handle) const
 	{
+		std::lock_guard<Mutex> lockGuard(mutex);
+
 		auto node = handle.lock();
 		if(node) {
 			while(node->previous) {
