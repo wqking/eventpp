@@ -208,7 +208,8 @@ public:
 
 	Handle insert(const Callback & callback, const Handle & before)
 	{
-		assert(before.expired() || ownsHandle(before));
+		// Disable this assertion because it's too slow in debug mode.
+		//assert(before.expired() || ownsHandle(before));
 
 		NodePtr beforeNode = before.lock();
 		if(beforeNode) {
@@ -226,7 +227,8 @@ public:
 
 	bool remove(const Handle & handle)
 	{
-		assert(handle.expired() || ownsHandle(handle));
+		// Disable this assertion because it's too slow in debug mode.
+		//assert(handle.expired() || ownsHandle(handle));
 
 		// It looks like the lock can be put inside the `if` below,
 		// but that doesn't work in multi-threading and cause related unit tests fail.

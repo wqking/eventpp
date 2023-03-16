@@ -116,7 +116,6 @@ The time complexity is O(1).
 Note: the caller must ensure the handle `before` is created by `this` CallbackList. If the caller can't ensure it, `ownsHandle` can be used
 to check if the handle `before` belongs to `this` CallbackList. The function `insert` can only be called if `ownsHandle(before)` returns true,
 otherwise, it's undefined behavior and it causes weird bugs.  
-`insert` only `assert(ownsHandle(before))`, but there is no check in release code for performance reason.  
 
 #### remove
 ```c++
