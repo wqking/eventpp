@@ -98,6 +98,8 @@ The time complexity is O(1).
 
 The two overloaded functions have similar but slightly difference. How to use them depends on the `ArgumentPassingMode` policy. Please reference the [document of policies](policies.md) for more information.
 
+Note: the arguments life time may be longer than expected. `EventQueue` copies the arguments into internal data structure, after the event is dispatched, the data is cached for next usage, so the arguments won't be destroyed until the data is reused. This is for performance optimization. This is usually not an issue, but if you pass large data in shared pointer, the data may be in the memory for longer time than necessary.
+
 #### process
 
 ```c++

@@ -114,6 +114,8 @@ EventQueue 的参数必须满足可拷贝和可移动两项中的一项。
 
 这两个重载函数略有不同，具体的用法取决于 `ArgumentPassingMode` 策略。详情请阅读https://github.com/wqking/eventpp/blob/master/doc/policies.md 文档。
 
+注意：参数的生命周期可能比预期的要长。`EventQueue`将参数拷贝到内部数据结构，当事件被派发以后，该数据被缓存以备后续使用，因此参数在数据重新使用前不会被释放。这么做是为了性能优化。这通常不是问题，但如果你用shared pointer来传递大量数据，那么这些数据在内存中存在更长的事件。
+
 #### process
 
 ```cpp
