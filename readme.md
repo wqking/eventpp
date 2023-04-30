@@ -41,11 +41,12 @@ eventpp is a C++ event library for callbacks, event dispatcher, and event queue.
     - The EventQueue can process 10M events in 1 second (10K events per millisecond).
     - The CallbackList can invoke 100M callbacks in 1 second (100K callbacks per millisecond).
     - The CallbackList can add/remove 5M callbacks in 1 second (5K callbacks per millisecond).
+    - With the helper class AnyData, it's possible to avoid heap allocation when sending events via EventQueue.
 - **Flexible and easy to use**
     - Listeners and events can be of any type and do not need to be inherited from any base class.
     - Utilities that can ease the usage, such as auto disconnecting, one shot listener, argument type adapter, etc.
     - Header only, no source file, no need to build. Does not depend on other libraries.
-    - Requires C++ 11.
+    - Only requires C++ 11.
     - Written in portable and standard C++, no hacks or quirks.
 
 ## License
@@ -57,7 +58,7 @@ Apache License, Version 2.0
 The master branch is usable and stable.  
 There are some releases on Github, but usually the releases are far behind the latest code.  
 You should prefer to clone or fork the master branch instead of downloading the releases.  
-Don't worry about the large timespan between commits and releases. The library is actively maintained.  
+Don't worry about the large time span between commits and releases. The library is actively maintained.  
 The master branch is currently fully back compatible with the first version. So your project won't get any back compatible issues.  
 If you find any back compatible issue which is not announced, please report a bug.
 
@@ -219,6 +220,7 @@ queue.process();
     * [Policies -- configure eventpp](doc/policies.md)
     * [Mixins -- extend eventpp](doc/mixins.md)
 * Utilities
+    * [Utility class AnyData -- zero heap allocation event data in EventQueue](doc/anydata.md)
     * [Utility argumentAdapter -- adapt pass-in argument types to the types of the functioning being called](doc/argumentadapter.md)
     * [Utility conditionalFunctor -- pre-check the condition before calling a function](doc/conditionalfunctor.md)
     * [Utility class CounterRemover -- auto remove listeners after triggered certain times](doc/counterremover.md)

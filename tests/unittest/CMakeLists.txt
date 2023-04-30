@@ -27,6 +27,7 @@ set(SRC_TEST
 	test_argumentadapter.cpp
 	test_conditionalfunctor.cpp
 	test_anyid.cpp
+	test_anydata.cpp
 )
 
 add_executable(

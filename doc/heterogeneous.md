@@ -1,5 +1,16 @@
 # Overview of heterogeneous classes
+<!--begintoc-->
+## Table Of Contents
 
+* [Description](#a2_1)
+* [Warning](#a2_2)
+* [Usage](#a2_3)
+  * [Headers](#a3_1)
+  * [Template parameters](#a3_2)
+* [Differences between heterogeneous classes vs homogeneous classes](#a2_4)
+<!--endtoc-->
+
+<a id="a2_1"></a>
 ## Description
 
 'CallbackList', 'EventDispatcher', and 'EventQueue' are homogeneous. All listeners must have the same prototype. For example,
@@ -18,20 +29,24 @@ dispatcher.appendListener(3, []() {}); // OK
 dispatcher.appendListener(3, [](std::string) {}); // OK
 ```
 
+<a id="a2_2"></a>
 ## Warning
 
 The heterogeneous classes are mostly for proof of concept purpose. Misusing them most likely means your application design has flaws.
 You should stick with the homogeneous classes, even though sometimes the heterogeneous classes look convenient (but with overhead).  
 The heterogeneous classes may be not well maintained or supported in the future. You use them on your own risk.
 
+<a id="a2_3"></a>
 ## Usage
 
+<a id="a3_1"></a>
 ### Headers
 
 eventpp/hetercallbacklist.h  
 eventpp/hetereventdispatcher.h  
 eventpp/hetereventqueue.h  
 
+<a id="a3_2"></a>
 ### Template parameters
 
 ```c++
@@ -85,6 +100,7 @@ In the homo-classes, `Prototype` is a single function type such as `void ()`.
 In the heter-classes, `PrototypeList` is a list of function types in `eventpp::HeterTuple`, such as `eventpp::HeterTuple<void (), void (std::string), void (int, int)>`.  
 Note: Ideally it would be better to use `std::tuple` instead of `eventpp::HeterTuple`, but the problem is that the tuple is instantiated in HeterEventDispatcher which cause compile error that function type can't be instantiated.
 
+<a id="a2_4"></a>
 ## Differences between heterogeneous classes vs homogeneous classes
 
 1. Heterogeneous classes has both overhead on performance and memory usage. Usually event system is the core component in an application, the performance is critical.  

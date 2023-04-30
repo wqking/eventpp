@@ -7,6 +7,7 @@ set(SRC_BENCHMARK
 	b3_b5_eventqueue.cpp
 	b6_callbacklist_add_remove_callbacks.cpp
 	b7_callbacklist_vs_function_list.cpp
+	b8_eventqueue_anydata.cpp
 )
 
 add_executable(

@@ -8,6 +8,7 @@ set(SRC_TUTORIAL
 	tutorial_hetercallbacklist.cpp
 	tutorial_hetereventdispatcher.cpp
 	tutorial_argumentadapter.cpp
+	tutorial_anydata.cpp
 )
 
 add_executable(
