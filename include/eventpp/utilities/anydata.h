@@ -130,24 +130,11 @@ public:
 	}
 
 	template <typename T>
-	AnyData(const T & object) : functions(anydata_internal_::getAnyDataFunctions<T>()), buffer() {
-		static_assert(sizeof(T) <= maxSize, "AnyData: object size must not be greater than maxSize");
-
-		new (buffer.data()) T(object);
-	}
-
-	template <typename T>
-	AnyData(T & object) : functions(anydata_internal_::getAnyDataFunctions<T>()), buffer() {
-		static_assert(sizeof(T) <= maxSize, "AnyData: object size must not be greater than maxSize");
-
-		new (buffer.data()) T(object);
-	}
-
-	template <typename T>
 	AnyData(T && object) : functions(anydata_internal_::getAnyDataFunctions<T>()), buffer() {
-		static_assert(sizeof(T) <= maxSize, "AnyData: object size must not be greater than maxSize");
+		using U = typename std::remove_reference<T>::type;
+		static_assert(sizeof(U) <= maxSize, "AnyData: object size must not be greater than maxSize");
 
-		new (buffer.data()) T(std::move(object));
+		new (buffer.data()) U(std::forward<T>(object));
 	}
 
 	AnyData(const AnyData & other) : functions(other.functions), buffer() {

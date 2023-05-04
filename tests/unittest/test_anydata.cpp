@@ -63,6 +63,9 @@ TEST_CASE("AnyData, unique_ptr")
 	Data data2(data);
 	REQUIRE(data2.isType<Ptr>());
 	REQUIRE(*data2.get<Ptr>() == 5);
+	Data data3(Data(Ptr(new int(8))));
+	REQUIRE(data3.isType<Ptr>());
+	REQUIRE(*data3.get<Ptr>() == 8);
 }
 
 TEST_CASE("AnyData, shared_ptr")
@@ -71,21 +74,26 @@ TEST_CASE("AnyData, shared_ptr")
 	using Data = eventpp::AnyData<sizeof(Ptr)>;
 	Ptr ptr(std::make_shared<int>(8));
 	REQUIRE(ptr.use_count() == 1);
-	Data data(ptr);
-	REQUIRE(ptr.use_count() == 2);
-	REQUIRE(data.isType<Ptr>());
-	REQUIRE(*data.get<Ptr>() == 8);
-	Data data2(data);
-	REQUIRE(ptr.use_count() == 3);
-	REQUIRE(data2.isType<Ptr>());
-	REQUIRE(*data2.get<Ptr>() == 8);
-	REQUIRE(*data.get<Ptr>() == 8);
-	REQUIRE(*ptr == 8);
+	{
+		Data data(ptr);
+		REQUIRE(ptr.use_count() == 2);
+		REQUIRE(data.isType<Ptr>());
+		REQUIRE(*data.get<Ptr>() == 8);
+		Data data2(data);
+		REQUIRE(ptr.use_count() == 3);
+		REQUIRE(data2.isType<Ptr>());
+		REQUIRE(*data2.get<Ptr>() == 8);
+		REQUIRE(*data.get<Ptr>() == 8);
+		REQUIRE(*ptr == 8);
 
-	*ptr = 5;
-	REQUIRE(*data2.get<Ptr>() == 5);
-	REQUIRE(*data.get<Ptr>() == 5);
-	REQUIRE(*ptr == 5);
+		*ptr = 5;
+		REQUIRE(*data2.get<Ptr>() == 5);
+		REQUIRE(*data.get<Ptr>() == 5);
+		REQUIRE(*ptr == 5);
+
+		REQUIRE(ptr.use_count() == 3);
+	}
+	REQUIRE(ptr.use_count() == 1);
 }
 
 enum class EventType {
