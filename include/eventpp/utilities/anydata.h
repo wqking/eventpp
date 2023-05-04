@@ -75,7 +75,6 @@ void funcMoveConstruct(void * object, void * buffer)
 struct AnyDataFunctions
 {
 	void (*free)(void *);
-	void (*copyConstruct)(void *, void *);
 	void (*moveConstruct)(void *, void *);
 };
 
@@ -84,7 +83,6 @@ const AnyDataFunctions * doGetAnyDataFunctions()
 {
 	static const AnyDataFunctions functions {
 		&funcFreeObject<T>,
-		&funcCopyConstruct<T>,
 		&funcMoveConstruct<T>
 	};
 	return &functions;
@@ -137,24 +135,14 @@ public:
 		new (buffer.data()) U(std::forward<T>(object));
 	}
 
-	AnyData(const AnyData & other) : functions(other.functions), buffer() {
-		if(functions != nullptr) {
-			functions->copyConstruct(other.buffer.data(), buffer.data());
-		}
-	}
-
-	AnyData(AnyData & other) : functions(other.functions), buffer() {
-		if(functions != nullptr) {
-			functions->copyConstruct(other.buffer.data(), buffer.data());
-		}
-	}
-
 	AnyData(AnyData && other) : functions(other.functions), buffer() {
 		if(functions != nullptr) {
 			functions->moveConstruct(other.buffer.data(), buffer.data());
 		}
 	}
 
+	AnyData(const AnyData & other) = delete;
+	AnyData(AnyData & other) = delete;
 	AnyData & operator = (const AnyData & other) = delete;
 	AnyData & operator = (AnyData && other) = delete;
 

@@ -60,10 +60,10 @@ TEST_CASE("AnyData, unique_ptr")
 	Data data(Ptr(new int(5)));
 	REQUIRE(data.isType<Ptr>());
 	REQUIRE(*data.get<Ptr>() == 5);
-	Data data2(data);
+	Data data2(Ptr(new int(5)));
 	REQUIRE(data2.isType<Ptr>());
 	REQUIRE(*data2.get<Ptr>() == 5);
-	Data data3(Data(Ptr(new int(8))));
+	Data data3(Ptr(new int(8)));
 	REQUIRE(data3.isType<Ptr>());
 	REQUIRE(*data3.get<Ptr>() == 8);
 }
@@ -79,7 +79,7 @@ TEST_CASE("AnyData, shared_ptr")
 		REQUIRE(ptr.use_count() == 2);
 		REQUIRE(data.isType<Ptr>());
 		REQUIRE(*data.get<Ptr>() == 8);
-		Data data2(data);
+		Data data2(ptr);
 		REQUIRE(ptr.use_count() == 3);
 		REQUIRE(data2.isType<Ptr>());
 		REQUIRE(*data2.get<Ptr>() == 8);
