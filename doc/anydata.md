@@ -148,7 +148,7 @@ queue.appendListener(EventType::key, [](const Event & e) {
 });
 ```
 
-Since `AnyData` can convert to any types automatically, here the listener functions can receive `const Event &` instead of `AnyData`. It looks more nature than the "not recommend" method. When `EventQueue` passes `AnyData` to the listener, `AnyData` can cast to `const Event &` automatically.  
+Since `AnyData` can convert to any types automatically, here the listener functions can receive `const Event &` instead of `AnyData`. When `EventQueue` passes `AnyData` to the listener, `AnyData` can cast to `const Event &` automatically.  
 `AnyData` can convert to reference or pointer. When it converts to reference, the reference refers to the underlying data. When it converts to pointer, the pointer points to the address of the underlying data. The special conversion of pointer allow we use unrelated data types as event arguments and receive the argument as `const void *`. For example,  
 
 ```c++
@@ -174,7 +174,7 @@ queue.appendListener(EventType::key, [](const EventType type, const eventpp::Any
 });
 ```
 
-I would not recommend it. It is really bad idea because then your code is coupled with `eventpp` tightly. I highly recommend you not to do so. But if you do want to do it, here are the `AnyData` member functions which helps you to use it.  
+This is really bad design because then your code is coupled with `eventpp` tightly. I highly recommend you not to do so. But if you do want to do it, here are the `AnyData` member functions which helps you to use it.  
 
 #### get
 
