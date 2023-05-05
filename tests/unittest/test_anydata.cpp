@@ -22,6 +22,26 @@
 
 namespace {
 
+template <typename T>
+bool isWithinAnyData(const T & anyData, const void * address)
+{
+	return (std::ptrdiff_t)address >= (std::ptrdiff_t)&anyData
+		&& (std::ptrdiff_t)address < (std::ptrdiff_t)&anyData + (std::ptrdiff_t)sizeof(T)
+	;
+}
+
+template <typename T>
+bool isWithinAnyData(const T & anyData)
+{
+	return isWithinAnyData(anyData, anyData.getAddress());
+}
+
+template <typename T>
+bool isLargeAnyData(const T & anyData)
+{
+	return ! isWithinAnyData(anyData);
+}
+
 TEST_CASE("AnyData, maxSizeOf")
 {
 	REQUIRE(eventpp::maxSizeOf<
@@ -40,60 +60,126 @@ TEST_CASE("AnyData, maxSizeOf")
 	);
 }
 
-TEST_CASE("AnyData, default")
+struct LargeDataBase
 {
-	using Data = eventpp::AnyData<64>;
-	eventpp::EventQueue<int, void (const Data &)> queue;
-	queue.appendListener(3, [](const Data & value) {
-		REQUIRE(value.isType<int>());
-		REQUIRE((long)value == 5);
-		REQUIRE(value.get<long>() == 5);
-	});
-	queue.enqueue(3, 5);
-	queue.process();
+	std::array<void *, 100> largeData;
+};
+
+template <typename T>
+bool isLargeDataBase()
+{
+	return sizeof(T) >= sizeof(LargeDataBase);
 }
 
-TEST_CASE("AnyData, unique_ptr")
+struct DataUniquePtr
 {
-	using Ptr = std::unique_ptr<int>;
-	using Data = eventpp::AnyData<sizeof(Ptr)>;
-	Data data(Ptr(new int(5)));
-	REQUIRE(data.isType<Ptr>());
-	REQUIRE(*data.get<Ptr>() == 5);
-	Data data2(Ptr(new int(5)));
-	REQUIRE(data2.isType<Ptr>());
-	REQUIRE(*data2.get<Ptr>() == 5);
-	Data data3(Ptr(new int(8)));
-	REQUIRE(data3.isType<Ptr>());
-	REQUIRE(*data3.get<Ptr>() == 8);
+	std::unique_ptr<std::string> ptr;
+};
+
+struct LargeDataUniquePtr : DataUniquePtr, LargeDataBase {};
+
+TEMPLATE_TEST_CASE("AnyData, DataUniquePtr", "", DataUniquePtr, LargeDataUniquePtr)
+{
+	using Type = TestType;
+	using MyAnyData = eventpp::AnyData<sizeof(DataUniquePtr)>;
+	Type data {};
+	data.ptr = std::unique_ptr<std::string>(new std::string("Hello"));
+	REQUIRE(data.ptr);
+	MyAnyData anyData { std::move(data) };
+	REQUIRE(anyData.isType<Type>());
+	REQUIRE(! data.ptr);
+	REQUIRE(isLargeAnyData(anyData) == isLargeDataBase<Type>());
+	REQUIRE(*anyData.get<DataUniquePtr>().ptr == "Hello");
+	REQUIRE(*anyData.get<Type>().ptr == "Hello");
 }
 
-TEST_CASE("AnyData, shared_ptr")
+struct DataSharedPtr
 {
-	using Ptr = std::shared_ptr<int>;
-	using Data = eventpp::AnyData<sizeof(Ptr)>;
-	Ptr ptr(std::make_shared<int>(8));
-	REQUIRE(ptr.use_count() == 1);
-	{
-		Data data(ptr);
-		REQUIRE(ptr.use_count() == 2);
-		REQUIRE(data.isType<Ptr>());
-		REQUIRE(*data.get<Ptr>() == 8);
-		Data data2(ptr);
-		REQUIRE(ptr.use_count() == 3);
-		REQUIRE(data2.isType<Ptr>());
-		REQUIRE(*data2.get<Ptr>() == 8);
-		REQUIRE(*data.get<Ptr>() == 8);
-		REQUIRE(*ptr == 8);
+	std::shared_ptr<std::string> ptr;
+};
 
-		*ptr = 5;
-		REQUIRE(*data2.get<Ptr>() == 5);
-		REQUIRE(*data.get<Ptr>() == 5);
-		REQUIRE(*ptr == 5);
+struct LargeDataSharedPtr : DataSharedPtr, LargeDataBase {};
 
-		REQUIRE(ptr.use_count() == 3);
+TEMPLATE_TEST_CASE("AnyData, DataSharedPtr", "", DataSharedPtr, LargeDataSharedPtr)
+{
+	using Type = TestType;
+	using MyAnyData = eventpp::AnyData<sizeof(DataSharedPtr)>;
+	Type data {};
+	data.ptr = std::make_shared<std::string>("Hello");
+	REQUIRE(data.ptr.use_count() == 1);
+	SECTION("copy") {
+		MyAnyData anyData { data };
+		REQUIRE(anyData.isType<Type>());
+		REQUIRE(data.ptr.use_count() == 2);
+		REQUIRE(anyData.get<DataSharedPtr>().ptr.use_count() == 2);
+		REQUIRE(isLargeAnyData(anyData) == isLargeDataBase<Type>());
+		REQUIRE(*anyData.get<DataSharedPtr>().ptr == "Hello");
+		REQUIRE(*anyData.get<Type>().ptr == "Hello");
+		*data.ptr = "world";
+		REQUIRE(*anyData.get<DataSharedPtr>().ptr == "world");
+		REQUIRE(*anyData.get<Type>().ptr == "world");
 	}
-	REQUIRE(ptr.use_count() == 1);
+	SECTION("move") {
+		MyAnyData anyData { std::move(data) };
+		REQUIRE(anyData.isType<Type>());
+		REQUIRE(data.ptr.use_count() == 0);
+		REQUIRE(anyData.get<DataSharedPtr>().ptr.use_count() == 1);
+		REQUIRE(isLargeAnyData(anyData) == isLargeDataBase<Type>());
+		REQUIRE(*anyData.get<DataSharedPtr>().ptr == "Hello");
+		REQUIRE(*anyData.get<Type>().ptr == "Hello");
+	}
+}
+
+struct LifeCounter
+{
+	int ctors;
+};
+
+struct DataLifeCounter
+{
+	explicit DataLifeCounter(LifeCounter * counter) : counter(counter) {
+		++counter->ctors;
+	}
+
+	DataLifeCounter(const DataLifeCounter & other) : counter(other.counter) {
+		++counter->ctors;
+	}
+	
+	DataLifeCounter(DataLifeCounter && other) : counter(other.counter) {
+		++counter->ctors;
+	}
+	
+	~DataLifeCounter() {
+		--counter->ctors;
+	}
+
+	LifeCounter * counter;
+};
+
+struct LargeDataLifeCounter : DataLifeCounter, LargeDataBase
+{
+	explicit LargeDataLifeCounter(LifeCounter * counter) : DataLifeCounter(counter), LargeDataBase() {
+	}
+};
+
+TEMPLATE_TEST_CASE("AnyData, DataLifeCounter", "", DataLifeCounter, LargeDataLifeCounter)
+{
+	using Type = TestType;
+	using MyAnyData = eventpp::AnyData<sizeof(DataLifeCounter)>;
+	LifeCounter lifeCounter {};
+	REQUIRE(lifeCounter.ctors == 0);
+	{
+		Type data { &lifeCounter };
+		REQUIRE(lifeCounter.ctors == 1);
+		{
+			MyAnyData anyData { data };
+			REQUIRE(anyData.isType<Type>());
+			REQUIRE(lifeCounter.ctors == 2);
+			REQUIRE(isLargeAnyData(anyData) == isLargeDataBase<Type>());
+		}
+		REQUIRE(lifeCounter.ctors == 1);
+	}
+	REQUIRE(lifeCounter.ctors == 0);
 }
 
 enum class EventType {
@@ -122,6 +208,17 @@ struct EventMouse : Event {
 	EventMouse(const int x, const int y) : Event(EventType::mouse), x(x), y(y) {
 	}
 };
+
+struct LargeEventKey : EventKey, LargeDataBase {
+	explicit LargeEventKey(const int key) : EventKey(key), LargeDataBase() {
+	}
+};
+
+struct LargeEventMouse : EventMouse, LargeDataBase {
+	explicit LargeEventMouse(const int x, const int y) : EventMouse(x, y), LargeDataBase() {
+	}
+};
+
 constexpr std::size_t eventMaxSize = eventpp::maxSizeOf<
 	Event, EventKey, EventMouse, std::string
 >();
@@ -164,8 +261,8 @@ TEST_CASE("AnyData, Policies")
 	expectedKey = 8;
 	expectedX = 12345678;
 	expectedY = 9876532;
-	queue.enqueue(EventType::mouse, EventMouse(12345678, 9876532));
-	queue.enqueue(EventType::key, EventKey(8));
+	queue.enqueue(EventType::mouse, LargeEventMouse(12345678, 9876532));
+	queue.enqueue(EventType::key, LargeEventKey(8));
 	queue.process();
 }
 

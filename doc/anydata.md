@@ -2,19 +2,22 @@
 <!--begintoc-->
 ## Table Of Contents
 
-* [Description](#a2_1)
-* [Use AnyData](#a2_2)
-  * [Header](#a3_1)
-  * [Class AnyData template parameters](#a3_2)
-  * [Use AnyData in EventQueue, the simplest but not recommend way](#a3_3)
-  * [Use AnyData in EventQueue, the recommend way](#a3_4)
-  * [Extend with new events](#a3_5)
-* [Global function](#a2_3)
-  * [maxSizeOf](#a3_6)
-* [Tutorial](#a2_4)
+- [Class AnyData reference](#class-anydata-reference)
+	- [Table Of Contents](#table-of-contents)
+	- [Description](#description)
+	- [Use AnyData](#use-anydata)
+		- [Header](#header)
+		- [Class AnyData template parameters](#class-anydata-template-parameters)
+		- [Use AnyData in EventQueue, the simplest but not recommend way](#use-anydata-in-eventqueue-the-simplest-but-not-recommend-way)
+			- [get](#get)
+			- [getAddress](#getaddress)
+			- [isType](#istype)
+		- [Use AnyData in EventQueue, the recommend way](#use-anydata-in-eventqueue-the-recommend-way)
+	- [Global function](#global-function)
+		- [maxSizeOf](#maxsizeof)
+	- [Tutorial](#tutorial)
 <!--endtoc-->
 
-<a id="a2_1"></a>
 ## Description
 
 Class `AnyData` is a data structure that can hold any data types without any dynamic heap allocation, and `AnyData` can be passed to `EventQueue` in place of the data it holds. The purpose is to eliminate the heap allocation time which is commonly used as `std::shared_ptr`. `AnyData` can improve the performance by about 30%~50%, comparing to heap allocation with `std::shared_ptr`.  
@@ -119,15 +122,12 @@ eventQueue.enqueue(EventType::key, KeyEvent(123));
 eventQueue.enqueue(EventType::mouse, MouseEvent(100, 200));
 ```
 
-<a id="a2_2"></a>
 ## Use AnyData
 
-<a id="a3_1"></a>
 ### Header
 
 eventpp/utilities/anydata.h  
 
-<a id="a3_2"></a>
 ### Class AnyData template parameters
 
 ```c++
@@ -135,10 +135,9 @@ template <std::size_t maxSize>
 class AnyData;
 ```
 
-`AnyData` requires one constant template parameter. It's the max size of the underlying types. Any data types can be used to construct `AnyData`, as long as the data type size is not larger than `maxSize`. If it's larger, compile time error is produced.  
+`AnyData` requires one constant template parameter. It's the max size of the underlying types. Any data types with any data size can be used to construct `AnyData`. If the data size is not larger than `maxSize`, the data is stored inside `AnyData`. If it's larger, the data is stored on the heap with dynamic allocation.  
 `AnyData` uses at least `maxSize` bytes, even if the underlying data is only 1 byte long. So `AnyData` might use slightly more memory than the shared pointer solution, but also may not, because shared pointer solution has other memory overhead.  
 
-<a id="a3_3"></a>
 ### Use AnyData in EventQueue, the simplest but not recommend way
 
 `AnyData` can be used as the callback arguments in EventQueue. 
@@ -184,7 +183,6 @@ bool isType() const;
 Return true if the underlying data type is `T`, false if not.  
 This function compares the exactly types, it doesn't check any class hierarchy. For example, if an `AnyData` holds `KeyEvent`, then `isType<KeyEvent>()` will return true, but `isType<Event>()` will return false.  
 
-<a id="a3_4"></a>
 ### Use AnyData in EventQueue, the recommend way
 
 ```c++
@@ -219,26 +217,8 @@ queue.enqueue(EventType::text, std::string("This is a text"));
 queue.process();
 ```
 
-<a id="a3_5"></a>
-### Extend with new events
-
-`AnyData` requires compile time known max data size. What if a user needs to add new events but he can't modify the `AnyData` declaration thus can't modify the max size?  
-The user can add any new events as long as the data size is not larger then the max size. If any new events has larger data, the data can be put in dynamic allocated memory and hold in `std::shared_ptr`. For example,  
-
-```c++
-class MyLargeEvent : public Event
-{
-private:
-	std::shared_ptr<char> myLargeGigaBytesData;
-};
-```
-
-Then it works as long as `sizeof(MyLargeEvent) <= eventMaxSize`.
-
-<a id="a2_3"></a>
 ## Global function
 
-<a id="a3_6"></a>
 ### maxSizeOf
 
 ```c++
@@ -251,7 +231,6 @@ Return the maximum size of types Ts... For example,
 maxSizeOf<KeyEvent, MouseEvent, int, double>();
 ```
 
-<a id="a2_4"></a>
 ## Tutorial
 
 Below is the tutorial code. The complete code can be found in `tests/tutorial/tutorial_anydata.cpp`  

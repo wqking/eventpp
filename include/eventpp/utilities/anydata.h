@@ -18,38 +18,22 @@
 #include <type_traits>
 #include <cstdint>
 #include <cassert>
+#include <memory>
 
 namespace eventpp {
 
 namespace anydata_internal_ {
 
 template <typename T>
-void funcMoveConstruct(void * object, void * buffer);
+void funcDeleteObject(void * object)
+{
+	delete static_cast<T *>(object);
+}
 
 template <typename T>
 void funcFreeObject(void * object)
 {
 	static_cast<T *>(object)->~T();
-}
-
-template <typename T>
-auto doFuncCopyConstruct(void * object, void * buffer)
-	-> typename std::enable_if<std::is_copy_constructible<T>::value>::type
-{
-	new (buffer) T(*(T *)object);
-}
-
-template <typename T>
-auto doFuncCopyConstruct(void * object, void * buffer)
-	-> typename std::enable_if<! std::is_copy_constructible<T>::value>::type
-{
-	funcMoveConstruct<T>(object, buffer);
-}
-
-template <typename T>
-void funcCopyConstruct(void * object, void * buffer)
-{
-	doFuncCopyConstruct<T>(object, buffer);
 }
 
 template <typename T>
@@ -89,9 +73,15 @@ const AnyDataFunctions * doGetAnyDataFunctions()
 }
 
 template <typename T>
+struct RemoveCvRef
+{
+	using Type = typename std::remove_cv<typename std::remove_reference<T>::type>::type;
+};
+
+template <typename T>
 const AnyDataFunctions * getAnyDataFunctions()
 {
-	using U = typename std::remove_reference<typename std::remove_cv<T>::type>::type;
+	using U = typename RemoveCvRef<T>::Type;
 	return doGetAnyDataFunctions<U>();
 }
 
@@ -113,11 +103,56 @@ struct MaxSizeOf <T>
 	static constexpr std::size_t value = sizeof(T);
 };
 
+class LargeData
+{
+public:
+	template <typename T>
+	explicit LargeData(T && object) : data(), deleter() {
+		using U = typename RemoveCvRef<T>::Type;
+		deleter = &funcDeleteObject<U>;
+		data = new U(std::forward<T>(object));
+	}
+
+	~LargeData() {
+		if(data != nullptr) {
+			assert(deleter != nullptr);
+			deleter(data);
+		}
+	}
+
+	LargeData(LargeData && other) : data(), deleter() {
+		std::swap(data, other.data);
+		std::swap(deleter, other.deleter);
+	}
+
+	LargeData(const LargeData & other) = delete;
+	LargeData & operator = (const LargeData & other) = delete;
+	LargeData & operator = (LargeData && other) = delete;
+
+	const void * getAddress() const {
+		return data;
+	}
+
+	template <typename T>
+	bool isType() const {
+		using U = typename RemoveCvRef<T>::Type;
+		return deleter == &funcDeleteObject<U>;
+	}
+
+private:
+	void * data;
+	void (*deleter)(void *);
+};
+
 } //namespace anydata_internal_
 
-template <std::size_t maxSize>
+template <std::size_t maxSize_>
 class AnyData
 {
+private:
+	using LargeData = anydata_internal_::LargeData;
+	static constexpr std::size_t maxSize = maxSize_ < sizeof(LargeData) ? sizeof(LargeData) : maxSize_;
+
 	static_assert(maxSize > 0, "AnyData: maxSize must be greater than 0");
 
 public:
@@ -128,11 +163,18 @@ public:
 	}
 
 	template <typename T>
-	AnyData(T && object) : functions(anydata_internal_::getAnyDataFunctions<T>()), buffer() {
+	AnyData(T && object,
+		typename std::enable_if<(sizeof(typename anydata_internal_::RemoveCvRef<T>::Type) <= maxSize)>::type * = 0)
+		: functions(anydata_internal_::getAnyDataFunctions<T>()), buffer() {
 		using U = typename std::remove_reference<T>::type;
-		static_assert(sizeof(U) <= maxSize, "AnyData: object size must not be greater than maxSize");
-
 		new (buffer.data()) U(std::forward<T>(object));
+	}
+
+	template <typename T>
+	AnyData(T && object,
+		typename std::enable_if<(sizeof(typename anydata_internal_::RemoveCvRef<T>::Type) > maxSize)>::type * = 0)
+		: functions(anydata_internal_::getAnyDataFunctions<LargeData>()), buffer() {
+		new (buffer.data()) LargeData(std::forward<T>(object));
 	}
 
 	AnyData(AnyData && other) : functions(other.functions), buffer() {
@@ -154,12 +196,22 @@ public:
 	const void * getAddress() const {
 		assert(functions != nullptr);
 
-		return buffer.data();
+		if(! isLargerData()) {
+			return buffer.data();
+		}
+		else {
+			return ((const LargeData *)buffer.data())->getAddress();
+		}
 	}
 
 	template <typename T>
 	bool isType() const {
-		return anydata_internal_::getAnyDataFunctions<T>() == functions;
+		if(! isLargerData()) {
+			return anydata_internal_::getAnyDataFunctions<T>() == functions;
+		}
+		else {
+			return ((const LargeData *)buffer.data())->isType<T>();
+		}
 	}
 
 	template <typename T>
@@ -170,6 +222,11 @@ public:
 	template <typename T>
 	operator T * () const {
 		return (T *)getAddress();
+	}
+
+private:
+	bool isLargerData() const {
+		return functions == anydata_internal_::getAnyDataFunctions<LargeData>();
 	}
 
 private:

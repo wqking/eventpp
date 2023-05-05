@@ -33,6 +33,18 @@ struct EventB : Event {
 	int b2;
 };
 
+struct LargeEventA : Event {
+	int a;
+	std::array<void *, 100> dummy;
+};
+
+struct LargeEventB : Event {
+	int b1;
+	int b2;
+	std::array<void *, 100> dummy;
+};
+
+template <typename A, typename B>
 void doExecuteEventQueue(
 		const std::string & message,
 		const size_t queueSize,
@@ -62,8 +74,8 @@ void doExecuteEventQueue(
 		]{
 		for(size_t iterate = 0; iterate < iterateCount; ++iterate) {
 			for(size_t i = 0; i < queueSize; ++i) {
-				eventQueue.enqueue(i % eventCount, std::make_shared<EventA>());
-				eventQueue.enqueue(i % eventCount, std::make_shared<EventB>());
+				eventQueue.enqueue(i % eventCount, std::make_shared<A>());
+				eventQueue.enqueue(i % eventCount, std::make_shared<B>());
 			}
 			eventQueue.process();
 		}
@@ -80,6 +92,7 @@ void doExecuteEventQueue(
 	;
 }
 
+template <typename A, typename B>
 void doExecuteEventQueueWithAnyData(
 		const std::string & message,
 		const size_t queueSize,
@@ -113,8 +126,8 @@ void doExecuteEventQueueWithAnyData(
 		]{
 		for(size_t iterate = 0; iterate < iterateCount; ++iterate) {
 			for(size_t i = 0; i < queueSize; ++i) {
-				eventQueue.enqueue(i % eventCount, EventA());
-				eventQueue.enqueue(i % eventCount, EventB());
+				eventQueue.enqueue(i % eventCount, A());
+				eventQueue.enqueue(i % eventCount, B());
 			}
 			eventQueue.process();
 		}
@@ -136,7 +149,9 @@ void doExecuteEventQueueWithAnyData(
 
 TEST_CASE("b8, EventQueue, AnyData")
 {
-	doExecuteEventQueue("Without AnyData", 100, 1000 * 100, 100);
-	doExecuteEventQueueWithAnyData("With AnyData", 100, 1000 * 100, 100);
+	doExecuteEventQueue<EventA, EventB>("Without AnyData, small data", 100, 1000 * 100, 100);
+	doExecuteEventQueueWithAnyData<EventA, EventB>("With AnyData, small data", 100, 1000 * 100, 100);
+	doExecuteEventQueue<LargeEventA, LargeEventB>("Without AnyData, large data", 100, 1000 * 100, 100);
+	doExecuteEventQueueWithAnyData<LargeEventA, LargeEventB>("With AnyData, large data", 100, 1000 * 100, 100);
 }
 
