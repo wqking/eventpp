@@ -223,7 +223,7 @@ constexpr std::size_t eventMaxSize = eventpp::maxSizeOf<
 	Event, EventKey, EventMouse, std::string
 >();
 
-TEST_CASE("AnyData, data")
+TEST_CASE("AnyData, use AnyData as callback argument")
 {
 	using Data = eventpp::AnyData<eventMaxSize>;
 	eventpp::EventQueue<EventType, void (const Data &)> queue;
@@ -236,13 +236,10 @@ TEST_CASE("AnyData, data")
 	queue.process();
 }
 
-TEST_CASE("AnyData, Policies")
+TEST_CASE("AnyData, use Event as callback argument")
 {
 	using Data = eventpp::AnyData<eventMaxSize>;
-	struct Policies {
-		using Callback = std::function<void (const Event &)>;
-	};
-	eventpp::EventQueue<EventType, void (const Data &), Policies> queue;
+	eventpp::EventQueue<EventType, void (const Data &)> queue;
 	int expectedKey;
 	int expectedX;
 	int expectedY;

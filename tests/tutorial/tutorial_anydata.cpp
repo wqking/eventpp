@@ -101,17 +101,9 @@ TEST_CASE("AnyData tutorial 1, basic")
 {
 	std::cout << std::endl << "AnyData tutorial 1, basic" << std::endl;
 
-	// Define the Policies struct, set Callback as std::function<void (const Event &)>,
-	// then the listener can have prototype as `void (const Event &)`.
-	// If we don't customize the Callback, the listener prototype have to be
-	// `void (const eventpp::AnyData<eventMaxSize> &)`.
-	// The argument is `const Event &` because all events we send in this tutorial are derived from Event.
-	struct Policies {
-		using Callback = std::function<void (const Event &)>;
-	};
-	// Construct EventQueue with Policies. Here we use `const eventpp::AnyData<eventMaxSize> &` as the
-	// callback argument.
-	eventpp::EventQueue<EventType, void (const eventpp::AnyData<eventMaxSize> &), Policies> queue;
+	eventpp::EventQueue<EventType, void (const eventpp::AnyData<eventMaxSize> &)> queue;
+	// Append a listener. Note the listener argument is `const Event &` which is different with the prototype in
+	// the queue definition. This works since `AnyData` can convert to any data type automatically.
 	queue.appendListener(EventType::key, [](const Event & e) {
 		std::cout << "Received KeyEvent, key="
 			<< static_cast<const KeyEvent &>(e).getKey() << std::endl;

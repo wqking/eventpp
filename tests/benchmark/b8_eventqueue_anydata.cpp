@@ -103,10 +103,7 @@ void doExecuteEventQueueWithAnyData(
 {
 	constexpr std::size_t maxSize = sizeof(EventB) * 2;
 	using Data = eventpp::AnyData<maxSize>;
-	struct Policies {
-		using Callback = std::function<void (const Event &)>;
-	};
-	using EQ = eventpp::EventQueue<size_t, void (const Data &), Policies>;
+	using EQ = eventpp::EventQueue<size_t, void (const Data &)>;
 	EQ eventQueue;
 	
 	if(listenerCount == 0) {
