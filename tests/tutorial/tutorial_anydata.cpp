@@ -97,6 +97,12 @@ constexpr std::size_t eventMaxSize = eventpp::maxSizeOf<
 		std::string
 	>();
 
+void onMessageEvent(const MessageEvent & e)
+{
+	std::cout << "Received MessageEvent in free function, message="
+		<< e.getMessage() << std::endl;
+}
+
 TEST_CASE("AnyData tutorial 1, basic")
 {
 	std::cout << std::endl << "AnyData tutorial 1, basic" << std::endl;
@@ -112,10 +118,15 @@ TEST_CASE("AnyData tutorial 1, basic")
 		std::cout << "Received MouseEvent, x=" << static_cast<const MouseEvent &>(e).getX()
 			<< " y=" << static_cast<const MouseEvent &>(e).getY() << std::endl;
 	});
-	queue.appendListener(EventType::message, [](const Event & e) {
+	// Even more convenient, the argument type can be the concrete class such as MessageEvent,
+	// but be sure the listener only receive MessageEvent. If it also receives MouseEvent,
+	// we can expect crash.
+	queue.appendListener(EventType::message, [](const MessageEvent & e) {
 		std::cout << "Received MessageEvent, message="
-			<< static_cast<const MessageEvent &>(e).getMessage() << std::endl;
+			<< e.getMessage() << std::endl;
 	});
+	// Not only lambda, we can also use free function, or member function as the listener.
+	queue.appendListener(EventType::message, &onMessageEvent);
 	// Put events into the queue. Any data type, such as KeyEvent, MouseEvent, can be put
 	// as long as the data size doesn't exceed eventMaxSize.
 	queue.enqueue(EventType::key, KeyEvent(255));
