@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.2)
+cmake_minimum_required(VERSION 3.5)
 project(eventpp VERSION 0.1.2)
 
 add_library(eventpp INTERFACE)
