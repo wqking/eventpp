@@ -104,7 +104,7 @@ public:
 			}
 		}
 		
-		std::unique_lock<std::mutex> lock(itemListMutex);
+		std::unique_lock<typename DispatcherType::Mutex> lock(itemListMutex);
 		itemList.clear();
 	}
 	
@@ -128,7 +128,7 @@ public:
 		};
 
 		{
-			std::unique_lock<std::mutex> lock(itemListMutex);
+			std::unique_lock<typename DispatcherType::Mutex> lock(itemListMutex);
 			itemList.push_back(item);
 		}
 
@@ -147,7 +147,7 @@ public:
 		};
 		
 		{
-			std::unique_lock<std::mutex> lock(itemListMutex);
+			std::unique_lock<typename DispatcherType::Mutex> lock(itemListMutex);
 			itemList.push_back(item);
 		}
 		
@@ -167,7 +167,7 @@ public:
 		};
 		
 		{
-			std::unique_lock<std::mutex> lock(itemListMutex);
+			std::unique_lock<typename DispatcherType::Mutex> lock(itemListMutex);
 			itemList.push_back(item);
 		}
 		
@@ -245,7 +245,7 @@ public:
 			}
 		}
 
-		std::unique_lock<std::mutex> lock(itemListMutex);
+		std::unique_lock<typename CallbackListType::Mutex> lock(itemListMutex);
 		itemList.clear();
 	}
 	
@@ -267,7 +267,7 @@ public:
 		};
 
 		{
-			std::unique_lock<std::mutex> lock(itemListMutex);
+			std::unique_lock<typename CallbackListType::Mutex> lock(itemListMutex);
 			itemList.push_back(item);
 		}
 
@@ -284,7 +284,7 @@ public:
 		};
 
 		{
-			std::unique_lock<std::mutex> lock(itemListMutex);
+			std::unique_lock<typename CallbackListType::Mutex> lock(itemListMutex);
 			itemList.push_back(item);
 		}
 
@@ -302,7 +302,7 @@ public:
 		};
 
 		{
-			std::unique_lock<std::mutex> lock(itemListMutex);
+			std::unique_lock<typename CallbackListType::Mutex> lock(itemListMutex);
 			itemList.push_back(item);
 		}
 
