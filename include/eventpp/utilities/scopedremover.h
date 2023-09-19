@@ -23,14 +23,14 @@ namespace eventpp {
 
 namespace internal_ {
 
-template <typename Item, typename Handle>
-bool removeHandleFromScopedRemoverItemList(std::vector<Item> & itemList, Handle & handle, std::mutex & mutex)
+template <typename Item, typename Handle, typename Mutex>
+bool removeHandleFromScopedRemoverItemList(std::vector<Item> & itemList, Handle & handle, Mutex & mutex)
 {
 	if(! handle) {
 		return false;
 	}
 	auto handlePointer = handle.lock();
-	std::unique_lock<std::mutex> lock(mutex);
+	std::unique_lock<Mutex> lock(mutex);
 	auto it = std::find_if(itemList.begin(), itemList.end(), [&handlePointer](Item & item) {
 		return item.handle && item.handle.lock() == handlePointer;
 	});
