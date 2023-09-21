@@ -3,7 +3,7 @@
 - [eventpp -- C++ library for event dispatcher and callback list](#eventpp----c-library-for-event-dispatcher-and-callback-list)
   - [Facts and features](#facts-and-features)
   - [License](#license)
-  - [Version 0.1.2](#version-012)
+  - [Version 0.1.3](#version-013)
   - [Source code](#source-code)
   - [Supported compilers](#supported-compilers)
   - [C++ standard requirements](#c-standard-requirements)
@@ -53,7 +53,7 @@ eventpp is a C++ event library for callbacks, event dispatcher, and event queue.
 
 Apache License, Version 2.0  
 
-## Version 0.1.2
+## Version 0.1.3
 
 The master branch is usable and stable.  
 There are some releases on Github, but usually the releases are far behind the latest code.  
@@ -268,6 +268,10 @@ Thanking to C++11, now it's quite easy to write a reusable event library with be
 
 ## Change log
 
+**Version 0.1.3**  Sep 21, 2023  
+Added utility class AnyData.  
+Small bugs fixes and improvements.  
+  
 **Version 0.1.2**  Mar 11, 2022  
 Bug fix.  
 Added more unit tests.  
