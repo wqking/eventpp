@@ -63,7 +63,7 @@ Code examples:
 ```c++
 EVENTPP_MAKE_EVENT(
     EventDraw, Event, EventType::draw,
-    (std::string, getText, setText), (int, getX), (double, getSize)
+    (std::string, Text), (int, X), (double, Size)
 );
 ```
 Generates class like (in pseudo code),
@@ -102,14 +102,14 @@ private:
 
 ```c++
 EVENTPP_MAKE_EVENT(EventDraw, (Event<int, char>), EventType::draw,
-    (std::string, getText, setText), (int, getX), (double, getSize)
+    (std::string, Text), (int, X), (double, Size)
 );
 ```
 Similar to above example, except the base class is `Event<int, char>`.  
 
 ```c++
 EVENTPP_MAKE_EVENT(EventDraw, (Event<int, char>), (EventType::draw, 5),
-    (std::string, getText, setText), (int, getX), (double, getSize)
+    (std::string, Text), (int, X), (double, Size)
 );
 ```
 Similar to above example, except the base class is constructed with `(EventType::draw, 5)` instead of `(EventType::draw)`.  
