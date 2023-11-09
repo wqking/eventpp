@@ -2,7 +2,7 @@
 
 ## Overview
 
-`eventpp/eventmaker.h` contains several macros to generate event classes.  
+`eventpp/utilities/eventmaker.h` contains several macros to generate event classes.  
 Without the macros, we may need to repeat the same code structure on lots of event classes.  
 For example,  
 
@@ -42,7 +42,7 @@ The macros in eventmaker.h can reduce the work significantly.
 
 ## Header
 
-eventpp/eventmaker.h
+eventpp/utilities/eventmaker.h
 
 ## Macro EVENTPP_MAKE_EVENT
 ```c++
