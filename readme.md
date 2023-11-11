@@ -319,6 +319,7 @@ Added CallbackList, EventDispatcher, EventQueue, CounterRemover, ConditionalRemo
 <tr>
 <td align="center"><a href="https://github.com/henaiguo/"><img alt="henaiguo" src="https://github.com/henaiguo.png?s=100" width="100px;" /></a><span>henaiguo</span></td>
 <td align="center"><a href="https://github.com/sr-tream/"><img alt="sr-tream" src="https://github.com/sr-tream.png?s=100" width="100px;" /></a><span>sr-tream</span></td>
+<td align="center"><a href="https://github.com/Drise13/"><img alt="Drise13" src="https://github.com/Drise13.png?s=100" width="100px;" /></a><span>Drise13</span></td>
 </tr>
 </table>
 
