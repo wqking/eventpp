@@ -106,3 +106,24 @@ TEST_CASE("eventmake, TemplatedEvent")
 	REQUIRE(e.getText() == "world");
 }
 
+#define G(type, name) (type, get ## name)
+#define GS(type, name) (type, get ## name, set ## name)
+
+EVENTPP_MAKE_EVENT(EventDrawGS, Event, EventType::draw,
+	GS(std::string, Text),
+	G(int, X),
+	G(double, Size)
+);
+
+TEST_CASE("eventmake, EventDrawGS with auto getter/setter")
+{
+	EventDrawGS e("Hello", 98, 3.5);
+	REQUIRE(e.getType() == EventType::draw);
+	REQUIRE(e.getText() == "Hello");
+	REQUIRE(e.getX() == 98);
+	REQUIRE(e.getSize() == 3.5);
+
+	e.setText("world");
+	REQUIRE(e.getText() == "world");
+}
+

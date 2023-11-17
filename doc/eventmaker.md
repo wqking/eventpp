@@ -121,3 +121,23 @@ Similar to above example, except the base class is constructed with `(EventType:
 ```
 
 Similar with `EVENTPP_MAKE_EVENT`, but EVENTPP_MAKE_EMPTY_EVENT declares event class which doesn't have any data member.
+
+## Tip: add getter/setter prefix automatically
+
+If you don't want to specify "get" or "set" prefix explictly, or you want the field definition looks like a property rather than getter/setter function, you can define some auxiliary macros to achieve that. For example,
+
+```
+// auto add "get" prefix
+#define G(type, name) (type, get ## name)
+
+// auto add "get" and "set" prefix
+#define GS(type, name) (type, get ## name, set ## name)
+
+EVENTPP_MAKE_EVENT(EventDrawGS, Event, EventType::draw,
+	GS(std::string, Text),
+	G(int, X),
+	G(double, Size)
+);
+```
+
+Of course you need to choose better macro names than `G` and `GS`, or `#undef` them after using them.
