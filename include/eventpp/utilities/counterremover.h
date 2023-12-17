@@ -15,6 +15,7 @@
 #define COUNTERREMOVER_H_211532679833
 
 #include "../eventpolicies.h"
+#include "../internal/typeutil_i.h"
 
 namespace eventpp {
 
@@ -41,7 +42,8 @@ private:
 		};
 
 		template <typename ...Args>
-		void operator() (Args && ...args) const {
+		auto operator() (Args && ...args) const
+			-> typename std::enable_if<internal_::CanInvoke<Callback, Args ...>::value, void>::type {
 			if(--data->triggerCount <= 0) {
 				data->dispatcher.removeListener(data->event, data->handle);
 			}
@@ -123,7 +125,8 @@ private:
 		};
 
 		template <typename ...Args>
-		void operator() (Args && ...args) const {
+		auto operator() (Args && ...args) const
+			-> typename std::enable_if<internal_::CanInvoke<Callback, Args ...>::value, void>::type {
 			if(--data->triggerCount <= 0) {
 				data->callbackList.remove(data->handle);
 			}
