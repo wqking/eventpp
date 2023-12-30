@@ -1,8 +1,11 @@
 # Benchmarks
 
-Hardware: Intel(R) Xeon(R) CPU E3-1225 V2 @ 3.20GHz  
-Software: Windows 10, MSVC 2017, MinGW GCC 7.2.0  
-Time unit: milliseconds (unless explicitly specified)
+Hardware: HP laptop, Intel(R) Core(TM) i5-8300H CPU @ 2.30GHz, 16 GB RAM  
+Software: Windows 10, MinGW GCC 11.3.0, MSVC 2022  
+Time unit: milliseconds (unless explicitly specified)  
+
+Unless it's specified, the default compiler is GCC.  
+The hardware used for benchmark is pretty medium to low end at the time of benchmarking (December 2023).  
 
 ## EventQueue enqueue and process -- single threading
 
@@ -22,8 +25,8 @@ Time unit: milliseconds (unless explicitly specified)
     <td>10M</td>
     <td>100</td>
     <td>100</td>
-    <td>401</td>
-    <td>1146</td>
+    <td>289</td>
+    <td>939</td>
 </tr>
 <tr>
     <td>100k</td>
@@ -31,8 +34,8 @@ Time unit: milliseconds (unless explicitly specified)
     <td>100M</td>
     <td>100</td>
     <td>100</td>
-    <td>4012</td>
-    <td>11467</td>
+    <td>2822</td>
+    <td>9328</td>
 </tr>
 <tr>
     <td>100k</td>
@@ -40,8 +43,8 @@ Time unit: milliseconds (unless explicitly specified)
     <td>100M</td>
     <td>1000</td>
     <td>1000</td>
-    <td>4102</td>
-    <td>11600</td>
+    <td>2923</td>
+    <td>9502</td>
 </tr>
 <table>
 
@@ -68,7 +71,7 @@ The EventQueue is processed in one thread. The Single/Multi threading in the tab
     <td>10M</td>
     <td>100</td>
     <td>100</td>
-    <td>2283</td>
+    <td>1824</td>
 </tr>
 <tr>
     <td>SpinLock</td>
@@ -77,7 +80,7 @@ The EventQueue is processed in one thread. The Single/Multi threading in the tab
     <td>10M</td>
     <td>100</td>
     <td>100</td>
-    <td>1692</td>
+    <td>1303</td>
 </tr>
 
 <tr>
@@ -87,7 +90,7 @@ The EventQueue is processed in one thread. The Single/Multi threading in the tab
     <td>10M</td>
     <td>100</td>
     <td>100</td>
-    <td>3446</td>
+    <td>2989</td>
 </tr>
 <tr>
     <td>SpinLock</td>
@@ -96,7 +99,7 @@ The EventQueue is processed in one thread. The Single/Multi threading in the tab
     <td>10M</td>
     <td>100</td>
     <td>100</td>
-    <td>3025</td>
+    <td>3186</td>
 </tr>
 
 <tr>
@@ -106,7 +109,7 @@ The EventQueue is processed in one thread. The Single/Multi threading in the tab
     <td>10M</td>
     <td>100</td>
     <td>100</td>
-    <td>4000</td>
+    <td>3151</td>
 </tr>
 <tr>
     <td>SpinLock</td>
@@ -115,7 +118,7 @@ The EventQueue is processed in one thread. The Single/Multi threading in the tab
     <td>10M</td>
     <td>100</td>
     <td>100</td>
-    <td>3076</td>
+    <td>3049</td>
 </tr>
 
 <tr>
@@ -125,7 +128,7 @@ The EventQueue is processed in one thread. The Single/Multi threading in the tab
     <td>10M</td>
     <td>100</td>
     <td>100</td>
-    <td>1971</td>
+    <td>1657</td>
 </tr>
 <tr>
     <td>SpinLock</td>
@@ -134,7 +137,7 @@ The EventQueue is processed in one thread. The Single/Multi threading in the tab
     <td>10M</td>
     <td>100</td>
     <td>100</td>
-    <td>1755</td>
+    <td>1659</td>
 </tr>
 
 <tr>
@@ -144,7 +147,7 @@ The EventQueue is processed in one thread. The Single/Multi threading in the tab
     <td>10M</td>
     <td>100</td>
     <td>100</td>
-    <td>928</td>
+    <td>708</td>
 </tr>
 <tr>
     <td>SpinLock</td>
@@ -153,7 +156,7 @@ The EventQueue is processed in one thread. The Single/Multi threading in the tab
     <td>10M</td>
     <td>100</td>
     <td>100</td>
-    <td>2082</td>
+    <td>1891</td>
 </tr>
 </table>
 
@@ -164,7 +167,7 @@ When there are fewer threads (about around the number of CPU cores which is 4 he
 ## CallbackList append/remove callbacks
 
 The benchmark loops 100K times, in each loop it appends 1000 empty callbacks to a CallbackList, then remove all that 1000 callbacks. So there are totally 100M append/remove operations.  
-The total benchmarked time is about 21000 milliseconds. That's to say in 1 milliseconds there can be 5000 append/remove operations.
+The total benchmarked time is about 16000 milliseconds. That's to say in 1 milliseconds there can be 6000 append/remove operations.
 
 ## CallbackList invoking VS native function invoking
 
@@ -181,114 +184,114 @@ Iterations: 100,000,000
 
 <tr>
     <td rowspan="2">Inline global function</td>
-    <td>MSVC 2017</td>
-    <td>217</td>
-    <td>1501</td>
-    <td>6921</td>
+    <td>MSVC</td>
+    <td>139</td>
+    <td>1267</td>
+    <td>3058</td>
 </tr>
 <tr>
-    <td>GCC 7.2</td>
-    <td>187</td>
-    <td>1489</td>
-    <td>4463</td>
+    <td>GCC</td>
+    <td>141</td>
+    <td>1149</td>
+    <td>2563</td>
 </tr>
 
 <tr>
     <td rowspan="2">Non-inline global function</td>
-    <td>MSVC 2017</td>
-    <td>241</td>
-    <td>1526</td>
-    <td>6544</td>
+    <td>MSVC</td>
+    <td>143</td>
+    <td>1273</td>
+    <td>3047</td>
 </tr>
 <tr>
-    <td>GCC 7.2</td>
-    <td>233</td>
-    <td>1488</td>
-    <td>4787</td>
+    <td>GCC</td>
+    <td>132</td>
+    <td>1218</td>
+    <td>2583</td>
 </tr>
 
 <tr>
     <td rowspan="2">Function object</td>
-    <td>MSVC 2017</td>
-    <td>194</td>
-    <td>1498</td>
-    <td>6433</td>
+    <td>MSVC</td>
+    <td>139</td>
+    <td>1198</td>
+    <td>2993</td>
 </tr>
 <tr>
-    <td>GCC 7.2</td>
-    <td>212</td>
-    <td>1485</td>
-    <td>4951</td>
+    <td>GCC</td>
+    <td>141</td>
+    <td>1107</td>
+    <td>2633</td>
 </tr>
 
 <tr>
     <td rowspan="2">Member virtual function</td>
-    <td>MSVC 2017</td>
-    <td>207</td>
-    <td>1533</td>
-    <td>6558</td>
+    <td>MSVC</td>
+    <td>159</td>
+    <td>1221</td>
+    <td>3076</td>
 </tr>
 <tr>
-    <td>GCC 7.2</td>
-    <td>212</td>
-    <td>1485</td>
-    <td>4489</td>
+    <td>GCC</td>
+    <td>140</td>
+    <td>1231</td>
+    <td>2691</td>
 </tr>
 
 <tr>
     <td rowspan="2">Member non-virtual function</td>
-    <td>MSVC 2017</td>
-    <td>214</td>
-    <td>1533</td>
-    <td>6390</td>
+    <td>MSVC</td>
+    <td>140</td>
+    <td>1266</td>
+    <td>3054</td>
 </tr>
 <tr>
-    <td>GCC 7.2</td>
-    <td>211</td>
-    <td>1486</td>
-    <td>4872</td>
+    <td>GCC</td>
+    <td>140</td>
+    <td>1193</td>
+    <td>2701</td>
 </tr>
 
 <tr>
     <td rowspan="2">Member non-inline virtual function</td>
-    <td>MSVC 2017</td>
-    <td>206</td>
-    <td>1522</td>
-    <td>6578</td>
+    <td>MSVC</td>
+    <td>158</td>
+    <td>1223</td>
+    <td>3103</td>
 </tr>
 <tr>
-    <td>GCC 7.2</td>
-    <td>182</td>
-    <td>1666</td>
-    <td>4593</td>
+    <td>GCC</td>
+    <td>133</td>
+    <td>1231</td>
+    <td>2676</td>
 </tr>
 
 <tr>
     <td rowspan="2">Member non-inline non-virtual function</td>
-    <td>MSVC 2017</td>
-    <td>206</td>
-    <td>1491</td>
-    <td>6992</td>
+    <td>MSVC</td>
+    <td>134</td>
+    <td>1266</td>
+    <td>3028</td>
 </tr>
 <tr>
-    <td>GCC 7.2</td>
-    <td>205</td>
-    <td>1486</td>
-    <td>4490</td>
+    <td>GCC</td>
+    <td>134</td>
+    <td>1205</td>
+    <td>2652</td>
 </tr>
 
 <tr>
     <td rowspan="2">All functions</td>
-    <td>MSVC 2017</td>
-    <td>1374</td>
-    <td>10951</td>
-    <td>29973</td>
+    <td>MSVC</td>
+    <td>91</td>
+    <td>903</td>
+    <td>2214</td>
 </tr>
 <tr>
-    <td>GCC 7.2</td>
-    <td>1223</td>
-    <td>9770</td>
-    <td>22958</td>
+    <td>GCC</td>
+    <td>89</td>
+    <td>858</td>
+    <td>1852</td>
 </tr>
 
 </table>

@@ -65,6 +65,8 @@ struct FunctionObject
 
 TEST_CASE("b1, CallbackList invoking vs C++ invoking")
 {
+	std::cout << std::endl << "b1, CallbackList invoking vs C++ invoking" << std::endl;
+
 	constexpr int iterateCount = 1000 * 1000 * 10;
 	constexpr int callbackCount = 10;
 

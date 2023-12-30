@@ -16,6 +16,8 @@
 
 TEST_CASE("b6, CallbackList add/remove callbacks")
 {
+	std::cout << std::endl << "b6, CallbackList add/remove callbacks" << std::endl;
+
 	using CL = eventpp::CallbackList<void ()>;
 	constexpr size_t callbackCount = 1000;
 	constexpr size_t iterateCount = 1000 * 100;

@@ -146,6 +146,8 @@ void doExecuteEventQueueWithAnyData(
 
 TEST_CASE("b8, EventQueue, AnyData")
 {
+	std::cout << std::endl << "b8, EventQueue, AnyData" << std::endl;
+
 	doExecuteEventQueue<EventA, EventB>("Without AnyData, small data", 100, 1000 * 100, 100);
 	doExecuteEventQueueWithAnyData<EventA, EventB>("With AnyData, small data", 100, 1000 * 100, 100);
 	doExecuteEventQueue<LargeEventA, LargeEventB>("Without AnyData, large data", 100, 1000 * 100, 100);

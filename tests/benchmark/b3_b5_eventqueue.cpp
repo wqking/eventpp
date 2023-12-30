@@ -166,6 +166,8 @@ struct B3PoliciesSingleThreading {
 
 TEST_CASE("b3, EventQueue, one thread")
 {
+	std::cout << std::endl << "b3, EventQueue, one thread" << std::endl;
+
 	doExecuteEventQueue<B3PoliciesMultiThreading>("Multi threading", 100, 1000 * 100, 100);
 	doExecuteEventQueue<B3PoliciesMultiThreading>("Multi threading", 1000, 1000 * 100, 100);
 	doExecuteEventQueue<B3PoliciesMultiThreading>("Multi threading", 1000, 1000 * 100, 1000);
@@ -181,6 +183,8 @@ struct B4PoliciesMultiThreading {
 
 TEST_CASE("b4, EventQueue, multi threads, mutex")
 {
+	std::cout << std::endl << "b4, EventQueue, multi threads, mutex" << std::endl;
+
 	doMultiThreadingExecuteEventQueue<B4PoliciesMultiThreading>("Mutex", 1, 1, 1000 * 1000 * 10, 100);
 	doMultiThreadingExecuteEventQueue<B4PoliciesMultiThreading>("Mutex", 1, 3, 1000 * 1000 * 10, 100);
 	doMultiThreadingExecuteEventQueue<B4PoliciesMultiThreading>("Mutex", 2, 2, 1000 * 1000 * 10, 100);
@@ -194,6 +198,8 @@ struct B5PoliciesMultiThreading {
 
 TEST_CASE("b5, EventQueue, multi threads, spinlock")
 {
+	std::cout << std::endl << "b5, EventQueue, multi threads, spinlock" << std::endl;
+
 	doMultiThreadingExecuteEventQueue<B5PoliciesMultiThreading>("Spinlock", 1, 1, 1000 * 1000 * 10, 100);
 	doMultiThreadingExecuteEventQueue<B5PoliciesMultiThreading>("Spinlock", 1, 3, 1000 * 1000 * 10, 100);
 	doMultiThreadingExecuteEventQueue<B5PoliciesMultiThreading>("Spinlock", 2, 2, 1000 * 1000 * 10, 100);

@@ -100,14 +100,16 @@ void doCallbackListVsFunctionList(const std::string & message, AddCL && addCl, A
 		}
 	);
 
-	std::cout << message << " timeCallbackList " << timeCallbackList << std::endl;
-	std::cout << message << " timeFunctionList " << timeFunctionList << std::endl;
+	std::cout << message << " CallbackList " << timeCallbackList << std::endl;
+	std::cout << message << " FunctionList " << timeFunctionList << std::endl;
 }
 
 } //unnamed namespace
 
 TEST_CASE("b7, CallbackList vs vector of functions")
 {
+	std::cout << std::endl << "b7, CallbackList vs vector of functions" << std::endl;
+
 	struct PoliciesMultiThreading {
 		using Threading = eventpp::MultipleThreading;
 	};
@@ -163,6 +165,9 @@ TEST_CASE("b7, CallbackList vs vector of functions")
 
 	};
 	
+	for(BenchmarkItem & item : itemList) {
+		doCallbackListVsFunctionList<PoliciesSingleThreading>("Single thread, " + item.message, item.addClSingle, item.addFl);
+	}
 	for(BenchmarkItem & item : itemList) {
 		doCallbackListVsFunctionList<PoliciesMultiThreading>("Multi thread, " + item.message, item.addClMulti, item.addFl);
 	}

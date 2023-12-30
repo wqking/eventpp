@@ -54,6 +54,8 @@ std::string generateRandomString(const int length){
 
 TEST_CASE("b2, std::map vs std::unordered_map")
 {
+	std::cout << std::endl << "b2, std::map vs std::unordered_map" << std::endl;
+
 	constexpr int stringCount = 1000 * 1000;
 	std::vector<std::string> stringList(stringCount);
 	for(auto & s : stringList) {
@@ -99,7 +101,7 @@ TEST_CASE("b2, std::map vs std::unordered_map")
 			}
 		});
 	}
-	std::cout << mapInsertTime << " " << mapLookupTime << std::endl;
-	std::cout << unorderedMapInsertTime << " " << unorderedMapLookupTime << std::endl;
+	std::cout << "Map: insert " << mapInsertTime << " lookup " << mapLookupTime << std::endl;
+	std::cout << "UnordereMap: insert " << unorderedMapInsertTime << " lookup " << unorderedMapLookupTime << std::endl;
 }
 
