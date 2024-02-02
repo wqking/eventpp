@@ -25,6 +25,8 @@ eventpp is a C++ event library for callbacks, event dispatcher, and event queue.
 ![Compilers](https://img.shields.io/badge/Compilers-GCC%2FMSVC%2FClang%2FIntel-blue)
 ![License](https://img.shields.io/badge/License-Apache--2.0-blue)
 ![CI](https://github.com/wqking/eventpp/workflows/CI/badge.svg)
+[![Vcpkg port](https://img.shields.io/vcpkg/v/eventpp)](https://vcpkg.link/ports/eventpp)
+[![Conan Center](https://img.shields.io/conan/v/eventpp)](https://conan.io/center/recipes/eventpp)
 
 ## Facts and features
 
