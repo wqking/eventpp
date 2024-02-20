@@ -127,6 +127,7 @@ dispatcher.dispatch(5);
 
 ### Using EventQueue
 ```c++
+#include "eventpp/eventqueue.h"
 eventpp::EventQueue<int, void (const std::string &, const bool)> queue;
 
 queue.appendListener(3, [](const std::string s, bool b) {
