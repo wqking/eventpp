@@ -20,6 +20,8 @@ EventQueue includes all features of EventDispatcher and adds event queue feature
 EventQueue is asynchronous. Events are cached in the queue when `EventQueue::enqueue` is called, and dispatched later when `EventQueue::process` is called.  
 EventQueue is equivalent to the event system (QEvent) in Qt, or the message processing in Windows API.  
 
+For basic functions such as add/remove listeners, please refer to the [EventDispatcher document](eventdispatcher.md).
+
 <a id="a2_2"></a>
 ## API reference
 

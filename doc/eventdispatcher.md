@@ -21,6 +21,8 @@ EventDispatcher is something like std::map<EventType, CallbackList>.
 
 EventDispatcher holds a map of `<EventType, CallbackList>` pairs. On dispatching, EventDispatcher finds the CallbackList of the event type, then invoke the callback list. The invocation is always synchronous. The listeners are triggered when `EventDispatcher::dispatch` is called.  
 
+All functions in EventDispatcher are also available in EventQueue.
+
 <a id="a2_2"></a>
 ## API reference
 
@@ -101,9 +103,8 @@ If `insertListener` is called in another listener during a dispatching, the new 
 The time complexity is O(1) plus time to look up the event in internal map.
 
 Note: the caller must ensure the handle `before` is created by `this` EventDispatcher. If the caller can't ensure it, `ownsHandle` can be used
-to check if the handle `before` belongs to `this` EventDispatcher. The function `insert` can only be called if `ownsHandle(before)`
+to check if the handle `before` belongs to `this` EventDispatcher. The function `insertListener` can only be called if `ownsHandle(before)`
 returns true, otherwise, it's undefined behavior and it causes weird bugs.  
-`insertListener` only `assert(ownsHandle(before))` in the underlying callback list, but there is no check in release code for performance reason.  
 
 #### removeListener
 
