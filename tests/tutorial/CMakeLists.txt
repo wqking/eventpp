@@ -9,6 +9,7 @@ set(SRC_TUTORIAL
 	tutorial_hetereventdispatcher.cpp
 	tutorial_argumentadapter.cpp
 	tutorial_anydata.cpp
+	tip_use_type_as_id.cpp
 )
 
 add_executable(
@@ -19,5 +20,4 @@ add_executable(
 set(THREADS_PREFER_PTHREAD_FLAG ON)
 find_package(Threads REQUIRED)
 target_link_libraries(${TARGET_TUTORIAL} Threads::Threads)
-
 

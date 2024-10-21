@@ -1,23 +1,23 @@
 # eventpp -- C++ library for event dispatcher and callback list
 
 - [eventpp -- C++ library for event dispatcher and callback list](#eventpp----c-library-for-event-dispatcher-and-callback-list)
-  - [Facts and features](#facts-and-features)
-  - [License](#license)
-  - [Version 0.1.3](#version-013)
-  - [Source code](#source-code)
-  - [Supported compilers](#supported-compilers)
-  - [C++ standard requirements](#c-standard-requirements)
-  - [Quick start](#quick-start)
-    - [Namespace](#namespace)
-    - [Use eventpp in your project](#use-eventpp-in-your-project)
-    - [Using CallbackList](#using-callbacklist)
-    - [Using EventDispatcher](#using-eventdispatcher)
-    - [Using EventQueue](#using-eventqueue)
-  - [Documentations](#documentations)
-  - [Build the test code](#build-the-test-code)
-  - [Motivations](#motivations)
-  - [Change log](#change-log)
-  - [Contributors](#contributors)
+    - [Facts and features](#facts-and-features)
+    - [License](#license)
+    - [Version 0.1.3](#version-013)
+    - [Source code](#source-code)
+    - [Supported compilers](#supported-compilers)
+    - [C++ standard requirements](#c-standard-requirements)
+    - [Quick start](#quick-start)
+        - [Namespace](#namespace)
+        - [Use eventpp in your project](#use-eventpp-in-your-project)
+        - [Using CallbackList](#using-callbacklist)
+        - [Using EventDispatcher](#using-eventdispatcher)
+        - [Using EventQueue](#using-eventqueue)
+    - [Documentations](#documentations)
+    - [Build the test code](#build-the-test-code)
+    - [Motivations](#motivations)
+    - [Change log](#change-log)
+    - [Contributors](#contributors)
 
 eventpp is a C++ event library for callbacks, event dispatcher, and event queue. With eventpp you can easily implement signal and slot mechanism, publisher and subscriber pattern, or observer pattern.
 
@@ -173,6 +173,8 @@ queue.process();
 * Miscellaneous
     * [Performance benchmarks](doc/benchmark.md)
     * [FAQs, tricks, and tips](doc/faq.md)
+* Tips and tricks
+    * [Use C++ data type as event identifier](doc/tip_use_type_as_id.md)
 * Heterogeneous classes and functions, for proof of concept, usually you don't need them
     * [Overview of heterogeneous classes](doc/heterogeneous.md)
     * [Class HeterCallbackList](doc/hetercallbacklist.md)
