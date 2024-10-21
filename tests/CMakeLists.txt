@@ -1,6 +1,6 @@
-project(eventpptest)
-
 cmake_minimum_required(VERSION 3.2)
+
+project(eventpptest)
 
 set(CMAKE_CXX_STANDARD 11)
 
