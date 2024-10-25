@@ -118,4 +118,4 @@ else(eventpp_FOUND)
 endif(eventpp_FOUND)
 ```
 
-Note: when using the method 3 with MingW on Windows, by default CMake will install eventpp in system folder which is not writable. You should specify another folder to install. To do so, replace `cmake ..` with `cmake .. -DCMAKE_INSTALL_PREFIX="YOUR_NEW_LIB_FOLDER"`.
+Note: when using this method with MingW on Windows, by default CMake will install eventpp in non-writable system folder and get error. You should specify another folder to install. To do so, replace `cmake ..` with `cmake .. -DCMAKE_INSTALL_PREFIX="YOUR_NEW_LIB_FOLDER"`.

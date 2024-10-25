@@ -14,12 +14,12 @@
         - [Using EventDispatcher](#using-eventdispatcher)
         - [Using EventQueue](#using-eventqueue)
     - [Documentations](#documentations)
-    - [Build the test code](#build-the-test-code)
     - [Motivations](#motivations)
     - [Change log](#change-log)
     - [Contributors](#contributors)
 
-eventpp is a C++ event library for callbacks, event dispatcher, and event queue. With eventpp you can easily implement signal and slot mechanism, publisher and subscriber pattern, or observer pattern.
+eventpp is a C++ event library for callbacks, event dispatcher, and event queue. With eventpp you can easily implement signal and slot mechanism, publisher and subscriber pattern, or observer pattern.  
+eventpp is mature and production-ready.
 
 ![C++](https://img.shields.io/badge/C%2B%2B-11-blue)
 ![Compilers](https://img.shields.io/badge/Compilers-GCC%2FMSVC%2FClang%2FIntel-blue)
@@ -58,8 +58,6 @@ Apache License, Version 2.0
 ## Version 0.1.3
 
 The master branch is usable and stable.  
-There are some releases on Github, but usually the releases are far behind the latest code.  
-You should prefer to clone or fork the master branch instead of downloading the releases.  
 Don't worry about the large time span between commits and releases. The library is actively maintained.  
 The master branch is currently fully back compatible with the first version. So your project won't get any back compatible issues.  
 If you find any back compatible issue which is not announced, please report a bug.
@@ -171,6 +169,7 @@ queue.process();
     * [Utility header eventmaker.h -- auto generate event classes](doc/eventmaker.md)
     * [Document of utilities functions](doc/eventutil.md)
 * Miscellaneous
+    * [Build eventpp for development](doc/build_for_development.md)
     * [Performance benchmarks](doc/benchmark.md)
     * [FAQs, tricks, and tips](doc/faq.md)
 * Tips and tricks
@@ -182,26 +181,6 @@ queue.process();
     * [Class HeterEventQueue](doc/hetereventqueue.md)
 * Translated documents
     * [Chinese version 中文版](doc/cn/readme.md), thanks @marsCatXdu for the translation.
-
-## Build the test code
-
-The library itself is header only and doesn't need building.  
-There are three parts of code to test the library,
-
-- unittests: tests the library. They require C++17 since it uses generic lambda and `std::any` (the library itself only requires C++11).
-- tutorials: sample code to demonstrate how to use the library. They require C++11. If you want to have a quick study on how to use the library, you can look at the tutorials.
-- benchmarks: measure the library performance.
-
-All parts are in the `tests` folder.
-
-All three parts require CMake to build, and there is a makefile to ease the building.  
-Go to folder `tests/build`, then run `make` with different target.
-- `make vc19` #generate solution files for Microsoft Visual Studio 2019, then open eventpptest.sln in folder project_vc19
-- `make vc17` #generate solution files for Microsoft Visual Studio 2017, then open eventpptest.sln in folder project_vc17
-- `make vc15` #generate solution files for Microsoft Visual Studio 2015, then open eventpptest.sln in folder project_vc15
-- `make mingw` #build using MinGW
-- `make linux` #build on Linux
-- `make mingw_coverage` #build using MinGW and generate code coverage report
 
 ## Motivations
 
