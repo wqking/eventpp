@@ -173,6 +173,7 @@ queue.process();
     * [Performance benchmarks](doc/benchmark.md)
     * [FAQs, tricks, and tips](doc/faq.md)
 * Tips and tricks
+    * [Samples for typical use cases](doc/tip_sample_use_cases.md)
     * [Use C++ data type as event identifier](doc/tip_use_type_as_id.md)
 * Heterogeneous classes and functions, for proof of concept, usually you don't need them
     * [Overview of heterogeneous classes](doc/heterogeneous.md)
