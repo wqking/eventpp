@@ -6,9 +6,10 @@
 	- [Use Vcpkg package manager](#use-vcpkg-package-manager)
 	- [Use Conan package manager](#use-conan-package-manager)
 	- [Use Hunter package manager](#use-hunter-package-manager)
+	- [Use Homebrew on macOS (or Linux)](#use-homebrew-on-macos-or-linux)
 	- [Install using CMake locally and use it in CMake](#install-using-cmake-locally-and-use-it-in-cmake)
 
-`eventpp` package is available in C++ package managers Vcpkg, Conan, and Hunter.  
+`eventpp` package is available in C++ package managers Vcpkg, Conan, Hunter, and Homebrew.  
 `eventpp` is header only and not requires building. There are various methods to use `eventpp`.  
 Here lists all possible methods to use `eventpp`.  
 
@@ -91,6 +92,12 @@ find_package(eventpp CONFIG REQUIRED)
 add_executable(main main.cpp)
 target_link_libraries(main eventpp::eventpp)
 include_directories(${EVENTPP_INCLUDE_DIR})
+```
+
+## Use Homebrew on macOS (or Linux)
+
+```
+brew install eventpp
 ```
 
 ## Install using CMake locally and use it in CMake

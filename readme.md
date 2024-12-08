@@ -57,6 +57,7 @@ Apache License, Version 2.0
 
 ## Version 0.1.3
 
+`eventpp` package is available in C++ package managers Vcpkg, Conan, Hunter, and Homebrew.  
 The master branch is usable and stable.  
 Don't worry about the large time span between commits and releases. The library is actively maintained.  
 The master branch is currently fully back compatible with the first version. So your project won't get any back compatible issues.  
