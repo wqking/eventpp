@@ -275,18 +275,35 @@ public:
 		});
 	}
 
-#if !defined(__GNUC__) || __GNUC__ >= 5
 	void operator() (Args ...args) const
 	{
-		forEachIf([&args...](Callback & callback) -> bool {
+		(void)doInvoke(args...);
+	}
+
+	// Same as operator(), but returns true if any callback was invoked, false if the list is empty.
+	bool invokeIfAny(Args ...args) const
+	{
+		return doInvoke(args...);
+	}
+
+private:
+#if !defined(__GNUC__) || __GNUC__ >= 5
+	bool doInvoke(Args & ...args) const
+	{
+		bool invoked = false;
+
+		forEachIf([&args..., &invoked](Callback & callback) -> bool {
 			// We can't use std::forward here, because if we use std::forward,
 			// for arg that is passed by value, and the callback prototype accepts it by value,
 			// std::forward will move it and may cause the original value invalid.
 			// That happens on any value-to-value passing, no matter the callback moves it or not.
 
+			invoked = true;
 			callback(args...);
 			return CanContinueInvoking::canContinueInvoking(args...);
 		});
+
+		return invoked;
 	}
 #else
 	// This is a patch version for GCC 4. It inlines the unrolled doForEachIf.
@@ -294,8 +311,9 @@ public:
 	// https://github.com/wqking/eventpp/issues/19
 	// This is a compromised patch for GCC 4, it may be not maintained or updated unless there are bugs.
 	// We don't use the patch as main code because the patch generates longer code, and duplicated with doForEachIf.
-	void operator() (Args ...args) const
+	bool doInvoke(Args & ...args) const
 	{
+		bool invoked = false;
 		NodePtr node;
 
 		{
@@ -307,6 +325,7 @@ public:
 
 		while(node) {
 			if(node->counter != removedCounter && counter >= node->counter) {
+				invoked = true;
 				node->callback(args...);
 				if(! CanContinueInvoking::canContinueInvoking(args...)) {
 					break;
@@ -318,10 +337,11 @@ public:
 				node = node->next;
 			}
 		}
+
+		return invoked;
 	}
 #endif
 
-private:
 	template <typename F>
 	bool doForEachIf(F && f) const
 	{

@@ -349,3 +349,44 @@ TEST_CASE("copymove, EventDispatcher<void(const &)>, callback(value)")
 	}
 }
 
+TEST_CASE("copymove, EventDispatcher<void(value)>, moved count")
+{
+	using ED = eventpp::EventDispatcher<int, void(CopyMoveCounter)>;
+	ED eventDispatcher;
+
+	eventDispatcher.appendListener(1, [](const CopyMoveCounter & obj) {
+		obj.called();
+	});
+
+	// The object variable is copied into the by value argument of dispatch, and into the by value argument
+	// of the std::function callback. Between them it's moved only once, into CallbackList::invokeIfAny.
+	SECTION("dispatch") {
+		CopyMoveCounter obj1;
+		eventDispatcher.dispatch(1, obj1);
+		REQUIRE(obj1.getCalledAndReset() > 0);
+		REQUIRE(obj1.getCounter().copied == 2);
+		REQUIRE(obj1.getCounter().moved == 1);
+	}
+	SECTION("dispatchIfAny") {
+		CopyMoveCounter obj1;
+		REQUIRE(eventDispatcher.dispatchIfAny(1, obj1));
+		REQUIRE(obj1.getCalledAndReset() > 0);
+		REQUIRE(obj1.getCounter().copied == 2);
+		REQUIRE(obj1.getCounter().moved == 1);
+	}
+	SECTION("directDispatch") {
+		CopyMoveCounter obj1;
+		eventDispatcher.directDispatch(1, obj1);
+		REQUIRE(obj1.getCalledAndReset() > 0);
+		REQUIRE(obj1.getCounter().copied == 2);
+		REQUIRE(obj1.getCounter().moved == 1);
+	}
+	SECTION("directDispatchIfAny") {
+		CopyMoveCounter obj1;
+		REQUIRE(eventDispatcher.directDispatchIfAny(1, obj1));
+		REQUIRE(obj1.getCalledAndReset() > 0);
+		REQUIRE(obj1.getCounter().copied == 2);
+		REQUIRE(obj1.getCounter().moved == 1);
+	}
+}
+

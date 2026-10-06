@@ -180,7 +180,15 @@ public:
 	template <typename T, typename ...Args>
 	void dispatch(T && first, Args && ...args) const
 	{
-		doDispatch<ArgumentPassingMode>(std::forward<T>(first), std::forward<Args>(args)...);
+		(void)doDispatch<ArgumentPassingMode>(std::forward<T>(first), std::forward<Args>(args)...);
+	}
+
+	// Same as dispatch, but returns true if any listener with the prototype matching the arguments was invoked.
+	// Returns false if there is no listener, or the dispatching is blocked by mixins (mixinBeforeDispatch).
+	template <typename T, typename ...Args>
+	bool dispatchIfAny(T && first, Args && ...args) const
+	{
+		return doDispatch<ArgumentPassingMode>(std::forward<T>(first), std::forward<Args>(args)...);
 	}
 
 	// Bypass any getEvent policy. The first argument is the event type.
@@ -188,55 +196,68 @@ public:
 	template <typename ...Args>
 	void directDispatch(const Event & e, Args && ...args) const
 	{
+		(void)directDispatchIfAny(e, std::forward<Args>(args)...);
+	}
+
+	// Same as directDispatch, but returns true if any listener with the prototype matching the arguments was invoked.
+	template <typename ...Args>
+	bool directDispatchIfAny(const Event & e, Args && ...args) const
+	{
 		if(! internal_::ForEachMixins<MixinRoot, Mixins, DoMixinBeforeDispatch>::forEach(
 			this, typename std::add_lvalue_reference<Args>::type(args)...)) {
-			return;
+			return false;
 		}
 
 		const CallbackList_ * callableList = doFindCallableList(e);
 		if(callableList) {
-			(*callableList)(std::forward<Args>(args)...);
+			return callableList->invokeIfAny(std::forward<Args>(args)...);
 		}
+
+		return false;
 	}
 
 protected:
 	template <typename ArgumentMode, typename T, typename ...Args>
 	auto doDispatch(T && first, Args && ...args) const
-		-> typename std::enable_if<std::is_same<ArgumentMode, ArgumentPassingIncludeEvent>::value>::type
+		-> typename std::enable_if<std::is_same<ArgumentMode, ArgumentPassingIncludeEvent>::value, bool>::type
 	{
 		if(! internal_::ForEachMixins<MixinRoot, Mixins, DoMixinBeforeDispatch>::forEach(
 			this,
 			typename std::add_lvalue_reference<T>::type(first),
 			typename std::add_lvalue_reference<Args>::type(args)...)
 		) {
-			return;
+			return false;
 		}
 
 		using GetEvent = typename SelectGetEvent<Policies_, EventType_, HasFunctionGetEvent<Policies_, T &&, Args...>::value>::Type;
 		const auto e = GetEvent::getEvent(std::forward<T>(first), args...);
 		const CallbackList_ * callableList = doFindCallableList(e);
 		if(callableList) {
-			(*callableList)(std::forward<T>(first), std::forward<Args>(args)...);
+			return callableList->invokeIfAny(std::forward<T>(first), std::forward<Args>(args)...);
 		}
+
+		return false;
 	}
 
 	template <typename ArgumentMode, typename T, typename ...Args>
 	auto doDispatch(T && first, Args && ...args) const
-		-> typename std::enable_if<std::is_same<ArgumentMode, ArgumentPassingExcludeEvent>::value>::type
+		-> typename std::enable_if<std::is_same<ArgumentMode, ArgumentPassingExcludeEvent>::value, bool>::type
 	{
 		if(! internal_::ForEachMixins<MixinRoot, Mixins, DoMixinBeforeDispatch>::forEach(
 			this,
 			typename std::add_lvalue_reference<Args>::type(args)...)
 		) {
-			return;
+			return false;
 		}
 
 		using GetEvent = typename SelectGetEvent<Policies_, EventType_, HasFunctionGetEvent<Policies_, T &&, Args...>::value>::Type;
 		const auto e = GetEvent::getEvent(std::forward<T>(first), args...);
 		const CallbackList_ * callableList = doFindCallableList(e);
 		if(callableList) {
-			(*callableList)(std::forward<Args>(args)...);
+			return callableList->invokeIfAny(std::forward<Args>(args)...);
 		}
+
+		return false;
 	}
 
 	const CallbackList_ * doFindCallableList(const Event & e) const

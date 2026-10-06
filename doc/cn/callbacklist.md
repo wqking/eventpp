@@ -179,6 +179,15 @@ void operator() (Args ...args) const;
 回调函数会被用 `args` 参数作为参数调用。  
 回调函数会在 `operator()` 所在的线程中调用。
 
+#### invokeIfAny
+
+```c++
+bool invokeIfAny(Args ...args) const;
+```
+
+与 `operator()` 相同，但在有回调函数被调用时返回 `true` ，在回调函数列表为空时返回 `false` 。  
+与先调用 `empty()` 再调用 `operator()` 不同，该结果在多线程下是准确的，因为它是在遍历回调函数时确定的。
+
 <a id="a2_3"></a>
 ## 嵌套回调函数安全性
 

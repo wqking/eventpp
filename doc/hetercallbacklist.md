@@ -155,3 +155,12 @@ void operator() (Args && ...args) const;
 Invoke each callbacks that can be called with `Args` in the callback list.  
 The callbacks are called with arguments `args`.  
 The callbacks are called in the thread same as the callee of `operator()`.
+
+#### invokeIfAny
+
+```c++
+template <typename ...Args>
+bool invokeIfAny(Args && ...args) const;
+```  
+Same as `operator()`, but returns `true` if any callback that can be called with `Args` was invoked, `false` if there is no such callback.  
+Note: only the callbacks matching the prototype of `Args` count. If the list has callbacks for other prototypes only, the function returns `false`.

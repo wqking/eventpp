@@ -255,6 +255,16 @@ public:
 		(*callbackList)(std::forward<Args>(args)...);
 	}
 
+	// Same as operator(), but returns true if any callback of the prototype matching the arguments was invoked.
+	template <typename ...Args>
+	bool invokeIfAny(Args && ...args) const
+	{
+		using PrototypeInfo = FindPrototypeByArgs<PrototypeList, Args...>;
+		static_assert(PrototypeInfo::index >= 0, "Can't find invoker for the given argument types.");
+
+		return doGetCallbackList<PrototypeInfo>()->invokeIfAny(std::forward<Args>(args)...);
+	}
+
 private:
 	template <typename RT, int PrototypeIndex, typename Func, typename H, typename CL>
 	auto doForEachInvoke(Func && func, const H & handle, CL && callback) const

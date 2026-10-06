@@ -203,47 +203,87 @@ public:
 
 	void dispatch(Args ...args) const
 	{
-		static_assert(ArgumentPassingMode::canIncludeEventType, "Dispatching arguments count doesn't match required (Event type should be included).");
-
-		using GetEvent = typename SelectGetEvent<Policies_, EventType_, HasFunctionGetEvent<Policies_, Args...>::value>::Type;
-
-		// can't std::forward<Args>(args) in GetEvent::getEvent because the pass by value arguments will be moved to getEvent
-		// then the other std::forward<Args>(args) to directDispatch will get empty values.
-		directDispatch(
-			GetEvent::getEvent(args...),
-			std::forward<Args>(args)...
-		);
+		(void)doDispatch(args...);
 	}
 
 	template <typename T>
 	void dispatch(T && first, Args ...args) const
 	{
-		static_assert(ArgumentPassingMode::canExcludeEventType, "Dispatching arguments count doesn't match required (Event type should NOT be included).");
+		(void)doDispatch(std::forward<T>(first), args...);
+	}
 
-		using GetEvent = typename SelectGetEvent<Policies_, EventType_, HasFunctionGetEvent<Policies_, T &&, Args...>::value>::Type;
+	// Same as dispatch, but returns true if any listener was invoked.
+	// Returns false if there is no listener, or the dispatching is blocked by mixins (mixinBeforeDispatch).
+	// Useful to avoid calling hasAnyListener before dispatch, which looks up the event twice.
+	bool dispatchIfAny(Args ...args) const
+	{
+		return doDispatch(args...);
+	}
 
-		directDispatch(
-			GetEvent::getEvent(std::forward<T>(first), args...),
-			std::forward<Args>(args)...
-		);
+	template <typename T>
+	bool dispatchIfAny(T && first, Args ...args) const
+	{
+		return doDispatch(std::forward<T>(first), args...);
 	}
 
 	// Bypass any getEvent policy. The first argument is the event type.
 	// Most used for internal purpose.
 	void directDispatch(const Event & e, Args ...args) const
 	{
+		(void)doDirectDispatch(e, args...);
+	}
+
+	// Same as directDispatch, but returns true if any listener was invoked.
+	bool directDispatchIfAny(const Event & e, Args ...args) const
+	{
+		return doDirectDispatch(e, args...);
+	}
+
+protected:
+	// The arguments are passed by reference to the public functions' by value arguments,
+	// so they are moved only once, in doDirectDispatch.
+	bool doDispatch(Args & ...args) const
+	{
+		static_assert(ArgumentPassingMode::canIncludeEventType, "Dispatching arguments count doesn't match required (Event type should be included).");
+
+		using GetEvent = typename SelectGetEvent<Policies_, EventType_, HasFunctionGetEvent<Policies_, Args...>::value>::Type;
+
+		// can't std::forward<Args>(args) in GetEvent::getEvent because the pass by value arguments will be moved to getEvent
+		// then the other std::forward<Args>(args) to invokeIfAny will get empty values.
+		return doDirectDispatch(
+			GetEvent::getEvent(args...),
+			args...
+		);
+	}
+
+	template <typename T>
+	bool doDispatch(T && first, Args & ...args) const
+	{
+		static_assert(ArgumentPassingMode::canExcludeEventType, "Dispatching arguments count doesn't match required (Event type should NOT be included).");
+
+		using GetEvent = typename SelectGetEvent<Policies_, EventType_, HasFunctionGetEvent<Policies_, T &&, Args...>::value>::Type;
+
+		return doDirectDispatch(
+			GetEvent::getEvent(std::forward<T>(first), args...),
+			args...
+		);
+	}
+
+	bool doDirectDispatch(const Event & e, Args & ...args) const
+	{
 		if(! internal_::ForEachMixins<MixinRoot, Mixins, DoMixinBeforeDispatch>::forEach(
 			this, typename std::add_lvalue_reference<Args>::type(args)...)) {
-			return;
+			return false;
 		}
 
 		const CallbackList_ * callableList = doFindCallableList(e);
 		if(callableList) {
-			(*callableList)(std::forward<Args>(args)...);
+			return callableList->invokeIfAny(std::forward<Args>(args)...);
 		}
+
+		return false;
 	}
 
-protected:
 	const CallbackList_ * doFindCallableList(const Event & e) const
 	{
 		return doFindCallableListHelper(this, e);

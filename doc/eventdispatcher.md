@@ -170,6 +170,17 @@ The function is synchronous. The listeners are called in the thread same as the 
 
 The two overloaded functions have similar but slightly difference. How to use them depends on the `ArgumentPassingMode` policy. Please reference the [document of policies](policies.md) for more information.
 
+#### dispatchIfAny
+
+```c++
+bool dispatchIfAny(Args ...args);
+
+template <typename T>
+bool dispatchIfAny(T && first, Args ...args);
+```  
+Same as `dispatch`, but returns `true` if any listener was invoked, `false` if there is no listener or the dispatching is blocked by a mixin (`mixinBeforeDispatch` returns false, see [MixinFilter](mixins.md)).  
+It's useful to know if an event was handled without calling `hasAnyListener` before `dispatch`, which would look up the event in the internal map twice, and is not atomic in multi threading.
+
 <a id="a2_3"></a>
 ## Nested listener safety
 1. If a listener adds another listener of the same event to the dispatcher during a dispatching, the new listener is guaranteed not to be triggered within the same dispatching. This is guaranteed by an unsigned 64 bits integer counter. This rule will be broken is the counter is overflowed to zero in a dispatching, but this rule will continue working on the subsequence dispatching.  

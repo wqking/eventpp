@@ -208,6 +208,19 @@ void dispatch(T && first, Args ...args);
 
 这两个重载函数略有区别，具体如何使用要根据 `ArgumentPassingMode` 策略而定。详情请阅读https://github.com/wqking/eventpp/blob/master/doc/policies.md 文档。
 
+#### dispatchIfAny
+
+```cpp
+bool dispatchIfAny(Args ...args);
+
+template <typename T>
+bool dispatchIfAny(T && first, Args ...args);
+```
+
+与 `dispatch` 相同，但在有监听器被调用时返回 `true` ；在没有监听器，或者调度被 mixin 阻止（ `mixinBeforeDispatch` 返回 false ，参见 MixinFilter ）时返回 `false` 。
+
+当需要知道事件是否被处理时，使用该函数可以避免在 `dispatch` 之前先调用 `hasAnyListener` ，后者会在内部映射表中查找两次事件，而且在多线程下不是原子的。
+
 <a id="nested-listener-safety"></a>
 
 ## 嵌套监听器安全

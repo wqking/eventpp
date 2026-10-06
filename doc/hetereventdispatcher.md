@@ -152,3 +152,12 @@ Dispatch an event. The event type is deducted from the arguments of `dispatch`.
 Invoke each callbacks that can be called with `Args` in the callback list.  
 The listeners are called with arguments `args`.  
 The function is synchronous. The listeners are called in the thread same as the caller of `dispatch`.
+
+#### dispatchIfAny
+
+```c++
+template <typename T, typename ...Args>
+bool dispatchIfAny(T && first, Args && ...args) const
+```  
+Same as `dispatch`, but returns `true` if any listener that can be called with `Args` was invoked, `false` if there is no such listener or the dispatching is blocked by a mixin (`mixinBeforeDispatch` returns false).  
+Note: only the listeners matching the prototype of `Args` count. If the event has listeners for other prototypes only, the function returns `false`.
