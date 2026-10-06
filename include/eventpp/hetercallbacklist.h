@@ -94,6 +94,7 @@ public:
 			callbackListList(),
 			callbackListListMutex()
 	{
+		doCreateCallbackLists<0>();
 	}
 
 	HeterCallbackListBase(const HeterCallbackListBase & other)
@@ -108,11 +109,13 @@ public:
 		}
 	}
 
+	// The moved-from object gets new empty lists so it's still usable, like a moved-from CallbackList.
 	HeterCallbackListBase(HeterCallbackListBase && other) noexcept
 		:
 			callbackListList(std::move(other.callbackListList)),
 			callbackListListMutex()
 	{
+		other.doCreateCallbackLists<0>();
 	}
 
 	// If we use pass by value idiom and omit the 'this' check,
@@ -132,6 +135,7 @@ public:
 			for(size_t i = 0; i < callbackListList.size(); ++i) {
 				callbackListList[i] = std::move(other.callbackListList[i]);
 			}
+			other.doCreateCallbackLists<0>();
 		}
 
 		return *this;
@@ -276,15 +280,24 @@ private:
 	{
 		static_assert(PrototypeInfo::index >= 0, "Can't find invoker for the given argument types.");
 
-		if(! callbackListList[PrototypeInfo::index]) {
-			std::lock_guard<Mutex> lockGuard(callbackListListMutex);
-
-			if(! callbackListList[PrototypeInfo::index]) {
-				callbackListList[PrototypeInfo::index] = std::make_shared<HomoCallbackListType<typename PrototypeInfo::Prototype> >();
-			}
-		}
-
+		// All the lists are created in the constructor, so no lock is needed here.
 		return std::static_pointer_cast<HomoCallbackListType<typename PrototypeInfo::Prototype> >(callbackListList[PrototypeInfo::index]);
+	}
+
+	// Create the callback list of each prototype. The lists were created lazily on first use, but
+	// the double checked locking read the std::shared_ptr without lock, which is a data race.
+	template <int N>
+	auto doCreateCallbackLists()
+		-> typename std::enable_if<(N < HeterTupleSize<PrototypeList_>::value)>::type
+	{
+		callbackListList[N] = std::make_shared<HomoCallbackListType<typename FindPrototypeByIndex<PrototypeList_, N>::Prototype> >();
+		doCreateCallbackLists<N + 1>();
+	}
+
+	template <int N>
+	auto doCreateCallbackLists()
+		-> typename std::enable_if<(N >= HeterTupleSize<PrototypeList_>::value)>::type
+	{
 	}
 
 private:

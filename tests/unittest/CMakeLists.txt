@@ -14,6 +14,7 @@ set(SRC_TEST
 	test_queue_ordered_list.cpp
 	test_hetercallbacklist_basic.cpp
 	test_hetercallbacklist_ctors.cpp
+	test_hetercallbacklist_multithread.cpp
 	test_heterdispatcher_basic.cpp
 	test_heterdispatcher_ctors.cpp
 	test_heterdispatcher_multithread.cpp
