@@ -6,6 +6,7 @@
 - [策略](#policies)
   - [getEvent 函数](#getevent)
   - [canContinueInvoking 函数](#cancontinueinvoking)
+  - [canStartInvoking 函数](#canstartinvoking)
   - [Mixins 类型](#mixins)
   - [Callback 类型](#callback)
   - [Threading 类型](#threading)
@@ -133,6 +134,51 @@ dispatcher.appendListener(3, [](const MyEvent & e) {
 });
 
 dispatcher.dispatch(MyEvent(3));
+```
+
+注意：`canContinueInvoking` 是在每个监听器被调用之后检查的。所以在上面的示例中，如果事件在调度之前就已经被取消，第一个监听器仍然会被调用。若要跳过所有监听器，请参阅下面的 `canStartInvoking` 。
+
+<a id="canstartinvoking"></a>
+
+### 函数： canStartInvoking
+
+**原型**：`static bool canStartInvoking(const Args &...)` 。该函数接收与 `EventDispatcher::dispatch` 和 `EventQueue::enqueue` 相同的参数，且必须在事件调度或回调列表调用可以开始的时候返回 true ，在不应调用任何监听器的时候返回 false 。
+
+**默认值**：默认实现总是返回 true 。
+
+**适用于**：CallbackList, EventDispatcher, EventQueue
+
+`canStartInvoking` 在调用任何监听器之前检查一次，而 `canContinueInvoking` 在每个监听器被调用之后检查。通常两者的实现相同，这样无论事件是在调度之前还是调度期间被取消，都不会到达任何监听器。
+
+对于 `EventQueue` ，`canStartInvoking` 是在处理事件时检查的，而不是在入队时。
+
+示例代码如下：
+
+```cpp
+struct MyEventPolicies
+{
+    static int getEvent(const MyEvent & e) {
+        return e.type;
+    }
+
+    static bool canStartInvoking(const MyEvent & e) {
+        return ! e.canceled;
+    }
+
+    static bool canContinueInvoking(const MyEvent & e) {
+        return ! e.canceled;
+    }
+};
+
+eventpp::EventDispatcher<int, void (const MyEvent &), MyEventPolicies> dispatcher;
+
+dispatcher.appendListener(3, [](const MyEvent & e) {
+    std::cout << "Should not get this event 3" << std::endl;
+});
+
+MyEvent e(3);
+e.canceled = true;
+dispatcher.dispatch(e);
 ```
 
 <a id="mixins"></a>

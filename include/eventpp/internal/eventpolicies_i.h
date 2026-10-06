@@ -72,6 +72,27 @@ struct DefaultCanContinueInvoking
 template <typename T, bool> struct SelectCanContinueInvoking { using Type = T; };
 template <typename T> struct SelectCanContinueInvoking<T, false> { using Type = DefaultCanContinueInvoking; };
 
+// canStartInvoking is checked once before any callback is invoked.
+// canContinueInvoking is only checked after each callback, so without canStartInvoking
+// the first callback is always invoked even if the arguments are already "canceled".
+template <typename T, typename ...Args>
+struct HasFunctionCanStartInvoking
+{
+	template <typename C> static std::true_type test(decltype(C::canStartInvoking(std::declval<Args>()...)) *) ;
+	template <typename C> static std::false_type test(...);
+
+	enum { value = !! decltype(test<T>(0))() };
+};
+struct DefaultCanStartInvoking
+{
+	template <typename ...Args>
+	static bool canStartInvoking(Args && ...) {
+		return true;
+	}
+};
+template <typename T, bool> struct SelectCanStartInvoking { using Type = T; };
+template <typename T> struct SelectCanStartInvoking<T, false> { using Type = DefaultCanStartInvoking; };
+
 template <typename T>
 struct HasTemplateMap
 {

@@ -7,6 +7,7 @@
 * [Policies](#a2_2)
   * [Function getEvent](#a3_1)
   * [Function canContinueInvoking](#a3_2)
+  * [Function canStartInvoking](#a3_2_1)
   * [Type Mixins](#a3_3)
   * [Type Callback](#a3_4)
   * [Type Threading](#a3_5)
@@ -125,6 +126,47 @@ dispatcher.appendListener(3, [](const MyEvent & e) {
 });
 
 dispatcher.dispatch(MyEvent(3));
+```
+
+Note: `canContinueInvoking` is checked after each listener is invoked. So in above sample code, if the event is already canceled before dispatching, the first listener is still invoked. To skip all listeners, see `canStartInvoking` below.
+
+<a id="a3_2_1"></a>
+### Function canStartInvoking
+
+**Prototype**: `static bool canStartInvoking(const Args &...)`. The function receives same arguments as `EventDispatcher::dispatch` and `EventQueue::enqueue`, and must return true if the event dispatching or callback list invoking can start, false if no listener should be invoked at all.  
+**Default value**: the default implementation always returns true.  
+**Apply**: CallbackList, EventDispatcher, EventQueue.
+
+`canStartInvoking` is checked once before any listener is invoked, while `canContinueInvoking` is checked after each listener is invoked. Usually both have the same implementation, then a canceled event never reaches any listener, no matter it was canceled before or during the dispatching.  
+For `EventQueue`, `canStartInvoking` is checked when the event is processed, not when it's enqueued.
+
+Sample code
+
+```c++
+struct MyEventPolicies
+{
+    static int getEvent(const MyEvent & e) {
+        return e.type;
+    }
+
+    static bool canStartInvoking(const MyEvent & e) {
+        return ! e.canceled;
+    }
+
+    static bool canContinueInvoking(const MyEvent & e) {
+        return ! e.canceled;
+    }
+};
+
+eventpp::EventDispatcher<int, void (const MyEvent &), MyEventPolicies> dispatcher;
+
+dispatcher.appendListener(3, [](const MyEvent & e) {
+    std::cout << "Should not get this event 3" << std::endl;
+});
+
+MyEvent e(3);
+e.canceled = true;
+dispatcher.dispatch(e);
 ```
 
 <a id="a3_3"></a>

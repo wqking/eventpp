@@ -54,6 +54,10 @@ private:
 		Policies, HasFunctionCanContinueInvoking<Policies, Args...>::value
 	>::Type;
 
+	using CanStartInvoking = typename SelectCanStartInvoking<
+		Policies, HasFunctionCanStartInvoking<Policies, Args...>::value
+	>::Type;
+
 	struct Node;
 	using NodePtr = std::shared_ptr<Node>;
 
@@ -278,6 +282,10 @@ public:
 #if !defined(__GNUC__) || __GNUC__ >= 5
 	void operator() (Args ...args) const
 	{
+		if(! CanStartInvoking::canStartInvoking(args...)) {
+			return;
+		}
+
 		forEachIf([&args...](Callback & callback) -> bool {
 			// We can't use std::forward here, because if we use std::forward,
 			// for arg that is passed by value, and the callback prototype accepts it by value,
@@ -296,6 +304,10 @@ public:
 	// We don't use the patch as main code because the patch generates longer code, and duplicated with doForEachIf.
 	void operator() (Args ...args) const
 	{
+		if(! CanStartInvoking::canStartInvoking(args...)) {
+			return;
+		}
+
 		NodePtr node;
 
 		{
