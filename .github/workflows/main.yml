@@ -10,7 +10,7 @@ jobs:
         os: [windows-latest, ubuntu-latest, macos-latest]
         build-type: [Release]
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
 
       - name: Configure
         run: |
@@ -22,3 +22,42 @@ jobs:
 
       - name: Run unit tests
         run: cd build && ctest --build-config "${{ matrix.build-type }}" --progress --verbose
+
+  # Debug build with sanitizers. AddressSanitizer and UndefinedBehaviorSanitizer must pass.
+  Sanitizers:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure
+        run: |
+          mkdir -p build
+          cmake -DCMAKE_BUILD_TYPE=Debug -DCMAKE_CXX_FLAGS="-fsanitize=address,undefined -fno-omit-frame-pointer" -DCMAKE_EXE_LINKER_FLAGS="-fsanitize=address,undefined" -B build -S tests
+
+      - name: Build Tests
+        run: cmake --build build -j
+
+      - name: Run unit tests
+        run: cd build && ctest --progress --verbose
+        env:
+          UBSAN_OPTIONS: print_stacktrace=1:halt_on_error=1
+          ASAN_OPTIONS: detect_leaks=1
+
+  # ThreadSanitizer is informative only. CallbackList::empty() and hasAnyListener() read shared data
+  # without locking on purpose (see the comments in the code), which ThreadSanitizer reports as data races.
+  ThreadSanitizer:
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure
+        run: |
+          mkdir -p build
+          cmake -DCMAKE_BUILD_TYPE=Debug -DCMAKE_CXX_FLAGS="-fsanitize=thread -fno-omit-frame-pointer" -DCMAKE_EXE_LINKER_FLAGS="-fsanitize=thread" -B build -S tests
+
+      - name: Build Tests
+        run: cmake --build build -j
+
+      - name: Run unit tests
+        run: cd build && ctest --progress --verbose
