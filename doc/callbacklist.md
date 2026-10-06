@@ -85,6 +85,7 @@ This operator allows a CallbackList instance be used in condition statement.
 
 ```c++
 Handle append(const Callback & callback);
+Handle append(Callback && callback);
 ```  
 Add the *callback* to the callback list.  
 The callback is added to the end of the callback list.  
@@ -96,6 +97,7 @@ The time complexity is O(1).
 
 ```c++
 Handle prepend(const Callback & callback);
+Handle prepend(Callback && callback);
 ```  
 Add the *callback* to the callback list.  
 The callback is added to the beginning of the callback list.  
@@ -107,6 +109,7 @@ The time complexity is O(1).
 
 ```c++
 Handle insert(const Callback & callback, const Handle & before);
+Handle insert(Callback && callback, const Handle & before);
 ```  
 Insert the *callback* to the callback list before the callback handle *before*. If *before* is not found, *callback* is added at the end of the callback list.  
 Return a handle that represents the callback. The handle can be used to remove this callback or to insert additional callbacks before this callback.  

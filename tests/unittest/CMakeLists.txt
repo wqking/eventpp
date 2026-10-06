@@ -24,6 +24,7 @@ set(SRC_TEST
 	test_counterremover.cpp
 	test_scopedremover.cpp
 	test_no_extra_copy_move.cpp
+	test_rvalue_callback.cpp
 	test_argumentadapter.cpp
 	test_conditionalfunctor.cpp
 	test_anyid.cpp

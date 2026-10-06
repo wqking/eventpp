@@ -73,6 +73,7 @@ EventDispatcher can be copied, moved,  assigned, move assigned, and swapped.
 
 ```c++
 Handle appendListener(const Event & event, const Callback & callback);
+Handle appendListener(const Event & event, Callback && callback);
 ```  
 Add the *callback* to the dispatcher to listen to *event*.  
 The listener is added to the end of the listener list.  
@@ -85,6 +86,7 @@ The time complexity is O(1) plus time to look up the event in internal map.
 
 ```c++
 Handle prependListener(const Event & event, const Callback & callback);
+Handle prependListener(const Event & event, Callback && callback);
 ```  
 Add the *callback* to the dispatcher to listen to *event*.  
 The listener is added to the beginning of the listener list.  
@@ -95,9 +97,10 @@ The time complexity is O(1) plus time to look up the event in internal map.
 #### insertListener
 
 ```c++
-Handle insertListener(const Event & event, const Callback & callback, const Handle before);
+Handle insertListener(const Event & event, const Callback & callback, const Handle & before);
+Handle insertListener(const Event & event, Callback && callback, const Handle & before);
 ```  
-Insert the *callback* to the dispatcher to listen to *event* before the listener handle *before*. If *before* is not found, *callback* is added at the end of the listener list.  
+Insert the *callback* to the dispatcher to listen to *event* before the listener handle *before*. If *before* is not found, *callback* is added at the end of the listener list.
 Return a handle which represents the listener. The handle can be used to remove this listener or insert other listener before this listener.  
 If `insertListener` is called in another listener during a dispatching, the new listener is guaranteed not triggered during the same dispatching.  
 The time complexity is O(1) plus time to look up the event in internal map.

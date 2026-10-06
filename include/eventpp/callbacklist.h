@@ -66,6 +66,11 @@ private:
 		{
 		}
 
+		Node(Callback_ && callback, const Counter counter)
+			: callback(std::move(callback)), counter(counter)
+		{
+		}
+
 		NodePtr previous;
 		NodePtr next;
 		Callback_ callback;
@@ -170,40 +175,22 @@ public:
 
 	Handle append(const Callback & callback)
 	{
-		NodePtr node(doAllocateNode(callback));
+		return doAppend(doAllocateNode(callback));
+	}
 
-		std::lock_guard<Mutex> lockGuard(mutex);
-
-		if(head) {
-			node->previous = tail;
-			tail->next = node;
-			tail = node;
-		}
-		else {
-			head = node;
-			tail = node;
-		}
-
-		return Handle(node);
+	Handle append(Callback && callback)
+	{
+		return doAppend(doAllocateNode(std::move(callback)));
 	}
 
 	Handle prepend(const Callback & callback)
 	{
-		NodePtr node(doAllocateNode(callback));
+		return doPrepend(doAllocateNode(callback));
+	}
 
-		std::lock_guard<Mutex> lockGuard(mutex);
-
-		if(head) {
-			node->next = head;
-			head->previous = node;
-			head = node;
-		}
-		else {
-			head = node;
-			tail = node;
-		}
-
-		return Handle(node);
+	Handle prepend(Callback && callback)
+	{
+		return doPrepend(doAllocateNode(std::move(callback)));
 	}
 
 	Handle insert(const Callback & callback, const Handle & before)
@@ -223,6 +210,22 @@ public:
 		}
 
 		return append(callback);
+	}
+
+	Handle insert(Callback && callback, const Handle & before)
+	{
+		NodePtr beforeNode = before.lock();
+		if(beforeNode) {
+			NodePtr node(doAllocateNode(std::move(callback)));
+
+			std::lock_guard<Mutex> lockGuard(mutex);
+
+			doInsert(node, beforeNode);
+
+			return Handle(node);
+		}
+
+		return append(std::move(callback));
 	}
 
 	bool remove(const Handle & handle)
@@ -381,6 +384,45 @@ private:
 	NodePtr doAllocateNode(const Callback & callback)
 	{
 		return std::make_shared<Node>(callback, getNextCounter());
+	}
+
+	NodePtr doAllocateNode(Callback && callback)
+	{
+		return std::make_shared<Node>(std::move(callback), getNextCounter());
+	}
+
+	Handle doAppend(NodePtr node)
+	{
+		std::lock_guard<Mutex> lockGuard(mutex);
+
+		if(head) {
+			node->previous = tail;
+			tail->next = node;
+			tail = node;
+		}
+		else {
+			head = node;
+			tail = node;
+		}
+
+		return Handle(node);
+	}
+
+	Handle doPrepend(NodePtr node)
+	{
+		std::lock_guard<Mutex> lockGuard(mutex);
+
+		if(head) {
+			node->next = head;
+			head->previous = node;
+			head = node;
+		}
+		else {
+			head = node;
+			tail = node;
+		}
+
+		return Handle(node);
 	}
 	
 	void doFreeNode(NodePtr & node)

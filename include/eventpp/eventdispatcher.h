@@ -137,6 +137,13 @@ public:
 		return eventCallbackListMap[event].append(callback);
 	}
 
+	Handle appendListener(const Event & event, Callback && callback)
+	{
+		std::lock_guard<Mutex> lockGuard(listenerMutex);
+
+		return eventCallbackListMap[event].append(std::move(callback));
+	}
+
 	Handle prependListener(const Event & event, const Callback & callback)
 	{
 		std::lock_guard<Mutex> lockGuard(listenerMutex);
@@ -144,11 +151,25 @@ public:
 		return eventCallbackListMap[event].prepend(callback);
 	}
 
+	Handle prependListener(const Event & event, Callback && callback)
+	{
+		std::lock_guard<Mutex> lockGuard(listenerMutex);
+
+		return eventCallbackListMap[event].prepend(std::move(callback));
+	}
+
 	Handle insertListener(const Event & event, const Callback & callback, const Handle & before)
 	{
 		std::lock_guard<Mutex> lockGuard(listenerMutex);
 
 		return eventCallbackListMap[event].insert(callback, before);
+	}
+
+	Handle insertListener(const Event & event, Callback && callback, const Handle & before)
+	{
+		std::lock_guard<Mutex> lockGuard(listenerMutex);
+
+		return eventCallbackListMap[event].insert(std::move(callback), before);
 	}
 
 	bool removeListener(const Event & event, const Handle handle)
