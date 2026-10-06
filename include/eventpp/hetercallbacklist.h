@@ -96,11 +96,16 @@ public:
 	{
 	}
 
+	// The source is locked while its lists are cloned, so copying is safe while other threads are using the source.
+	// Moving, assigning and swapping are not locked because doGetCallbackList reads the lists without lock,
+	// so they are only safe when no other thread is using the source and the destination.
 	HeterCallbackListBase(const HeterCallbackListBase & other)
 		:
 			callbackListList(),
 			callbackListListMutex()
 	{
+		std::lock_guard<Mutex> lockGuard(other.callbackListListMutex);
+
 		for(size_t i = 0; i < callbackListList.size(); ++i) {
 			if(other.callbackListList[i]) {
 				callbackListList[i] = other.callbackListList[i]->doClone();

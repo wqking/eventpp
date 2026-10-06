@@ -171,6 +171,7 @@ The callbacks are called in the thread same as the callee of `operator()`.
 1. If a callback adds another callback to the callback list during a invoking, the new callback is guaranteed not to be triggered within the same invoking. This is guaranteed by an unsigned 64 bits integer counter. This rule will be broken is the counter is overflowed to zero in a invoking, but this rule will continue working on the subsequence invoking.  
 2. Any callbacks that are removed during a invoking are guaranteed not triggered.  
 3. All above points are not true in multiple threading. That's to say, if one thread is invoking a callback list, the other thread add or remove a callback, the added or removed callback may be called during the invoking.
+4. Copying, moving, assigning and swapping a callback list lock the source (and the destination when assigning or swapping), so they are safe while other threads are using the source.
 
 
 <a id="a2_4"></a>

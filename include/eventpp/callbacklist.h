@@ -105,9 +105,12 @@ public:
 	{
 	}
 
+	// The source is locked while its nodes are cloned, so copying is safe while other threads are using the source.
 	CallbackListBase(const CallbackListBase & other)
 		: CallbackListBase()
 	{
+		std::lock_guard<Mutex> lockGuard(other.mutex);
+
 		cloneFrom(other.head);
 	}
 
@@ -129,6 +132,8 @@ public:
 
 	CallbackListBase & operator = (CallbackListBase && other) noexcept {
 		if(this != &other) {
+			DualLockGuard<Mutex> lockGuard(mutex, other.mutex);
+
 			doFreeAllNodes();
 
 			head = std::move(other.head);
@@ -146,6 +151,8 @@ public:
 	
 	void swap(CallbackListBase & other) noexcept {
 		using std::swap;
+
+		DualLockGuard<Mutex> lockGuard(mutex, other.mutex);
 		
 		swap(head, other.head);
 		swap(tail, other.tail);

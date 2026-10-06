@@ -73,6 +73,7 @@ queue.process();
 ## Thread safety
 All classes are thread-safe. You can call all public functions from multiple threads at the same time. If it fails, please report a bug.  
 The library guarantees the integration of each single function call, such as `EventDispatcher::appendListener`, `CallbackList::remove`, but it does not guarantee the order of operations in multiple threads. For example, if a thread is dispatching an event, another thread removes a listener at the same time, the removed listener may be still triggered after it's removed.  
+Copying, moving, assigning and swapping lock the source (and the destination when assigning or swapping), so they are safe while other threads are using the source. The exception is `HeterCallbackList`, only copying it is safe while other threads are using it. Assigning to a dispatcher while another thread is dispatching on it is still not safe, see [EventDispatcher](eventdispatcher.md).
 
 ## Exception safety
 

@@ -81,34 +81,51 @@ public:
 	{
 	}
 
+	// The source is locked while the map is copied or moved, so copying and moving are safe while other threads are using the source.
 	HeterEventDispatcherBase(const HeterEventDispatcherBase & other)
 		:
-		eventCallbackListMap(other.eventCallbackListMap),
+		eventCallbackListMap(),
 		listenerMutex()
 	{
+		std::lock_guard<Mutex> lockGuard(other.listenerMutex);
+
+		eventCallbackListMap = other.eventCallbackListMap;
 	}
 
 	HeterEventDispatcherBase(HeterEventDispatcherBase && other) noexcept
 		:
-		eventCallbackListMap(std::move(other.eventCallbackListMap)),
+		eventCallbackListMap(),
 		listenerMutex()
 	{
+		std::lock_guard<Mutex> lockGuard(other.listenerMutex);
+
+		eventCallbackListMap = std::move(other.eventCallbackListMap);
 	}
 
 	HeterEventDispatcherBase & operator = (const HeterEventDispatcherBase & other)
 	{
-		eventCallbackListMap = other.eventCallbackListMap;
+		if(this != &other) {
+			DualLockGuard<Mutex> lockGuard(listenerMutex, other.listenerMutex);
+
+			eventCallbackListMap = other.eventCallbackListMap;
+		}
 		return *this;
 	}
 
 	HeterEventDispatcherBase & operator = (HeterEventDispatcherBase && other) noexcept
 	{
-		eventCallbackListMap = std::move(other.eventCallbackListMap);
+		if(this != &other) {
+			DualLockGuard<Mutex> lockGuard(listenerMutex, other.listenerMutex);
+
+			eventCallbackListMap = std::move(other.eventCallbackListMap);
+		}
 		return *this;
 	}
 
 	void swap(HeterEventDispatcherBase & other) noexcept {
 		using std::swap;
+
+		DualLockGuard<Mutex> lockGuard(listenerMutex, other.listenerMutex);
 
 		swap(eventCallbackListMap, other.eventCallbackListMap);
 	}

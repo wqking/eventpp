@@ -16,10 +16,43 @@
 
 #include <utility>
 #include <tuple>
+#include <functional>
 
 namespace eventpp {
 
 namespace internal_ {
+
+// Locks two mutexes in a consistent order (by address) to avoid dead lock when two threads lock
+// the same two mutexes in different orders. std::lock is not used because it requires try_lock,
+// which SingleThreading::Mutex doesn't have. If both are the same mutex, it's locked only once.
+template <typename Mutex>
+class DualLockGuard
+{
+public:
+	DualLockGuard(Mutex & a, Mutex & b)
+		: first(std::less<Mutex *>()(&a, &b) ? a : b), second(std::less<Mutex *>()(&a, &b) ? b : a)
+	{
+		first.lock();
+		if(&first != &second) {
+			second.lock();
+		}
+	}
+
+	~DualLockGuard()
+	{
+		if(&first != &second) {
+			second.unlock();
+		}
+		first.unlock();
+	}
+
+	DualLockGuard(const DualLockGuard &) = delete;
+	DualLockGuard & operator = (const DualLockGuard &) = delete;
+
+private:
+	Mutex & first;
+	Mutex & second;
+};
 
 template <typename F, template <typename> class T>
 struct TransformArguments;

@@ -175,6 +175,7 @@ The two overloaded functions have similar but slightly difference. How to use th
 1. If a listener adds another listener of the same event to the dispatcher during a dispatching, the new listener is guaranteed not to be triggered within the same dispatching. This is guaranteed by an unsigned 64 bits integer counter. This rule will be broken is the counter is overflowed to zero in a dispatching, but this rule will continue working on the subsequence dispatching.  
 2. Any listeners that are removed during a dispatching are guaranteed not triggered.  
 3. All above points are not true in multiple threading. That's to say, if one thread is invoking a callback list, the other thread add or remove a callback, the added or removed callback may be triggered during the invoking.
+4. Copying, moving, assigning and swapping a dispatcher lock the source (and the destination when assigning or swapping), so they are safe while other threads are using the source. Assigning to a dispatcher while another thread is dispatching on it or removing listeners from it is still not safe, because that thread may hold a pointer to a callback list that the assignment replaces.
 
 <a id="a2_4"></a>
 ## Time complexities

@@ -98,34 +98,51 @@ public:
 	{
 	}
 
+	// The source is locked while the map is copied or moved, so copying and moving are safe while other threads are using the source.
 	EventDispatcherBase(const EventDispatcherBase & other)
 		:
-			eventCallbackListMap(other.eventCallbackListMap),
+			eventCallbackListMap(),
 			listenerMutex()
 	{
+		std::lock_guard<Mutex> lockGuard(other.listenerMutex);
+
+		eventCallbackListMap = other.eventCallbackListMap;
 	}
 
 	EventDispatcherBase(EventDispatcherBase && other) noexcept
 		:
-			eventCallbackListMap(std::move(other.eventCallbackListMap)),
+			eventCallbackListMap(),
 			listenerMutex()
 	{
+		std::lock_guard<Mutex> lockGuard(other.listenerMutex);
+
+		eventCallbackListMap = std::move(other.eventCallbackListMap);
 	}
 
 	EventDispatcherBase & operator = (const EventDispatcherBase & other)
 	{
-		eventCallbackListMap = other.eventCallbackListMap;
+		if(this != &other) {
+			DualLockGuard<Mutex> lockGuard(listenerMutex, other.listenerMutex);
+
+			eventCallbackListMap = other.eventCallbackListMap;
+		}
 		return *this;
 	}
 
 	EventDispatcherBase & operator = (EventDispatcherBase && other) noexcept
 	{
-		eventCallbackListMap = std::move(other.eventCallbackListMap);
+		if(this != &other) {
+			DualLockGuard<Mutex> lockGuard(listenerMutex, other.listenerMutex);
+
+			eventCallbackListMap = std::move(other.eventCallbackListMap);
+		}
 		return *this;
 	}
 
 	void swap(EventDispatcherBase & other) noexcept {
 		using std::swap;
+
+		DualLockGuard<Mutex> lockGuard(listenerMutex, other.listenerMutex);
 		
 		swap(eventCallbackListMap, other.eventCallbackListMap);
 	}
