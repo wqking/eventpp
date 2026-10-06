@@ -238,6 +238,31 @@ eventpp::EventDispatcher<int, void (), MyEventPolicies> dispatcher;
 eventpp::CallbackList<void (), MyEventPolicies> callbackList;
 ```
 
+#### 可选类型： SharedMutex
+
+**默认值**：无。
+
+**适用于**：EventDispatcher, EventQueue, HeterEventDispatcher, HeterEventQueue.
+
+`Threading` 可以定义一个可选的类型 `SharedMutex` 。该类型必须支持 `lock()` 、 `unlock()` 、 `lock_shared()` 和 `unlock_shared()` ，例如 `std::shared_mutex` 。
+
+定义了 `SharedMutex` 后，dispatcher 使用它（而不是 `Mutex` ）来保护内部的（事件类型，CallbackList）映射表。添加监听器时（ `appendListener` 、 `prependListener` 、 `insertListener` ）使用独占锁；只查找映射表时（ `dispatch` 、 `enqueue`/`process` 、 `hasAnyListener` 、 `removeListener` 、 `forEach` 等）使用共享锁。因此多个线程同时分发不同的事件时，不会在映射表上互相阻塞。
+
+`SharedMutex` 只影响映射表，各个 CallbackList 仍然由 `Mutex` 保护。
+
+未定义 `SharedMutex` 时（默认情况），使用 `Mutex` ，行为与之前的版本完全相同。
+
+`eventpp` 提供了 `MultipleThreadingSharedMutex` ，它等于 `MultipleThreading` 加上 `using SharedMutex = std::shared_mutex` 。由于 `std::shared_mutex` 的缘故，它需要 C++17 。在 C++11 或 C++14 下，可以自行定义 `SharedMutex` 类型。
+
+```cpp
+struct MyEventPolicies {
+    using Threading = eventpp::MultipleThreadingSharedMutex;
+};
+eventpp::EventDispatcher<int, void (), MyEventPolicies> dispatcher;
+```
+
+注意：在没有竞争的情况下， `std::shared_mutex` 通常比 `std::mutex` 慢。只有在很多线程同时分发不同事件时， `SharedMutex` 才值得使用。
+
 <a id="argumentpassingmode"></a>
 
 ### 类型： ArgumentPassingMode

@@ -219,6 +219,27 @@ eventpp::EventDispatcher<int, void (), MyEventPolicies> dispatcher;
 eventpp::CallbackList<void (), MyEventPolicies> callbackList;
 ```
 
+#### Optional type SharedMutex
+
+**Default value**: none.  
+**Apply**: EventDispatcher, EventQueue, HeterEventDispatcher, HeterEventQueue.
+
+`Threading` may define an optional type `SharedMutex`. It must support `lock()`, `unlock()`, `lock_shared()` and `unlock_shared()`, such as `std::shared_mutex`.  
+When `SharedMutex` is defined, the dispatcher uses it instead of `Mutex` to protect the internal map of (Event type, CallbackList) pairs. The map is locked exclusive when adding listeners (`appendListener`, `prependListener`, `insertListener`), and locked shared when only looking up the map (`dispatch`, `enqueue`/`process`, `hasAnyListener`, `removeListener`, `forEach`, etc). So dispatching different events from multiple threads doesn't block each other on the map.  
+`SharedMutex` only affects the map. The callback lists are still protected by `Mutex`.  
+When `SharedMutex` is not defined (the default), `Mutex` is used and the behavior is same as the previous versions.
+
+`eventpp` provides `MultipleThreadingSharedMutex` which is `MultipleThreading` plus `using SharedMutex = std::shared_mutex`. It requires C++17 because of `std::shared_mutex`. On C++11 or C++14, you can define your own `SharedMutex` type.
+
+```c++
+struct MyEventPolicies {
+    using Threading = eventpp::MultipleThreadingSharedMutex;
+};
+eventpp::EventDispatcher<int, void (), MyEventPolicies> dispatcher;
+```
+
+Note: `std::shared_mutex` is usually slower than `std::mutex` when there is no contention. `SharedMutex` is only worth it when many threads dispatch different events at the same time.
+
 <a id="a3_6"></a>
 ### Type ArgumentPassingMode
 

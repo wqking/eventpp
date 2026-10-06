@@ -24,6 +24,44 @@ struct HasTypeThreading
 template <typename T, bool> struct SelectThreading { using Type = typename T::Threading; };
 template <typename T> struct SelectThreading <T, false> { using Type = MultipleThreading; };
 
+// If the Threading policy has type SharedMutex, the dispatcher map is locked shared for lookup (dispatch, hasAnyListener, removeListener, etc)
+// and locked exclusive for appendListener/prependListener/insertListener.
+// If there is no SharedMutex, Mutex is used and the behavior is same as before.
+template <typename T>
+struct HasTypeSharedMutex
+{
+	template <typename C> static std::true_type test(typename C::SharedMutex *) ;
+	template <typename C> static std::false_type test(...);
+
+	enum { value = !! decltype(test<T>(0))() };
+};
+
+// std::shared_lock requires C++14, this is for C++11.
+template <typename Mutex_>
+class SharedLockGuard
+{
+public:
+	explicit SharedLockGuard(Mutex_ & mutex) : mutex(mutex) {
+		this->mutex.lock_shared();
+	}
+
+	~SharedLockGuard() {
+		mutex.unlock_shared();
+	}
+
+	SharedLockGuard(const SharedLockGuard &) = delete;
+	SharedLockGuard & operator = (const SharedLockGuard &) = delete;
+
+private:
+	Mutex_ & mutex;
+};
+
+template <typename Threading, bool> struct SelectListenerMutex { using Type = typename Threading::SharedMutex; };
+template <typename Threading> struct SelectListenerMutex <Threading, false> { using Type = typename Threading::Mutex; };
+
+template <typename Threading, bool> struct SelectListenerReadLock { using Type = SharedLockGuard<typename Threading::SharedMutex>; };
+template <typename Threading> struct SelectListenerReadLock <Threading, false> { using Type = std::lock_guard<typename Threading::Mutex>; };
+
 template <typename T>
 struct HasTypeCallback
 {
