@@ -169,6 +169,7 @@ public:
 	{
 		if(! queueList.empty()) {
 			BufferedItemList tempList;
+			BufferedItemList idleList;
 
 			// Use a counter to tell the queue list is not empty during processing
 			// even though queueList is swapped to empty.
@@ -180,9 +181,19 @@ public:
 			}
 
 			if(! tempList.empty()) {
-				for(auto & item : tempList) {
-					doDispatchQueuedEvent(item.template get<QueuedItemBase>());
-					item.clear();
+				// Only move the processed items to idleList on exception, see EventQueue::process.
+				for(auto it = tempList.begin(); it != tempList.end(); ++it) {
+					try {
+						doDispatchQueuedEvent(it->template get<QueuedItemBase>());
+					}
+					catch(...) {
+						while(tempList.begin() != it) {
+							idleList.splice(idleList.end(), tempList, tempList.begin());
+						}
+						doRequeueOnException(tempList, idleList, it, true);
+						throw;
+					}
+					it->clear();
 				}
 
 				std::lock_guard<Mutex> queueListLock(freeListMutex);
@@ -199,6 +210,7 @@ public:
 	{
 		if(! queueList.empty()) {
 			BufferedItemList tempList;
+			BufferedItemList idleList;
 
 			// Use a counter to tell the queue list is not empty during processing
 			// even though queueList is swapped to empty.
@@ -213,7 +225,13 @@ public:
 
 			if(! tempList.empty()) {
 				auto & item = tempList.front();
-				doDispatchQueuedEvent(item.template get<QueuedItemBase>());
+				try {
+					doDispatchQueuedEvent(item.template get<QueuedItemBase>());
+				}
+				catch(...) {
+					doRequeueOnException(tempList, idleList, tempList.begin(), true);
+					throw;
+				}
 				item.clear();
 
 				std::lock_guard<Mutex> queueListLock(freeListMutex);
@@ -260,6 +278,33 @@ private:
 	bool doCanProcess() const
 	{
 		return ! emptyQueue() && doCanNotifyQueueAvailable();
+	}
+
+	// Called when a listener or the predictor throws while processing the item at `it` in tempList.
+	// If `dispatched` is true, the listeners of the item were invoked (maybe partially), so the item is
+	// dropped, because processing it again would invoke the listeners again. Otherwise the item is kept.
+	// The remaining items in tempList are put back to the front of the queue to be processed by the next
+	// call, and the processed items in idleList are recycled. The caller must rethrow after calling this.
+	void doRequeueOnException(BufferedItemList & tempList, BufferedItemList & idleList, typename BufferedItemList::iterator it, const bool dispatched)
+	{
+		if(dispatched) {
+			it->clear();
+			idleList.splice(idleList.end(), tempList, it);
+		}
+
+		if(! tempList.empty()) {
+			std::lock_guard<Mutex> queueListLock(queueListMutex);
+			queueList.splice(queueList.begin(), tempList);
+		}
+
+		if(! idleList.empty()) {
+			std::lock_guard<Mutex> queueListLock(freeListMutex);
+			freeList.splice(freeList.end(), idleList);
+		}
+
+		if(doCanProcess()) {
+			queueListConditionVariable.notify_one();
+		}
 	}
 
 	bool doCanNotifyQueueAvailable() const
@@ -313,12 +358,26 @@ private:
 					++it;
 					continue;
 				}
-				if(doInvokeFuncWithQueuedEvent(
-					func,
-					item,
-					typename MakeIndexSequence<std::tuple_size<ArgsTuple>::value>::Type())
-					) {
-					doDispatchQueuedEvent(item);
+				bool shouldProcess = false;
+				try {
+					shouldProcess = doInvokeFuncWithQueuedEvent(
+						func,
+						item,
+						typename MakeIndexSequence<std::tuple_size<ArgsTuple>::value>::Type()
+					);
+				}
+				catch(...) {
+					doRequeueOnException(tempList, idleList, it, false);
+					throw;
+				}
+				if(shouldProcess) {
+					try {
+						doDispatchQueuedEvent(item);
+					}
+					catch(...) {
+						doRequeueOnException(tempList, idleList, it, true);
+						throw;
+					}
 					it->clear();
 
 					auto tempIt = it;

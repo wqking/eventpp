@@ -134,6 +134,8 @@ bool process();
 
 注意：若 `process()` 被同时在多个线程中调用，事件队列中的事件也将只被处理一次。
 
+若监听器抛出异常，正在调度的事件会从队列中移除（它的监听器已经被调用，可能只调用了一部分，再次调度会再次调用这些监听器），尚未处理的事件按原来的顺序保留在队列中，异常传递给 `process()` 的调用者。 `processOne()` 、 `processIf()` 和 `processUntil()` 也是如此。若 `processIf()` 或 `processUntil()` 的 `predictor` 抛出异常，则不移除任何事件。
+
 #### processOne
 
 ```c++

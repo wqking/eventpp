@@ -113,6 +113,7 @@ The listeners are called in the thread same as the caller of `process`.
 Any new events added to the queue during `process()` are not dispatched during current `process()`.  
 `process()` is efficient in single thread event processing, it processes all events in the queue in current thread. To process events from multiple threads efficiently, use `processOne()`.  
 Note: if `process()` is called from multiple threads simultaneously, the events in the event queue are guaranteed dispatched only once.  
+If a listener throws an exception, the event being dispatched is removed from the queue (its listeners were invoked, maybe partially, and dispatching it again would invoke them again), the events that were not processed yet are kept in the queue in their original order, and the exception propagates to the caller of `process()`. The same applies to `processOne()`, `processIf()` and `processUntil()`. If the `predictor` of `processIf()` or `processUntil()` throws, no event is removed.
 
 #### processOne
 

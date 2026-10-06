@@ -82,4 +82,4 @@ Exceptions may be thrown by underlying code when,
 2. The listeners (callbacks) throw exceptions during copying, moving, comparing, or invoking.
 
 Almost all operations guarantee strong exception safety, which means the underlying data remains original value on exception is thrown.  
-An except is `EventQueue::process`, on exception, the remaining events will not be dispatched, and the queue becomes empty.
+If a listener throws while `EventQueue` is processing, the event being dispatched is removed from the queue and the events not processed yet are kept, see [EventQueue::process](eventqueue.md).
