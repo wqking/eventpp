@@ -275,7 +275,9 @@ public:
 		});
 	}
 
-#if !defined(__GNUC__) || __GNUC__ >= 5
+// Clang defines __GNUC__ as 4 for GCC compatibility, but it supports parameter pack capture in lambda,
+// so it must use the main code, not the GCC 4 patch below.
+#if !defined(__GNUC__) || defined(__clang__) || __GNUC__ >= 5
 	void operator() (Args ...args) const
 	{
 		forEachIf([&args...](Callback & callback) -> bool {
