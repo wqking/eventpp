@@ -18,6 +18,8 @@
 
 #include <atomic>
 #include <condition_variable>
+#include <mutex>
+#include <type_traits>
 #include <map>
 #include <unordered_map>
 #include <list>
@@ -50,10 +52,16 @@ private:
     std::atomic_flag locked = ATOMIC_FLAG_INIT;
 };
 
+// std::condition_variable only works with std::mutex, so for any other Mutex_ (such as SpinLock)
+// the default ConditionVariable_ is std::condition_variable_any, otherwise EventQueue::wait doesn't compile.
 template <
 	typename Mutex_,
 	template <typename > class Atomic_ = std::atomic,
-	typename ConditionVariable_ = std::condition_variable
+	typename ConditionVariable_ = typename std::conditional<
+		std::is_same<Mutex_, std::mutex>::value,
+		std::condition_variable,
+		std::condition_variable_any
+	>::type
 >
 struct GeneralThreading
 {
@@ -128,13 +136,14 @@ struct SingleThreading
 		{
 		}
 		
-		template <class Predicate>
-		void wait(std::unique_lock<std::mutex> & /*lock*/, Predicate /*pred*/)
+		// The lock type is a template parameter because EventQueue passes std::unique_lock<SingleThreading::Mutex>.
+		template <class Lock, class Predicate>
+		void wait(Lock & /*lock*/, Predicate /*pred*/)
 		{
 		}
 		
-		template <class Rep, class Period, class Predicate>
-		bool wait_for(std::unique_lock<std::mutex> & /*lock*/,
+		template <class Lock, class Rep, class Period, class Predicate>
+		bool wait_for(Lock & /*lock*/,
 				const std::chrono::duration<Rep, Period> & /*rel_time*/,
 				Predicate /*pred*/
 			)

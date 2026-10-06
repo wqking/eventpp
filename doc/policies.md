@@ -182,7 +182,8 @@ struct MultipleThreadingSpinLock
     template <typename T>
     using Atomic = std::atomic<T>;
 
-    using ConditionVariable = std::condition_variable;
+    // std::condition_variable only works with std::mutex, any other mutex needs std::condition_variable_any
+    using ConditionVariable = std::condition_variable_any;
 };
 struct MyEventPolicies {
     using Threading = MultipleThreadingSpinLock;
@@ -196,7 +197,7 @@ eventpp::CallbackList<void (), MyEventPolicies> callbackList;
 template <
     typename Mutex_,
     template <typename > class Atomic_ = std::atomic,
-    typename ConditionVariable_ = std::condition_variable
+    typename ConditionVariable_ = std::condition_variable or std::condition_variable_any
 >
 struct GeneralThreading
 {
@@ -208,6 +209,7 @@ struct GeneralThreading
     using ConditionVariable = ConditionVariable_;
 };
 ```
+The default `ConditionVariable_` is `std::condition_variable` when `Mutex_` is `std::mutex`, and `std::condition_variable_any` otherwise, because `std::condition_variable` only works with `std::mutex`. `ConditionVariable` is only used by `EventQueue::wait` and `EventQueue::waitFor`.
 
 So the previous sample code for spinlock can be rewritten as
 

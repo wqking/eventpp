@@ -200,7 +200,8 @@ struct MultipleThreadingSpinLock
     template <typename T>
     using Atomic = std::atomic<T>;
     
-    using ConditionVariable = std::condition_variable;
+    // std::condition_variable 只能与 std::mutex 一起使用，其他互斥量需要使用 std::condition_variable_any
+    using ConditionVariable = std::condition_variable_any;
 };
 struct MyEventPolicies {
     using Threading = MultipleThreadingSpinLock;
@@ -215,7 +216,7 @@ eventpp::CallbackList<void (), MyEventPolicies> callbackList;
 template <
 	typename Mutex_,
 	template <typename > class Atomic_ = sd::atomic,
-    typename ConditionVariable_ = std::condition_variable
+    typename ConditionVariable_ = std::condition_variable 或 std::condition_variable_any
 >
 struct GeneralThreading
 {
@@ -227,6 +228,8 @@ struct GeneralThreading
     using ConditionVariable = ConditionVariable_;
 };
 ```
+
+当 `Mutex_` 是 `std::mutex` 时， `ConditionVariable_` 的默认值是 `std::condition_variable` ，否则是 `std::condition_variable_any` ，因为 `std::condition_variable` 只能与 `std::mutex` 一起使用。 `ConditionVariable` 只被 `EventQueue::wait` 和 `EventQueue::waitFor` 使用。
 
 因此前面自旋锁的示例代码可以重写为
 
