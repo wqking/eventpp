@@ -144,7 +144,7 @@ template <typename Prototype, typename Func>
 bool forEachIf(Func && func) const;
 ```  
 Apply `func` to all callbacks. `func` must return a boolean value, and if the return value is false, forEachIf stops the looping immediately.  
-Return `true` if all callbacks are invoked, or `event` is not found, `false` if `func` returns `false`.
+Return `true` if all callbacks are invoked, `false` if `func` returns `false`.
 
 #### invoking operator
 
@@ -154,4 +154,4 @@ void operator() (Args && ...args) const;
 ```  
 Invoke each callbacks that can be called with `Args` in the callback list.  
 The callbacks are called with arguments `args`.  
-The callbacks are called in the thread same as the callee of `operator()`.
+The callbacks are called in the thread same as the caller of `operator()`.

@@ -138,7 +138,7 @@ dispatcher.appendListener(5, [](const int e, const int i, const std::string & s)
 
 // Add three event filters.
 
-// The first filter modifies the input arguments to other values, then the subsequence filters
+// The first filter modifies the input arguments to other values, then the subsequent filters
 // and listeners will see the modified values.
 dispatcher.appendFilter([](const int e, int & i, std::string & s) -> bool {
     std::cout << "Filter 1, e is " << e << " passed in i is " << i << " s is " << s << std::endl;

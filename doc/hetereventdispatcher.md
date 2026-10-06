@@ -148,7 +148,7 @@ Return `true` if all listeners are invoked, or `event` is not found, `false` if 
 template <typename T, typename ...Args>
 void dispatch(T && first, Args && ...args) const
 ```  
-Dispatch an event. The event type is deducted from the arguments of `dispatch`.  
+Dispatch an event. The event type is deduced from the arguments of `dispatch`.  
 Invoke each callbacks that can be called with `Args` in the callback list.  
 The listeners are called with arguments `args`.  
 The function is synchronous. The listeners are called in the thread same as the caller of `dispatch`.

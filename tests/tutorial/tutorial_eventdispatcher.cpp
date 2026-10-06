@@ -186,7 +186,7 @@ TEST_CASE("EventDispatcher tutorial 5, event filter")
 
 	// Add three event filters.
 
-	// The first filter modifies the input arguments to other values, then the subsequence filters
+	// The first filter modifies the input arguments to other values, then the subsequent filters
 	// and listeners will see the modified values.
 	dispatcher.appendFilter([](const int e, int & i, std::string & s) -> bool {
 		std::cout << "Filter 1, e is " << e << " passed in i is " << i << " s is " << s << std::endl;

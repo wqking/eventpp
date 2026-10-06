@@ -65,7 +65,7 @@ Note: the queued events are not copied, moved, assigned, or move assigned, only 
 template <typename T, typename ...Args>
 void enqueue(T && first, Args && ...args);
 ```  
-Put an event into the event queue. The event type is deducted from the arguments of `enqueue`.  
+Put an event into the event queue. The event type is deduced from the arguments of `enqueue`.  
 All copyable arguments are copied to internal data structure. All non-copyable but movable arguments are moved.  
 HeterEventQueue requires the arguments either copyable or movable.  
 If an argument is a reference to a base class and a derived object is passed in, only the base object will be stored and the derived object is lost. Usually shared pointer should be used in such situation.  

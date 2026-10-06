@@ -90,7 +90,7 @@ void enqueue(A && ...args);
 template <typename T, typename ...A>
 void enqueue(T && first, A && ...args);
 ```  
-Put an event into the event queue. The event type is deducted from the arguments of `enqueue`.  
+Put an event into the event queue. The event type is deduced from the arguments of `enqueue`.  
 All copyable arguments are copied to internal data structure. All non-copyable but movable arguments are moved.  
 EventQueue requires the arguments either copyable or movable.  
 If an argument is a reference to a base class and a derived object is passed in, only the base object will be stored and the derived object is lost. Usually shared pointer should be used in such situation.  
@@ -98,7 +98,7 @@ If an argument is a pointer, only the pointer will be stored. The object it poin
 `enqueue` wakes up any threads that are blocked by `wait` or `waitFor`.  
 The time complexity is O(1).  
 
-The two overloaded functions have similar but slightly difference. How to use them depends on the `ArgumentPassingMode` policy. Please reference the [document of policies](policies.md) for more information.
+The two overloaded functions are similar but slightly different. How to use them depends on the `ArgumentPassingMode` policy. Please reference the [document of policies](policies.md) for more information.
 
 Note: the arguments life time may be longer than expected. `EventQueue` copies the arguments into internal data structure, after the event is dispatched, the data is cached for next usage, so the arguments won't be destroyed until the data is reused. This is for performance optimization. This is usually not an issue, but if you pass large data in shared pointer, the data may be in the memory for longer time than necessary.
 

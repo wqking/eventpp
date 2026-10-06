@@ -195,7 +195,7 @@ struct MultipleThreading
 ```cpp
 struct MultipleThreadingSpinLock
 {
-	using Mutex = eventpp::SpinLock;
+    using Mutex = eventpp::SpinLock;
     
     template <typename T>
     using Atomic = std::atomic<T>;
@@ -213,8 +213,8 @@ eventpp::CallbackList<void (), MyEventPolicies> callbackList;
 
 ```cpp
 template <
-	typename Mutex_,
-	template <typename > class Atomic_ = sd::atomic,
+    typename Mutex_,
+    template <typename > class Atomic_ = std::atomic,
     typename ConditionVariable_ = std::condition_variable
 >
 struct GeneralThreading

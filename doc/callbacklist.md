@@ -155,7 +155,7 @@ template <typename Func>
 bool forEachIf(Func && func) const;
 ```  
 Apply `func` to all callbacks. `func` must return a boolean value, and if the return value is false, forEachIf stops the looping immediately.  
-Return `true` if all callbacks are invoked, or `event` is not found, `false` if `func` returns `false`.
+Return `true` if all callbacks are invoked, `false` if `func` returns `false`.
 
 #### invoking operator
 
@@ -164,12 +164,12 @@ void operator() (Args ...args) const;
 ```  
 Invoke each callbacks in the callback list.  
 The callbacks are called with arguments `args`.  
-The callbacks are called in the thread same as the callee of `operator()`.
+The callbacks are called in the thread same as the caller of `operator()`.
 
 <a id="a2_3"></a>
 ## Nested callback safety
-1. If a callback adds another callback to the callback list during a invoking, the new callback is guaranteed not to be triggered within the same invoking. This is guaranteed by an unsigned 64 bits integer counter. This rule will be broken is the counter is overflowed to zero in a invoking, but this rule will continue working on the subsequence invoking.  
-2. Any callbacks that are removed during a invoking are guaranteed not triggered.  
+1. If a callback adds another callback to the callback list during an invoking, the new callback is guaranteed not to be triggered within the same invoking. This is guaranteed by an unsigned 64 bits integer counter. This rule will be broken if the counter is overflowed to zero in an invoking, but this rule will continue working on the subsequent invoking.  
+2. Any callbacks that are removed during an invoking are guaranteed not triggered.  
 3. All above points are not true in multiple threading. That's to say, if one thread is invoking a callback list, the other thread add or remove a callback, the added or removed callback may be called during the invoking.
 
 
