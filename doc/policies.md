@@ -168,7 +168,7 @@ struct MultipleThreading
 ```
 For `SingleThreading`, all the types `Mutex`, `Atomic`, and `ConditionVariable` are dummy types that don't do anything.  
 
-For multiple threading, the default `Mutex` is `std::mutex`. `eventpp` also provides a `SpinLock` class which uses spinlock as the mutex.  
+For multiple threading, the default `Mutex` is `std::mutex`. `eventpp` also provides a `SpinLock` class which uses spinlock as the mutex. `SpinLock` has `lock`, `try_lock` and `unlock`, so it can be used with `std::lock_guard` and `std::unique_lock`. The waiting thread yields after spinning for a while, so it doesn't burn the CPU when the lock is held for long.  
 When there are fewer threads (about around the number of CPU cores), `eventpp::SpinLock` has better performance than `std::mutex`. When there are much more threads than CPU cores, `eventpp::SpinLock` has worse performance than `std::mutex`.  
 Please [read the benchmark](benchmark.md) for benchmark data.  
 

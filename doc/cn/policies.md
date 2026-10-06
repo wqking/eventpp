@@ -184,7 +184,7 @@ struct MultipleThreading
 
 对于 `SingleThreading` 而言，所有的 `Mutex` 、 `Atomic` 和 `ConditionVariable` 类型都是不会起任何作用的假类型。
 
-对于多线程而言，默认的 `Mutex` 是 `std::mutex` 。 eventpp 也提供了一个使用自旋锁作为互斥量的 `SpinLock` 类。
+对于多线程而言，默认的 `Mutex` 是 `std::mutex` 。 eventpp 也提供了一个使用自旋锁作为互斥量的 `SpinLock` 类。 `SpinLock` 提供 `lock` 、 `try_lock` 和 `unlock` ，因此可以与 `std::lock_guard` 和 `std::unique_lock` 一起使用。等待的线程在自旋一段时间后会让出 CPU ，所以在锁被长时间持有时不会空耗 CPU 。
 
 当只有较少的线程时（和 CPU 核心数差不多的线程数），`eventpp::SpinLock` 的性能比 `std::mutex` 更高一些。当线程数超过 CPU 核心数时， `eventpp::SpinLock` 的性能弱于 `std::mutex` 。
 

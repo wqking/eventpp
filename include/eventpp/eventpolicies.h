@@ -18,6 +18,7 @@
 
 #include <atomic>
 #include <condition_variable>
+#include <thread>
 #include <map>
 #include <unordered_map>
 #include <list>
@@ -34,20 +35,36 @@ struct TagHeterCallbackList : public TagHeter {};
 struct TagHeterEventDispatcher : public TagHeter {};
 struct TagHeterEventQueue : public TagHeter {};
 
+// A simple spin lock. The waiting thread spins on a plain load (test and test-and-set), so it doesn't keep
+// invalidating the cache line of the lock, and it yields after spinning for a while, so it doesn't burn
+// the CPU when the lock is held for long or when there are more threads than CPU cores.
 struct SpinLock
 {
 public:
 	void lock() {
-		while(locked.test_and_set(std::memory_order_acquire)) {
+		while(locked.exchange(true, std::memory_order_acquire)) {
+			int spinCount = 0;
+			while(locked.load(std::memory_order_relaxed)) {
+				if(++spinCount >= spinCountBeforeYield) {
+					spinCount = 0;
+					std::this_thread::yield();
+				}
+			}
 		}
 	}
 
-	void unlock() {
-		locked.clear(std::memory_order_release);
+	bool try_lock() {
+		return ! locked.exchange(true, std::memory_order_acquire);
 	}
-	
+
+	void unlock() {
+		locked.store(false, std::memory_order_release);
+	}
+
 private:
-    std::atomic_flag locked = ATOMIC_FLAG_INIT;
+	enum { spinCountBeforeYield = 100 };
+
+	std::atomic<bool> locked { false };
 };
 
 template <

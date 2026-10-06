@@ -28,6 +28,7 @@ set(SRC_TEST
 	test_conditionalfunctor.cpp
 	test_anyid.cpp
 	test_anydata.cpp
+	test_spinlock.cpp
 )
 
 add_executable(
